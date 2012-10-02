@@ -11,10 +11,10 @@ require 'net/ftp'
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
   @@log_file
-  attr :host_ftp_server
 
-  def initialize(ftp_server_ip)
-    @host_ftp_server = ftp_server_ip
+
+  def initialize()
+
   end
 
   def post_init
@@ -27,13 +27,14 @@ module LoadServer
     Logging.send($log_file, Logger::DEBUG, "data receive : #{data}")
     case data["cmd"]
       when "file"
-        label = data["data"]
+        what = data["what"]
         date_scraping = data["date_scraping"]
         id_file = data["id_file"]
         user = data["user"]
         pwd = data["pwd"]
+        host_ftp_server = data["where"]
         p "download file #{id_file} from #{who}(#{ip}:#{port})"
-        get_file(id_file, user, pwd)
+        get_file(id_file, host_ftp_server, user, pwd)
         # load file id_file to DB with spawn
         # ==>>>
         close_connection
@@ -48,9 +49,9 @@ module LoadServer
   def unbind
   end
 
-  def get_file(id_file, user, pwd)
+  def get_file(id_file, host_ftp_server, user, pwd)
     begin
-      ftp = Net::FTP.new(@host_ftp_server)
+      ftp = Net::FTP.new(host_ftp_server)
       ftp.login(user, pwd)
       ftp.gettextfile(id_file, INPUT + id_file)
       ftp.delete(id_file)
@@ -70,11 +71,9 @@ end
 $log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
 #ftp_server et scraper server sont sur la même machine en raison du repertoire de partagé des fichiers
 # scraper_server le rempli, et ftp_server le publie et le vide.
-ftp_server_ip = scraper_server_ip = "localhost"
+scraper_servers_ip = ["localhost"] #liste de tous les scraper_server separer par une virgule
 listening_port = 9002 # port d'ecoute du load_server
-scraper_server_port = 9003
-
-
+scraper_server_port = 9003 # port d'ecoute du scraper_server
 
 
 #--------------------------------------------------------------------------------------------------------------------
@@ -82,13 +81,13 @@ scraper_server_port = 9003
 #--------------------------------------------------------------------------------------------------------------------
 ARGV.each { |arg|
   listening_port = arg.split("=")[1] if arg.split("=")[0] == "--port"
-  ftp_server_ip = scraper_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--scraper_server_ip"
+  scraper_servers_ip = arg.split("=")[1] if arg.split("=")[0] == "--scraper_servers_ip"
   scraper_server_port = arg.split("=")[1] if arg.split("=")[0] == "--scraper_server_port"
 } if ARGV.size > 0
 
 Logging.send($log_file, Logger::INFO, "parameters of load server : ")
 Logging.send($log_file, Logger::INFO, "listening port : #{listening_port}")
-Logging.send($log_file, Logger::INFO, "ftp and scraper server ip : #{ftp_server_ip}")
+Logging.send($log_file, Logger::INFO, "scraper servers ip : #{scraper_servers_ip}")
 Logging.send($log_file, Logger::INFO, "scraper server port : #{scraper_server_port}")
 
 
@@ -101,18 +100,20 @@ EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
   Logging.send($log_file, Logger::INFO, "load server is starting")
-  EventMachine.start_server "0.0.0.0", listening_port, LoadServer, ftp_server_ip
+  EventMachine.start_server "0.0.0.0", listening_port, LoadServer
 
   # recuperer les fichiers jamais chargés en base
-  begin
-    s = TCPSocket.new scraper_server_ip, scraper_server_port
-    s.puts JSON.generate({"who" => "load server", "cmd" => "send_me_all_files"})
-    s.close
-    p "request to scraper server, send me all files !!"
-    Logging.send($log_file, Logger::INFO, "request to scraper server, send me all files !!")
-  rescue Exception => e
-    Logging.send($log_file, Logger::FATAL, "request to scraper server, to retrieve all files, failed : #{e.message}")
-  end
+  scraper_servers_ip.split(",").each { |scraper_server_ip|
+    begin
+      s = TCPSocket.new scraper_server_ip, scraper_server_port
+      s.puts JSON.generate({"who" => "load server", "cmd" => "send_me_all_files"})
+      s.close
+      p "request to scraper server #{scraper_server_ip}, send me all files !!"
+      Logging.send($log_file, Logger::INFO, "request to scraper server #{scraper_server_ip}, send me all files !!")
+    rescue Exception => e
+      Logging.send($log_file, Logger::FATAL, "request to scraper server #{scraper_server_ip}, to retrieve all files, failed : #{e.message}")
+    end
+  }
 }
 Logging.send($log_file, Logger::INFO, "load server stopped")
 
