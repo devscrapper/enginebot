@@ -19,7 +19,7 @@ module Building_inputs
   SEPARATOR2=";"
   EOFLINE2 ="\n"
   LOG_FILE = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
-
+         $b = false
   class Page
     NO_LINK = "*"
     attr :id_uri,
@@ -31,6 +31,9 @@ module Building_inputs
     def initialize(page)
       splitted_page = page.split(SEPARATOR)
       @id_uri = splitted_page[0].to_i
+      if @id_uri == 24185
+        $b = true
+      end
       @hostname = splitted_page[1]
       @page_path = splitted_page[2]
       @title = splitted_page[3]
@@ -107,6 +110,7 @@ module Building_inputs
         website_file = "Website-#{label}-#{date}-#{vol}.txt"
         information("Loading website file : #{website_file}")
         IO.foreach(INPUT + website_file, EOFLINE, encoding: "BOM|UTF-8:-") { |p|
+          p p if $b
           page = Page.new(p)
           matrix_file.write(page.to_matrix)
           pages_file.write(page.to_page)

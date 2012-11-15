@@ -58,7 +58,7 @@ module LoadServer
         direct_medium_percent = 60 # sera calculé en fonction des objectif
         organic_medium_percent = 20 # sera calculé en fonction des objectif
         referral_medium_percent = 20 # sera calculé en fonction des objectif
-        count_visit = 100 # sera calculé en fonction des objectif
+        count_visit = 1000 # sera calculé en fonction des objectif
         Building_inputs.Choosing_landing_pages(label, date_building,
                                                direct_medium_percent,
                                                organic_medium_percent,
@@ -68,7 +68,7 @@ module LoadServer
         label = data["label"]
         date_building = data["date_building"]
         # seront fournis par l'objectif du jour
-        count_visit = 100
+        count_visit = 1000
         visit_bounce_rate = 60
 
         page_views_per_visit = 2
@@ -78,20 +78,41 @@ module LoadServer
         min_pages = 2
 
         Building_visits.Building_visits(label, date_building,
-                                          count_visit,
-                                          visit_bounce_rate,
-                                          page_views_per_visit,
-                                          avg_time_on_site,
-                                          min_durations,
-                                          min_pages)
+                                        count_visit,
+                                        visit_bounce_rate,
+                                        page_views_per_visit,
+                                        avg_time_on_site,
+                                        min_durations,
+                                        min_pages)
 
-      when "Distributing_visits"
-             label = data["label"]
-             date_building = data["date_building"]
-             # seront fournis par l'objectif du jour
-             hourly_distribution = "0;0;0;1;2;3;3.5;3.5;3;2;1;0.5;1;2;3;6;8;10;11;12;12;11.5;2;2"
-             Building_visits.Distributing_visits(label, date_building,
-                                               hourly_distribution)
+      when "Building_planification"
+        label = data["label"]
+        date_building = data["date_building"]
+        # seront fournis par l'objectif du jour
+        hourly_distribution = "0;0;0;1;2;3;3.5;3.5;3;2;1;0.5;1;2;3;6;8;10;11;12;12;11.5;2;2"
+        count_visit = 1000
+        Building_visits.Building_planification(label, date_building,
+                                               hourly_distribution,
+                                              count_visit)
+
+      when "Extending_visits"
+        label = data["label"]
+        date_building = data["date_building"]
+        # seront fournis par l'objectif du jour
+        count_visit = 1000
+        account_ga = "UA-XXXXXX"
+        return_visitor_rate = 40
+        Building_visits.Extending_visits(label, date_building,
+                                         count_visit,
+                                         account_ga,
+                                         return_visitor_rate)
+
+      when "Publishing_visits"
+        label = data["label"]
+        date_building = data["date_building"]
+        # seront fournis par l'objectif du jour
+
+        Building_visits.Publishing_visits()
 
       when "exit"
         close_connection
@@ -119,61 +140,16 @@ module LoadServer
   end
 
 
- def building_inputs(label, date_scraping)
-   s = TCPSocket.new 'localhost', $listening_port
-   s.puts JSON.generate({"cmd" => "building_inputs", "label" => label, "date_building" => date})
-   s.close
- end
+  def building_inputs(label, date_scraping)
+    s = TCPSocket.new 'localhost', $listening_port
+    s.puts JSON.generate({"cmd" => "building_inputs", "label" => label, "date_building" => date})
+    s.close
+  end
 
   def information(msg)
     Logging.send($log_file, Logger::INFO, msg)
     p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
   end
-
-  def building_visits(label, date)
-    Logging.send($log_file, Logger::INFO, "building_visits is starting")
-    matrix, durations, pages = matrix_durations(label, date)
-    entries = entries (label, date, pages)
-    exits = exits (label, date, pages)
-    aim_bounce_rate = 57
-    aim_avg_duration = 81.76
-    aim_avg_page_per_visit = 84.03
-    aim_count_visits = 100
-    aim_hourly_distribution = Array.new
-    aim_hourly_distribution[0] = aim_hourly_distribution[1] = aim_hourly_distribution[2] = aim_hourly_distribution[3] = 0
-    aim_hourly_distribution[4] = 1
-    aim_hourly_distribution[5] = 2
-    aim_hourly_distribution[6] = 3
-    aim_hourly_distribution[7] = 3.5
-    aim_hourly_distribution[8] = 3.5
-    aim_hourly_distribution[9] = 3
-    aim_hourly_distribution[10] = 2
-    aim_hourly_distribution[11] = 1
-    aim_hourly_distribution[12] = 0.5
-    aim_hourly_distribution[13] = 1
-    aim_hourly_distribution[14] = 2
-    aim_hourly_distribution[15] = 3
-    aim_hourly_distribution[16] = 4
-    aim_hourly_distribution[17] = 6
-    aim_hourly_distribution[18] = 8
-    aim_hourly_distribution[19] = 10
-    aim_hourly_distribution[20] = 11
-    aim_hourly_distribution[21] = 12
-    aim_hourly_distribution[22] = 12
-    aim_hourly_distribution[23] = 11.5
-    Hourly_planification.create(matrix,
-                                entries,
-                                exits,
-                                durations,
-                                aim_bounce_rate,
-                                aim_count_visits,
-                                aim_avg_duration,
-                                aim_avg_page_per_visit,
-                                aim_hourly_distribution)
-    Logging.send($log_file, Logger::INFO, "building_visits is over")
-  end
-
-
 end
 
 
