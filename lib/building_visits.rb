@@ -1,6 +1,12 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
 
+
+
+#TODO: integrer ruby-progressbar pour chaque traitement batch
+#TODO: integrer device plateforme dans extending_visits
+
+
 require File.dirname(__FILE__) + '/../lib/logging'
 require 'socket'
 #------------------------------------------------------------------------------------------
@@ -84,6 +90,7 @@ module Building_visits
          :start_date_time,
          :account_ga,
          :return_visitor,
+         :browser,
          :browser_version,
          :operating_system,
          :operating_system_version,
@@ -123,6 +130,16 @@ module Building_visits
     def to_s(*a)
       visit = "#{@id_visit}"
       visit += "#{SEPARATOR2}#{@start_date_time}" unless @start_date_time.nil?
+      visit += "#{SEPARATOR2}#{@account_ga}" unless @account_ga.nil?
+      visit += "#{SEPARATOR2}#{@return_visitor}" unless @return_visitor.nil?
+      visit += "#{SEPARATOR2}#{@browser}" unless @browser.nil?
+      visit += "#{SEPARATOR2}#{@browser_version}" unless @browser_version.nil?
+      visit += "#{SEPARATOR2}#{@operating_system}" unless @operating_system.nil?
+      visit += "#{SEPARATOR2}#{@operating_system_version}" unless @operating_system_version.nil?
+      visit += "#{SEPARATOR2}#{@flash_version}" unless @flash_version.nil?
+      visit += "#{SEPARATOR2}#{@java_enabled}" unless @java_enabled.nil?
+      visit += "#{SEPARATOR2}#{@screens_colors}" unless @screens_colors.nil?
+      visit += "#{SEPARATOR2}#{@screen_resolution}" unless @screen_resolution.nil?
       visit += "#{SEPARATOR2}#{@referral_path}" unless @referral_path.nil?
       visit += "#{SEPARATOR2}#{@source}" unless @source.nil?
       visit += "#{SEPARATOR2}#{@medium}" unless @medium.nil?
@@ -176,6 +193,8 @@ module Building_visits
 
       @id_visit = splitted_visit[0].strip
       @start_date_time = splitted_visit[1].strip
+      @account_ga = account_ga
+      @return_visitor = return_visitor
       @referral_path = splitted_visit[2].strip
       @source = splitted_visit[3].strip
       @medium = splitted_visit[4].strip
@@ -189,8 +208,8 @@ module Building_visits
         p.set_properties(pages_file)
         @pages << p
       }
-      @account_ga = account_ga
-      @return_visitor = return_visitor
+
+
     end
   end
 #--------------------------------------------------------------------------------------------------------------
@@ -210,6 +229,9 @@ module Building_visits
       avg_time_on_site,
       min_durations,
       min_pages)
+    #TODO: dans le building_visits sauvegarder à chaque visit et non pas à la fin => remplacer @visit[s] par @visit
+    #TODO selectionner le fichier <matrix> le plus récent
+    #TODO creer une alerte si le fichiermatrix, ou Chosen_landing_pages est absent
     begin
       information("Building visits for #{label} is starting")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_visit #{count_visit}")
@@ -248,6 +270,7 @@ module Building_visits
 #
 # --------------------------------------------------------------------------------------------------------------
   def Building_planification(label, date, hourly_distribution, count_visits)
+     #TODO creer une alerte si le fichier <visits> est absent
     begin
       information("Building planification of visit for #{label} is starting")
 
@@ -283,6 +306,11 @@ module Building_visits
 #
 # --------------------------------------------------------------------------------------------------------------
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
+    #TODO creer une alerte si le fichier <planed_visit> est absent
+    #TODO creer une alerte si le fichier <chosen_device_platform> est absent
+    #TODO selectionner le fichier <pages> le plus récent
+    #TODO developper le return visitor
+    #TODO integrer le device platform
     begin
       information("Extending visits for #{label} is starting")
 
@@ -310,7 +338,10 @@ module Building_visits
 #--------------------------------------------------------------------------------------------------------------
 #
 # --------------------------------------------------------------------------------------------------------------
+
   def Publishing_visits(label, date)
+    #TODO creer une alerte si les fichiers <final_visits> sont absents
+    #TODO developper Publishing_visits
     begin
       information("Publishing visits for #{label} is starting")
 

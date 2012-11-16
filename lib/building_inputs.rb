@@ -8,6 +8,7 @@ require 'socket'
 #------------------------------------------------------------------------------------------
 
 
+
 module Building_inputs
 #------------------------------------------------------------------------------------------
 # Globals variables
@@ -130,6 +131,8 @@ module Building_inputs
   end
 
   def Building_landing_pages(label, date)
+    #TODO selectionner le fichier <pages, Traffic_source_landing_page> le plus récent
+    #TODO creer une alerte si le fichier attendu est absent
     information("Building landing pages for #{label} is starting")
 
     landing_pages_direct_file = File.open(TMP + "landing-pages-direct-#{label}-#{date}.txt", "w:utf-8")
@@ -174,11 +177,19 @@ module Building_inputs
     landing_pages_referral_file.close
     landing_pages_organic_file.close
     information("Building landing pages for #{label} is over")
-    execute_next_step("Choosing_landing_pages", label, date)
   end
 
+  def Building_device_platform(label, date)
+    #TODO selectionner le fichier <Device_platform_resolution, Device_platform_plugin> le plus récent
+    #TODO creer une alerte si le fichier attendu est absent
+    #TODO developper   Building_device_platform
+    information("Building device platform for #{label} is starting")
+    information("Building device platform for #{label} is over")
+  end
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
+    #TODO selectionner le fichier <landing_pages_direct, landing_pages_referral, landing_pages_organic> le plus récent
+    #TODO creer une alerte si le fichier attendu est absent
     information("Choosing landing pages for #{label} is starting")
     landing_pages_direct_file = File.open(TMP + "landing-pages-direct-#{label}-#{date}.txt", "r:utf-8")
     landing_pages_referral_file = File.open(TMP + "landing-pages-referral-#{label}-#{date}.txt", "r:utf-8")
@@ -226,8 +237,20 @@ module Building_inputs
     landing_pages_referral_file.close
     landing_pages_organic_file.close
     information("Choosing landing pages for #{label} is over")
+    execute_next_step("Building_visits", label, date)
   end
 
+
+
+
+  def Choosing_device_platform(label, date, count_visit)
+    #TODO selectionner le fichier <Device_platform> le plus récent
+    #TODO creer une alerte si le fichier attendu est absent
+    #TODO developper  Choosing_device_platform
+    information("Choosing device platform for #{label} is starting")
+    information("Choosing device platform for #{label} is over")
+    execute_next_step("Building_visits", label, date)
+  end
   def information(msg)
     Logging.send(LOG_FILE, Logger::INFO, msg)
     p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
@@ -241,6 +264,8 @@ module Building_inputs
 
   module_function :Building_matrix_and_pages
   module_function :Building_landing_pages
+  module_function :Building_device_platform
+  module_function :Choosing_device_platform
   module_function :Choosing_landing_pages
 
   module_function :information
