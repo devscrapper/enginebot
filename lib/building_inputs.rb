@@ -3,6 +3,7 @@
 
 require File.dirname(__FILE__) + '/../lib/logging'
 require 'socket'
+require 'ruby-progressbar'
 #------------------------------------------------------------------------------------------
 # Pre requis gem
 #------------------------------------------------------------------------------------------
@@ -131,7 +132,7 @@ module Building_inputs
   end
 
   def Building_landing_pages(label, date)
-    #TODO selectionner le fichier <pages, Traffic_source_landing_page> le plus récent
+    #TODO selectionner le fichier <Traffic_source_landing_page> le plus récent
     #TODO creer une alerte si le fichier attendu est absent
     information("Building landing pages for #{label} is starting")
 
@@ -203,6 +204,7 @@ module Building_inputs
 
     # choisi les traffic source en fonction de la répartition de l'objectif
     landing_pages_direct_file_lines = File.foreach(TMP + "landing-pages-direct-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
+    p = ProgressBar.create(:title => "Direct landing pages", :starting_at => 0, :total => direct_medium_count, :format => '%t, %c/%C, %a|%w|')
     while direct_medium_count > 0 and landing_pages_direct_file_lines > 0
       chose = rand(landing_pages_direct_file_lines - 1) + 1
       landing_pages_direct_file.rewind
@@ -210,9 +212,12 @@ module Building_inputs
       page = landing_pages_direct_file.readline(EOFLINE2)
       chosen_landing_pages_file.write(page)
       direct_medium_count -= 1
+      p.increment
     end
 
+
     landing_pages_organic_file_lines = File.foreach(TMP + "landing-pages-organic-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
+    p = ProgressBar.create(:title => "Organic landing pages", :starting_at => 0, :total => organic_medium_count, :format => '%t, %c/%C, %a|%w|')
     while organic_medium_count > 0 and landing_pages_organic_file_lines > 0
       chose = rand(landing_pages_organic_file_lines - 1) + 1
       landing_pages_organic_file.rewind
@@ -220,9 +225,11 @@ module Building_inputs
       page = landing_pages_organic_file.readline(EOFLINE2)
       chosen_landing_pages_file.write(page)
       organic_medium_count -= 1
+      p.increment
     end
 
     landing_pages_referral_file_lines = File.foreach(TMP + "landing-pages-referral-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
+    p = ProgressBar.create(:title => "Referral landing pages", :starting_at => 0, :total => referral_medium_count, :format => '%t, %c/%C, %a|%w|')
     while referral_medium_count > 0 and landing_pages_referral_file_lines > 0
       chose = rand(landing_pages_referral_file_lines - 1) + 1
       landing_pages_referral_file.rewind
@@ -230,6 +237,7 @@ module Building_inputs
       page = landing_pages_referral_file.readline(EOFLINE2)
       chosen_landing_pages_file.write(page)
       referral_medium_count -= 1
+      p.increment
     end
 
     chosen_landing_pages_file.close
@@ -262,6 +270,19 @@ module Building_inputs
     s.close
   end
 
+  def select_file(dir, type_file, label, date)
+    if File.exist?("#{dir}#{type_file}-#{label}-#{date}.txt")
+      "#{dir}#{type_file}-#{label}-#{date}.txt"
+    else
+    alert("File <#{dir}#{type_file}-#{label}-#{date}.txt> is not found")
+    Dir.glob("#{dir}#{type_file}-#{label}-*.txt").sort{|a, b| b<=>a}[0]
+    end
+  end
+
+  def alert(msg)
+    Logging.send(LOG_FILE, Logger::WARN, msg)
+    p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
+  end
   module_function :Building_matrix_and_pages
   module_function :Building_landing_pages
   module_function :Building_device_platform
@@ -270,4 +291,6 @@ module Building_inputs
 
   module_function :information
   module_function :execute_next_step
+  module_function :select_file
+  module_function :alert
 end

@@ -3,7 +3,7 @@
 
 
 
-#TODO: integrer ruby-progressbar pour chaque traitement batch
+
 #TODO: integrer device plateforme dans extending_visits
 
 
@@ -243,18 +243,22 @@ module Building_visits
 
       count_pages = count_visit * page_views_per_visit
       count_durations = count_visit * avg_time_on_site
+
       @duration_pages = distributing(count_pages, count_durations, min_durations)
       @visits = []
 
+
+      p = ProgressBar.create(:title => "Loading chosen landing pages", :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
       IO.foreach(TMP + "chosen_landing_pages-#{label}-#{date}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
         @visits << Visit.new(page.chop, @duration_pages.pop)
+        p.increment
       }
 
       building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
-
       @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:utf-8")
       @visits_file.sync = true
-      @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}") }
+      p = ProgressBar.create(:title => "Saving visits", :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+      @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}") ; p.increment   }
       @visits_file.close
 
       information("Building visist for #{label} is over")
@@ -271,6 +275,7 @@ module Building_visits
 # --------------------------------------------------------------------------------------------------------------
   def Building_planification(label, date, hourly_distribution, count_visits)
      #TODO creer une alerte si le fichier <visits> est absent
+
     begin
       information("Building planification of visit for #{label} is starting")
 
@@ -286,12 +291,13 @@ module Building_visits
       }
       @count_visits_by_hour[rand(23)][1] += (rest_sum/count_visits).to_i # permet d'eviter de perdre des visits lors de la division qd le reste est non nul => n'arrive pas si le nombre de viste est grand
 
+      p = ProgressBar.create(:title => "Saving planed visits", :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
       IO.foreach(TMP + "visits-#{label}-#{date}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
         hour = chose_an_hour()
         v = Planed_visit.new(visit, date, hour)
         @planed_visits_by_hour_file[hour].write("#{v.to_s}#{EOFLINE2}")
+        p.increment
       }
-
       24.times { |hour| @planed_visits_by_hour_file[hour].close }
       information("Building planification of visit for #{label} is over")
       execute_next_step("Extending_visits", label, date)
@@ -311,8 +317,10 @@ module Building_visits
     #TODO selectionner le fichier <pages> le plus récent
     #TODO developper le return visitor
     #TODO integrer le device platform
+
     begin
       information("Extending visits for #{label} is starting")
+      p = ProgressBar.create(:title => "Saving Final visits", :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
 
       24.times { |hour|
         pages_file = File.open(TMP + "pages-#{label}-#{date}.txt", "r:utf-8")
@@ -321,9 +329,11 @@ module Building_visits
         IO.foreach(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
           return_visitor = true
           v = Final_visit.new(visit, account_ga, return_visitor, pages_file)
-
           final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE2}")
+          p.increment
+
         } unless File.zero?(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt")
+
       }
 
       information("Extending visits for #{label} is over")
@@ -342,6 +352,7 @@ module Building_visits
   def Publishing_visits(label, date)
     #TODO creer une alerte si les fichiers <final_visits> sont absents
     #TODO developper Publishing_visits
+    #TODO: integrer ruby-progressbar
     begin
       information("Publishing visits for #{label} is starting")
 
@@ -356,7 +367,6 @@ module Building_visits
 #--------------------------------------------------------------------------------------------------------------
   def building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
     begin
-      information("Building not bounce visit for #{label} is starting")
       count_bounce_visit = (visit_bounce_rate * count_visit/100).to_i
       count_not_bounce_visit = count_visit - count_bounce_visit
       count_pages_bounce_visit = count_bounce_visit
@@ -366,6 +376,7 @@ module Building_visits
       Logging.send(LOG_FILE, Logger::DEBUG, "count_not_bounce_visit #{count_not_bounce_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_pages_not_bounce_visit #{count_pages_not_bounce_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_pages_per_visits #{count_pages_per_visits}")
+      p = ProgressBar.create(:title => "Building not bounce visits", :starting_at => 0, :total => count_not_bounce_visit, :format => '%t, %c/%C, %a|%w|')
 
       @matrix_file = File.open(TMP + "matrix-#{label}-#{date}.txt", "r:utf-8")
       count_not_bounce_visit.times { |visit|
@@ -376,9 +387,10 @@ module Building_visits
         Logging.send(LOG_FILE, Logger::DEBUG, "Exploring visit #{v} for #{label}")
         Logging.send(LOG_FILE, Logger::DEBUG, "with count_page : #{count_pages_per_visits[visit]}")
         explore_visit_from v, v.landing_page, count_pages_per_visits[visit]
+        p.increment
       }
+
       @matrix_file.close
-      information("Building not bounce visit for #{label} is over")
     rescue Exception => e
       error(e.msg)
     end
@@ -450,7 +462,7 @@ module Building_visits
   end
 
   def distributing(into, values, min_values_per_into)
-
+    information ("distribution is starting")
     values_per_into = (values/into).to_i
     max_values_per_into = 2 * values_per_into - min_values_per_into
     res = Array.new(into, values_per_into)
@@ -464,7 +476,8 @@ module Building_visits
         into > 2
       plus = 0
       moins = 0
-      (10 ** (unite(into) + 4)).times {
+
+        (10 ** (unite(into) + 4)).times {
         ok = false
         while !ok
           plus = rand(res.size-1)
@@ -475,8 +488,10 @@ module Building_visits
         end
         res[plus] += 1
         res[moins] -= 1
+
       }
     end
+    information ("distribution is over")
     res
   end
 
