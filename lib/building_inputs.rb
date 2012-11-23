@@ -1,14 +1,15 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
 
-require File.dirname(__FILE__) + '/../lib/logging'
+
 require 'socket'
-require 'ruby-progressbar'
+
 #------------------------------------------------------------------------------------------
 # Pre requis gem
 #------------------------------------------------------------------------------------------
 
-
+require File.dirname(__FILE__) + '/../lib/logging'
+require File.dirname(__FILE__) + '/../lib/common'
 
 module Building_inputs
 #------------------------------------------------------------------------------------------
@@ -21,7 +22,8 @@ module Building_inputs
   SEPARATOR2=";"
   EOFLINE2 ="\n"
   LOG_FILE = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
-         $b = false
+  $log_file = LOG_FILE
+  $b = false
   class Page
     NO_LINK = "*"
     attr :id_uri,
@@ -80,13 +82,19 @@ module Building_inputs
 
     def set_id_uri(id_pages_file)
       @id_uri = NOT_FOUND
-      IO.foreach(id_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
-        splitted_page = page.split(SEPARATOR2)
-        if splitted_page[1] == @hostname and splitted_page[2] == @landing_page_path
-          @id_uri = splitted_page[0].to_i
-          break
-        end
-      }
+      #TODO selectionner le fichier le plus recent
+      #TODO emmettre une alerte si au aucune fichier
+      begin
+        IO.foreach(id_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
+          splitted_page = page.split(SEPARATOR2)
+          if splitted_page[1] == @hostname and splitted_page[2] == @landing_page_path
+            @id_uri = splitted_page[0].to_i
+            break
+          end
+        }
+      rescue Exception => e
+        Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}", __LINE__)
+      end
     end
 
     def isknown?()
@@ -112,6 +120,7 @@ module Building_inputs
         website_file = "Website-#{label}-#{date}-#{vol}.txt"
         information("Loading website file : #{website_file}")
         IO.foreach(INPUT + website_file, EOFLINE, encoding: "BOM|UTF-8:-") { |p|
+          #TODO resoudre le pb d'indice lors du scrapping
           p p if $b
           page = Page.new(p)
           matrix_file.write(page.to_matrix)
@@ -123,7 +132,7 @@ module Building_inputs
         eof = true
       rescue Exception => e
         eof = true
-        Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}")
+        Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}", __LINE__)
       end
     end
     matrix_file.close
@@ -132,10 +141,7 @@ module Building_inputs
   end
 
   def Building_landing_pages(label, date)
-    #TODO selectionner le fichier <Traffic_source_landing_page> le plus récent
-    #TODO creer une alerte si le fichier attendu est absent
     information("Building landing pages for #{label} is starting")
-
     landing_pages_direct_file = File.open(TMP + "landing-pages-direct-#{label}-#{date}.txt", "w:utf-8")
     landing_pages_direct_file.sync = true
     landing_pages_referral_file = File.open(TMP + "landing-pages-referral-#{label}-#{date}.txt", "w:utf-8")
@@ -146,31 +152,35 @@ module Building_inputs
     eof = false
     while !eof
       begin
-        traffic_source_file = "Traffic-source-landing-page-#{label}-#{date}-#{vol}.txt"
-        information("Loading traffic source landing file : #{traffic_source_file}")
-        IO.foreach(INPUT + traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |p|
-          page = Traffic_source.new(p)
-          page.set_id_uri(TMP + "pages-#{label}-#{date}.txt")
-          if page.isknown?
-            case page.medium
-              when "(none)"
-                landing_pages_direct_file.write(page.to_landing_page)
-              when "referral"
-                landing_pages_referral_file.write(page.to_landing_page)
-              when "organic"
-                landing_pages_organic_file.write(page.to_landing_page)
-              else
-                Logging.send(LOG_FILE, Logger::ERROR, "medium unknown : #{ page.medium}")
+        traffic_source_file = select_file(INPUT, "Traffic-source-landing-page", label, date, vol)
+        if  !traffic_source_file.nil?
+          count_line = File.foreach(traffic_source_file).inject(0) { |c, line| c+1 }
+          pob = ProgressBar.create(:title => File.basename(traffic_source_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
+          IO.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |p|
+            page = Traffic_source.new(p)
+            page.set_id_uri(TMP + "pages-#{label}-#{date}.txt")
+            if page.isknown?
+              case page.medium
+                when "(none)"
+                  landing_pages_direct_file.write(page.to_landing_page)
+                when "referral"
+                  landing_pages_referral_file.write(page.to_landing_page)
+                when "organic"
+                  landing_pages_organic_file.write(page.to_landing_page)
+                else
+                  Logging.send(LOG_FILE, Logger::ERROR, "medium unknown : #{ page.medium}")
+              end
             end
-          end
-        }
-        vol += 1
-      rescue Errno::ENOENT => e
-        Logging.send(LOG_FILE, Logger::DEBUG, "file <#{traffic_source_file}> no exist")
-        eof = true
+            pob.increment
+          }
+          vol += 1
+        else
+          Logging.send(LOG_FILE, Logger::DEBUG, "file <Traffic-source-landing-page-#{label}-#{date}-#{vol}> is not found")
+          eof = true
+        end
       rescue Exception => e
         eof = true
-        Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}")
+        Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}", __LINE__)
       end
     end
 
@@ -182,15 +192,13 @@ module Building_inputs
 
   def Building_device_platform(label, date)
     #TODO selectionner le fichier <Device_platform_resolution, Device_platform_plugin> le plus récent
-    #TODO creer une alerte si le fichier attendu est absent
     #TODO developper   Building_device_platform
     information("Building device platform for #{label} is starting")
     information("Building device platform for #{label} is over")
   end
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
-    #TODO selectionner le fichier <landing_pages_direct, landing_pages_referral, landing_pages_organic> le plus récent
-    #TODO creer une alerte si le fichier attendu est absent
+
     information("Choosing landing pages for #{label} is starting")
     landing_pages_direct_file = File.open(TMP + "landing-pages-direct-#{label}-#{date}.txt", "r:utf-8")
     landing_pages_referral_file = File.open(TMP + "landing-pages-referral-#{label}-#{date}.txt", "r:utf-8")
@@ -203,6 +211,7 @@ module Building_inputs
     referral_medium_count = (referral_medium_percent * count_visit /100).to_i
 
     # choisi les traffic source en fonction de la répartition de l'objectif
+    #TODO selectionner le fichier <landing_pages_direct> le plus récent
     landing_pages_direct_file_lines = File.foreach(TMP + "landing-pages-direct-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
     p = ProgressBar.create(:title => "Direct landing pages", :starting_at => 0, :total => direct_medium_count, :format => '%t, %c/%C, %a|%w|')
     while direct_medium_count > 0 and landing_pages_direct_file_lines > 0
@@ -215,7 +224,7 @@ module Building_inputs
       p.increment
     end
 
-
+    #TODO selectionner le fichier <landing_pages_organic> le plus récent
     landing_pages_organic_file_lines = File.foreach(TMP + "landing-pages-organic-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
     p = ProgressBar.create(:title => "Organic landing pages", :starting_at => 0, :total => organic_medium_count, :format => '%t, %c/%C, %a|%w|')
     while organic_medium_count > 0 and landing_pages_organic_file_lines > 0
@@ -227,7 +236,7 @@ module Building_inputs
       organic_medium_count -= 1
       p.increment
     end
-
+    #TODO selectionner le fichier <landing_pages_referral> le plus récent
     landing_pages_referral_file_lines = File.foreach(TMP + "landing-pages-referral-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
     p = ProgressBar.create(:title => "Referral landing pages", :starting_at => 0, :total => referral_medium_count, :format => '%t, %c/%C, %a|%w|')
     while referral_medium_count > 0 and landing_pages_referral_file_lines > 0
@@ -249,48 +258,36 @@ module Building_inputs
   end
 
 
-
-
   def Choosing_device_platform(label, date, count_visit)
     #TODO selectionner le fichier <Device_platform> le plus récent
-    #TODO creer une alerte si le fichier attendu est absent
     #TODO developper  Choosing_device_platform
     information("Choosing device platform for #{label} is starting")
     information("Choosing device platform for #{label} is over")
     execute_next_step("Building_visits", label, date)
   end
+
+  #private
   def information(msg)
-    Logging.send(LOG_FILE, Logger::INFO, msg)
-    p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
+    Common.information(msg)
   end
 
-  def execute_next_step(cmd, label, date)
-    s = TCPSocket.new 'localhost', $listening_port
-    s.puts JSON.generate({"cmd" => cmd, "label" => label, "date_building" => date})
-    s.close
+  def execute_next_step(task, label, date)
+    Common.execute_next_task(task, label, date)
   end
 
-  def select_file(dir, type_file, label, date)
-    if File.exist?("#{dir}#{type_file}-#{label}-#{date}.txt")
-      "#{dir}#{type_file}-#{label}-#{date}.txt"
-    else
-    alert("File <#{dir}#{type_file}-#{label}-#{date}.txt> is not found")
-    Dir.glob("#{dir}#{type_file}-#{label}-*.txt").sort{|a, b| b<=>a}[0]
-    end
+  def select_file(dir, type_file, label, date, vol)
+    Common.select_file(dir, type_file, label, date, vol)
   end
 
-  def alert(msg)
-    Logging.send(LOG_FILE, Logger::WARN, msg)
-    p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
-  end
   module_function :Building_matrix_and_pages
   module_function :Building_landing_pages
   module_function :Building_device_platform
   module_function :Choosing_device_platform
   module_function :Choosing_landing_pages
 
-  module_function :information
+  #private
   module_function :execute_next_step
+  module_function :information
   module_function :select_file
-  module_function :alert
+
 end
