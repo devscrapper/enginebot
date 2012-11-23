@@ -117,16 +117,24 @@ module Building_inputs
     eof = false
     while !eof
       begin
-        website_file = "Website-#{label}-#{date}-#{vol}.txt"
-        information("Loading website file : #{website_file}")
-        IO.foreach(INPUT + website_file, EOFLINE, encoding: "BOM|UTF-8:-") { |p|
-          #TODO resoudre le pb d'indice lors du scrapping
-          p p if $b
-          page = Page.new(p)
-          matrix_file.write(page.to_matrix)
-          pages_file.write(page.to_page)
-        }
-        vol += 1
+        # website_file = "Website-#{label}-#{date}-#{vol}.txt"
+        website_file = select_file(INPUT, "Website", label, date, vol)
+        if  !website_file.nil?
+          count_line = File.foreach(website_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+          pob = ProgressBar.create(:title => File.basename(website_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
+          IO.foreach(website_file, EOFLINE, encoding: "BOM|UTF-8:-") { |p|
+            #TODO resoudre le pb d'indice lors du scrapping
+            #p p if $b
+            page = Page.new(p)
+            matrix_file.write(page.to_matrix)
+            pages_file.write(page.to_page)
+            pob.increment
+          }
+          vol += 1
+        else
+          Logging.send(LOG_FILE, Logger::DEBUG, "file <Website-#{label}-#{date}-#{vol}> is not found")
+          eof = true
+        end
       rescue Errno::ENOENT => e
         Logging.send(LOG_FILE, Logger::DEBUG, "file <#{website_file}> no exist")
         eof = true
@@ -154,7 +162,7 @@ module Building_inputs
       begin
         traffic_source_file = select_file(INPUT, "Traffic-source-landing-page", label, date, vol)
         if  !traffic_source_file.nil?
-          count_line = File.foreach(traffic_source_file).inject(0) { |c, line| c+1 }
+          count_line = File.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
           pob = ProgressBar.create(:title => File.basename(traffic_source_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
           IO.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |p|
             page = Traffic_source.new(p)
@@ -261,6 +269,7 @@ module Building_inputs
   def Choosing_device_platform(label, date, count_visit)
     #TODO selectionner le fichier <Device_platform> le plus récent
     #TODO developper  Choosing_device_platform
+    #TODO inserer progress bar si possible
     information("Choosing device platform for #{label} is starting")
     information("Choosing device platform for #{label} is over")
     execute_next_step("Building_visits", label, date)
