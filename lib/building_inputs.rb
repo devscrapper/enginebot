@@ -80,20 +80,25 @@ module Building_inputs
       "#{@id_uri}#{SEPARATOR2}#{@referral_path}#{SEPARATOR2}#{@source}#{SEPARATOR2}#{@medium}#{SEPARATOR2}#{@keyword}#{EOFLINE2}"
     end
 
-    def set_id_uri(id_pages_file)
+    def set_id_uri(label, date)
       @id_uri = NOT_FOUND
       #TODO selectionner le fichier le plus recent
-      #TODO emmettre une alerte si au aucune fichier
-      begin
-        IO.foreach(id_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
-          splitted_page = page.split(SEPARATOR2)
-          if splitted_page[1] == @hostname and splitted_page[2] == @landing_page_path
-            @id_uri = splitted_page[0].to_i
-            break
-          end
-        }
-      rescue Exception => e
-        Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}", __LINE__)
+      #TODO emmettre une alerte si au aucun fichier
+      pages_file = Common.select_file(TMP, "pages", label, date)
+      if !pages_file.nil?
+        begin
+          IO.foreach(pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
+            splitted_page = page.split(SEPARATOR2)
+            if splitted_page[1] == @hostname and splitted_page[2] == @landing_page_path
+              @id_uri = splitted_page[0].to_i
+              break
+            end
+          }
+        rescue Exception => e
+          Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}", __LINE__)
+        end
+      else
+        @id_uri = NOT_FOUND
       end
     end
 
@@ -166,7 +171,7 @@ module Building_inputs
           pob = ProgressBar.create(:title => File.basename(traffic_source_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
           IO.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |p|
             page = Traffic_source.new(p)
-            page.set_id_uri(TMP + "pages-#{label}-#{date}.txt")
+            page.set_id_uri(label, date)
             if page.isknown?
               case page.medium
                 when "(none)"
@@ -278,6 +283,10 @@ module Building_inputs
   #private
   def information(msg)
     Common.information(msg)
+  end
+
+  def alert(msg)
+    Common.alert(msg)
   end
 
   def execute_next_step(task, label, date)
