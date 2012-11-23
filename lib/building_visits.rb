@@ -3,10 +3,7 @@
 
 
 
-
-#TODO: integrer device plateforme dans extending_visits
-
-
+require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../lib/logging'
 require 'socket'
 #------------------------------------------------------------------------------------------
@@ -230,8 +227,7 @@ module Building_visits
       min_durations,
       min_pages)
     #TODO: dans le building_visits sauvegarder à chaque visit et non pas à la fin => remplacer @visit[s] par @visit
-    #TODO selectionner le fichier <matrix> le plus récent
-    #TODO creer une alerte si le fichiermatrix, ou Chosen_landing_pages est absent
+
     begin
       information("Building visits for #{label} is starting")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_visit #{count_visit}")
@@ -246,10 +242,11 @@ module Building_visits
 
       @duration_pages = distributing(count_pages, count_durations, min_durations)
       @visits = []
-
-
-      p = ProgressBar.create(:title => "Loading chosen landing pages", :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
-      IO.foreach(TMP + "chosen_landing_pages-#{label}-#{date}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
+      chosen_landing_pages_file = TMP + "chosen_landing_pages-#{label}-#{date}.txt"
+      #TODO valider le fonctionnement de l'alert si le fichier Chosen_landing_pages est absent
+      if File.exist?(chosen_landing_pages_file)
+      p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+      IO.foreach(chosen_landing_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
         @visits << Visit.new(page.chop, @duration_pages.pop)
         p.increment
       }
@@ -257,12 +254,15 @@ module Building_visits
       building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
       @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:utf-8")
       @visits_file.sync = true
-      p = ProgressBar.create(:title => "Saving visits", :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+      p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
       @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}") ; p.increment   }
       @visits_file.close
 
       information("Building visist for #{label} is over")
       execute_next_step("Building_planification", label, date)
+      else
+        alert("File <#{chosen_landing_pages_file}> is not found => impossible to proceed building visit")
+      end
     rescue Exception => e
       error(e.message)
     end
@@ -274,7 +274,7 @@ module Building_visits
 #
 # --------------------------------------------------------------------------------------------------------------
   def Building_planification(label, date, hourly_distribution, count_visits)
-     #TODO creer une alerte si le fichier <visits> est absent
+
 
     begin
       information("Building planification of visit for #{label} is starting")
@@ -286,12 +286,13 @@ module Building_visits
       hourly_distribution.each_index { |hour|
         @count_visits_by_hour << [hour, (hourly_distribution[hour].to_f * count_visits).divmod(100)[0]]
         rest_sum += (hourly_distribution[hour].to_f * count_visits).divmod(100)[1]
+        #TODO creer une alerte si le fichier <planed-visits> est absent
         @planed_visits_by_hour_file[hour] = File.open(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", "w:utf-8")
         @planed_visits_by_hour_file[hour].sync = true
       }
       @count_visits_by_hour[rand(23)][1] += (rest_sum/count_visits).to_i # permet d'eviter de perdre des visits lors de la division qd le reste est non nul => n'arrive pas si le nombre de viste est grand
 
-      p = ProgressBar.create(:title => "Saving planed visits", :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
+      p = ProgressBar.create(:title => "Saving planed visits", :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
       IO.foreach(TMP + "visits-#{label}-#{date}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
         hour = chose_an_hour()
         v = Planed_visit.new(visit, date, hour)
@@ -312,20 +313,19 @@ module Building_visits
 #
 # --------------------------------------------------------------------------------------------------------------
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
-    #TODO creer une alerte si le fichier <planed_visit> est absent
-    #TODO creer une alerte si le fichier <chosen_device_platform> est absent
-    #TODO selectionner le fichier <pages> le plus récent
-    #TODO developper le return visitor
+    #TODO integrer le return visitor
     #TODO integrer le device platform
 
     begin
       information("Extending visits for #{label} is starting")
-      p = ProgressBar.create(:title => "Saving Final visits", :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+      p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
 
       24.times { |hour|
+       #TODO selectionner le fichier <pages> le plus récent
         pages_file = File.open(TMP + "pages-#{label}-#{date}.txt", "r:utf-8")
         final_visits_by_hour_file = File.open(TMP + "final-visits-#{label}-#{date}-#{hour}.txt", "w:utf-8")
         final_visits_by_hour_file.sync = true
+        #TODO creer une alerte si le fichier <planed_visit> est absent
         IO.foreach(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
           return_visitor = true
           v = Final_visit.new(visit, account_ga, return_visitor, pages_file)
@@ -350,7 +350,7 @@ module Building_visits
 # --------------------------------------------------------------------------------------------------------------
 
   def Publishing_visits(label, date)
-    #TODO creer une alerte si les fichiers <final_visits> sont absents
+    #TODO creer une alert si le fichiers <final_visits> est absent
     #TODO developper Publishing_visits
     #TODO: integrer ruby-progressbar
     begin
@@ -376,8 +376,8 @@ module Building_visits
       Logging.send(LOG_FILE, Logger::DEBUG, "count_not_bounce_visit #{count_not_bounce_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_pages_not_bounce_visit #{count_pages_not_bounce_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_pages_per_visits #{count_pages_per_visits}")
-      p = ProgressBar.create(:title => "Building not bounce visits", :starting_at => 0, :total => count_not_bounce_visit, :format => '%t, %c/%C, %a|%w|')
-
+      p = ProgressBar.create(:title => "Building not bounce visits", :length => 180, :starting_at => 0, :total => count_not_bounce_visit, :format => '%t, %c/%C, %a|%w|')
+      #TODO selectionner le fichier <matrix> le plus récent
       @matrix_file = File.open(TMP + "matrix-#{label}-#{date}.txt", "r:utf-8")
       count_not_bounce_visit.times { |visit|
         begin
@@ -505,26 +505,27 @@ module Building_visits
     hour
   end
 
-  def information(msg)
-    Logging.send(LOG_FILE, Logger::INFO, msg)
-    p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
-  end
 
-  def error(msg)
-    Logging.send(LOG_FILE, Logger::ERROR, msg)
-    p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} ERROR => #{msg}"
-  end
-
-  def execute_next_step(cmd, label, date)
-    s = TCPSocket.new 'localhost', $listening_port
-    s.puts JSON.generate({"cmd" => cmd, "label" => label, "date_building" => date})
-    s.close
-  end
 
   def min(a, b)
     a < b ? a : b
   end
+  def alert(msg)
+    Common.alert(msg)
+  end
+  def information(msg)
+    Common.information(msg)
+  end
+  def error(msg)
+    Common.error(msg)
+  end
+  def execute_next_step(task, label, date)
+    Common.execute_next_task(task, label, date)
+  end
 
+  def select_file(dir, type_file, label, date)
+    Common.select_file(dir, type_file, label, date)
+  end
 # public
   module_function :Building_planification
   module_function :Building_visits
@@ -538,8 +539,11 @@ module Building_visits
   module_function :explore_visit_from
   module_function :children
   module_function :leaf?
-  module_function :execute_next_step
-  module_function :information
-  module_function :error
+
   module_function :min
+  module_function :error
+  module_function :alert
+  module_function :information
+  module_function :execute_next_step
+  module_function :select_file
 end
