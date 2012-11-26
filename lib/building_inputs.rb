@@ -82,8 +82,6 @@ module Building_inputs
 
     def set_id_uri(label, date)
       @id_uri = NOT_FOUND
-      #TODO selectionner le fichier le plus recent
-      #TODO emmettre une alerte si au aucun fichier
       pages_file = Common.select_file(TMP, "pages", label, date)
       if !pages_file.nil?
         begin
@@ -210,64 +208,17 @@ module Building_inputs
     information("Building device platform for #{label} is over")
   end
 
+
+
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
-
     information("Choosing landing pages for #{label} is starting")
-    landing_pages_direct_file = File.open(TMP + "landing-pages-direct-#{label}-#{date}.txt", "r:utf-8")
-    landing_pages_referral_file = File.open(TMP + "landing-pages-referral-#{label}-#{date}.txt", "r:utf-8")
-    landing_pages_organic_file = File.open(TMP + "landing-pages-organic-#{label}-#{date}.txt", "r:utf-8")
-    chosen_landing_pages_file = File.open(TMP + "chosen_landing_pages-#{label}-#{date}.txt", "w:utf-8")
-    chosen_landing_pages_file.sync =true
-
-    direct_medium_count = (direct_medium_percent * count_visit / 100).to_i
-    organic_medium_count = (organic_medium_percent * count_visit/100).to_i
-    referral_medium_count = (referral_medium_percent * count_visit /100).to_i
-
-    # choisi les traffic source en fonction de la répartition de l'objectif
-    #TODO selectionner le fichier <landing_pages_direct> le plus récent
-    landing_pages_direct_file_lines = File.foreach(TMP + "landing-pages-direct-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
-    p = ProgressBar.create(:title => "Direct landing pages", :starting_at => 0, :total => direct_medium_count, :format => '%t, %c/%C, %a|%w|')
-    while direct_medium_count > 0 and landing_pages_direct_file_lines > 0
-      chose = rand(landing_pages_direct_file_lines - 1) + 1
-      landing_pages_direct_file.rewind
-      (chose - 1).times { landing_pages_direct_file.readline(EOFLINE2) }
-      page = landing_pages_direct_file.readline(EOFLINE2)
-      chosen_landing_pages_file.write(page)
-      direct_medium_count -= 1
-      p.increment
-    end
-
-    #TODO selectionner le fichier <landing_pages_organic> le plus récent
-    landing_pages_organic_file_lines = File.foreach(TMP + "landing-pages-organic-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
-    p = ProgressBar.create(:title => "Organic landing pages", :starting_at => 0, :total => organic_medium_count, :format => '%t, %c/%C, %a|%w|')
-    while organic_medium_count > 0 and landing_pages_organic_file_lines > 0
-      chose = rand(landing_pages_organic_file_lines - 1) + 1
-      landing_pages_organic_file.rewind
-      (chose - 1).times { landing_pages_organic_file.readline(EOFLINE2) }
-      page = landing_pages_organic_file.readline(EOFLINE2)
-      chosen_landing_pages_file.write(page)
-      organic_medium_count -= 1
-      p.increment
-    end
-    #TODO selectionner le fichier <landing_pages_referral> le plus récent
-    landing_pages_referral_file_lines = File.foreach(TMP + "landing-pages-referral-#{label}-#{date}.txt").inject(0) { |c, line| c+1 }
-    p = ProgressBar.create(:title => "Referral landing pages", :starting_at => 0, :total => referral_medium_count, :format => '%t, %c/%C, %a|%w|')
-    while referral_medium_count > 0 and landing_pages_referral_file_lines > 0
-      chose = rand(landing_pages_referral_file_lines - 1) + 1
-      landing_pages_referral_file.rewind
-      (chose - 1).times { landing_pages_referral_file.readline(EOFLINE2) }
-      page = landing_pages_referral_file.readline(EOFLINE2)
-      chosen_landing_pages_file.write(page)
-      referral_medium_count -= 1
-      p.increment
-    end
-
-    chosen_landing_pages_file.close
-    landing_pages_direct_file.close
-    landing_pages_referral_file.close
-    landing_pages_organic_file.close
+    result = Choosing_landing(label, date, "direct", direct_medium_percent, count_visit) &&
+        Choosing_landing(label, date, "referral", referral_medium_percent, count_visit) &&
+        Choosing_landing(label, date, "organic", organic_medium_percent, count_visit)
+    alert("Choosing landing pages for #{label} fails because inputs Landing files are missing") unless result
     information("Choosing landing pages for #{label} is over")
-    execute_next_step("Building_visits", label, date)
+    execute_next_step("Building_visits", label, date) if result
+
   end
 
 
@@ -281,6 +232,30 @@ module Building_inputs
   end
 
   #private
+  def Choosing_landing(label, date, medium_type, medium_percent, count_visit)
+      landing_pages = select_file(TMP, "landing-pages-#{medium_type}", label, date)
+      return false if landing_pages.nil?
+
+      landing_pages_file = File.open(landing_pages, "r:utf-8")
+      medium_count = (medium_percent * count_visit / 100).to_i
+      landing_pages_file_lines = File.foreach(landing_pages).inject(0) { |c, line| c+1 }
+      chosen_landing_pages_file = File.open(TMP + "chosen_landing_pages-#{label}-#{date}.txt", "a:utf-8")
+      chosen_landing_pages_file.sync =true
+
+      p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => 180, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
+      while medium_count > 0 and landing_pages_file_lines > 0
+        chose = rand(landing_pages_file_lines - 1) + 1
+        landing_pages_file.rewind
+        (chose - 1).times { landing_pages_file.readline(EOFLINE2) }
+        page = landing_pages_file.readline(EOFLINE2)
+        chosen_landing_pages_file.write(page)
+        medium_count -= 1
+        p.increment
+      end
+      chosen_landing_pages_file.close
+      landing_pages_file.close
+      true
+    end
   def information(msg)
     Common.information(msg)
   end
@@ -293,7 +268,7 @@ module Building_inputs
     Common.execute_next_task(task, label, date)
   end
 
-  def select_file(dir, type_file, label, date, vol)
+  def select_file(dir, type_file, label, date, vol=nil)
     Common.select_file(dir, type_file, label, date, vol)
   end
 
@@ -304,8 +279,10 @@ module Building_inputs
   module_function :Choosing_landing_pages
 
   #private
+  module_function :Choosing_landing
   module_function :execute_next_step
   module_function :information
+  module_function :alert
   module_function :select_file
 
 end
