@@ -2,7 +2,6 @@
 # encoding: UTF-8
 
 
-
 require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../lib/logging'
 require 'socket'
@@ -243,26 +242,25 @@ module Building_visits
       @duration_pages = distributing(count_pages, count_durations, min_durations)
       @visits = []
       chosen_landing_pages_file = TMP + "chosen_landing_pages-#{label}-#{date}.txt"
-      #TODO valider le fonctionnement de l'alert si le fichier Chosen_landing_pages est absent
+
       if File.exist?(chosen_landing_pages_file)
-      p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
-      IO.foreach(chosen_landing_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
-        @visits << Visit.new(page.chop, @duration_pages.pop)
-        p.increment
-      }
+        p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+        IO.foreach(chosen_landing_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
+          @visits << Visit.new(page.chop, @duration_pages.pop)
+          p.increment
+        }
 
-      building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
-      @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:utf-8")
-      @visits_file.sync = true
-      p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
-      @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}") ; p.increment   }
-      @visits_file.close
-
-      information("Building visist for #{label} is over")
-      execute_next_step("Building_planification", label, date)
+        building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
+        @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:utf-8")
+        @visits_file.sync = true
+        p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+        @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}"); p.increment }
+        @visits_file.close
+        execute_next_step("Building_planification", label, date)
       else
-        alert("File <#{chosen_landing_pages_file}> is not found => impossible to proceed building visit")
+        alert("Building visits is failed because <#{chosen_landing_pages_file}> file is not found")
       end
+      information("Building visist for #{label} is over")
     rescue Exception => e
       error(e.message)
     end
@@ -321,7 +319,7 @@ module Building_visits
       p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
 
       24.times { |hour|
-       #TODO selectionner le fichier <pages> le plus récent
+        #TODO selectionner le fichier <pages> le plus récent
         pages_file = File.open(TMP + "pages-#{label}-#{date}.txt", "r:utf-8")
         final_visits_by_hour_file = File.open(TMP + "final-visits-#{label}-#{date}-#{hour}.txt", "w:utf-8")
         final_visits_by_hour_file.sync = true
@@ -410,7 +408,7 @@ module Building_visits
       @matrix[pt] = []
       @matrix_file.rewind
       (pt.to_i - 1).times { @matrix_file.readline(EOFLINE2) }
-    @matrix_file.readline(EOFLINE2).split(SEPARATOR2)[1].strip.split(SEPARATOR3).each { |page| @matrix[pt] << page.strip }
+      @matrix_file.readline(EOFLINE2).split(SEPARATOR2)[1].strip.split(SEPARATOR3).each { |page| @matrix[pt] << page.strip }
     end
     Array.new(@matrix[pt])
   end
@@ -477,7 +475,7 @@ module Building_visits
       plus = 0
       moins = 0
 
-        (10 ** (unite(into) + 4)).times {
+      (10 ** (unite(into) + 4)).times {
         ok = false
         while !ok
           plus = rand(res.size-1)
@@ -506,19 +504,22 @@ module Building_visits
   end
 
 
-
   def min(a, b)
     a < b ? a : b
   end
+
   def alert(msg)
     Common.alert(msg)
   end
+
   def information(msg)
     Common.information(msg)
   end
+
   def error(msg)
     Common.error(msg)
   end
+
   def execute_next_step(task, label, date)
     Common.execute_next_task(task, label, date)
   end
@@ -526,6 +527,7 @@ module Building_visits
   def select_file(dir, type_file, label, date)
     Common.select_file(dir, type_file, label, date)
   end
+
 # public
   module_function :Building_planification
   module_function :Building_visits
