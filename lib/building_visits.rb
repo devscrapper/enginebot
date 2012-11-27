@@ -184,7 +184,7 @@ module Building_visits
 
   class Final_visit < Planed_visit
 
-    def initialize(visit, account_ga, return_visitor, pages_file)
+    def initialize(visit, account_ga, return_visitor, pages_file, device_platform)
       splitted_visit = visit.split(SEPARATOR2)
 
       @id_visit = splitted_visit[0].strip
@@ -204,7 +204,15 @@ module Building_visits
         p.set_properties(pages_file)
         @pages << p
       }
-
+      splitted_device_platform = device_platform.strip.split(SEPARATOR2)
+      @browser = splitted_device_platform[0]
+      @browser_version = splitted_device_platform[1]
+      @operating_system = splitted_device_platform[2]
+      @operating_system_version = splitted_device_platform[3]
+      @flash_version = splitted_device_platform[4]
+      @java_enabled = splitted_device_platform[5]
+      @screens_colors = splitted_device_platform[6]
+      @screen_resolution = splitted_device_platform[7]
 
     end
   end
@@ -310,30 +318,44 @@ module Building_visits
 #
 # --------------------------------------------------------------------------------------------------------------
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
-
-    #TODO integrer le device platform
-
     begin
       information("Extending visits for #{label} is starting")
-      return_visitors = Array.new(count_visit,false)
+      device_platforme_id_file = TMP + "chosen-device-platform-#{label}-#{date}.txt"
+      if !File.exist?(device_platforme_id_file)
+        alert("Extending visits is failed because <#{device_platforme_id_file}> file is not found")
+        return
+      end
+
+      pages_id_file = select_file(TMP, "pages", label, date)
+      if pages_id_file.nil?
+        alert("Extending for #{label} fails because inputs pages file for #{label}  is missing")
+        return
+      end
+
+      device_platform_file = File.open(device_platforme_id_file, "r:utf-8")
+       device_platforms = device_platform_file.readlines(EOFLINE2).shuffle
+       pages_file = File.open(pages_id_file, "r:utf-8")
+      return_visitors = Array.new(count_visit, false)
       return_visitors.fill(true, 0..(count_visit * return_visitor_rate / 100).to_i).shuffle!
       p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
       24.times { |hour|
-        #TODO selectionner le fichier <pages> le plus récent
-        pages_file = File.open(TMP + "pages-#{label}-#{date}.txt", "r:utf-8")
+
         final_visits_by_hour_file = File.open(TMP + "final-visits-#{label}-#{date}-#{hour}.txt", "w:utf-8")
         final_visits_by_hour_file.sync = true
-        #TODO creer une alerte si le fichier <planed_visit> est absent
+
+        alert("<#{TMP + "planed-visits-#{label}-#{date}-#{hour}.txt"}> file is not found") if !File.exist?(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt")
+
         IO.foreach(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
           return_visitor = return_visitors.shift
-          v = Final_visit.new(visit, account_ga, return_visitor, pages_file)
+          v = Final_visit.new(visit, account_ga, return_visitor, pages_file, device_platforms.shift)
           final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE2}")
           p.increment
 
         } unless File.zero?(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt")
 
       }
-
+      device_platform_file.close
+      pages_file.close
       information("Extending visits for #{label} is over")
       execute_next_step("Publishing_visits", label, date)
     rescue Exception => e
