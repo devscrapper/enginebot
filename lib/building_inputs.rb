@@ -351,7 +351,7 @@ module Building_inputs
     device_platform = select_file(TMP, "device-platform", label, date)
 
     if device_platform.nil?
-      alert("Choosing_device_platform for #{label} fails because inputs Device_platform file is missing")
+      alert("Choosing_device_platform for #{label} fails because inputs <#{device_platform}> file is missing")
       return false
     end
     chosen_device_platform_file = File.open(TMP + "chosen-device-platform-#{label}-#{date}.txt", "w:utf-8")
