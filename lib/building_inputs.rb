@@ -320,7 +320,7 @@ module Building_inputs
       p.increment
     }
 
-    device_platform_file = File.open(TMP + "Device-platform-#{label}-#{date}.txt", "w:utf-8")
+    device_platform_file = File.open(TMP + "device-platform-#{label}-#{date}.txt", "w:utf-8")
     total = 0
     device_platforms.sort_by! { |a| [a.count_visits] }.reverse!.each { |device|
       device.count_visits = (device.count_visits.to_f * 100/count_visits)
@@ -348,13 +348,13 @@ module Building_inputs
   def Choosing_device_platform(label, date, count_visits)
 
     information("Choosing device platform for #{label} is starting")
-    device_platform = select_file(TMP, "Device-platform", label, date)
+    device_platform = select_file(TMP, "device-platform", label, date)
 
     if device_platform.nil?
       alert("Choosing_device_platform for #{label} fails because inputs Device_platform file is missing")
       return false
     end
-    chosen_device_platform_file = File.open(TMP + "Chosen-device-platform-#{label}-#{date}.txt", "w:utf-8")
+    chosen_device_platform_file = File.open(TMP + "chosen-device-platform-#{label}-#{date}.txt", "w:utf-8")
     total_visits = 0
     pob = ProgressBar.create(:title => File.basename(device_platform), :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
     IO.foreach(device_platform, EOFLINE2, encoding: "BOM|UTF-8:-") { |device|
