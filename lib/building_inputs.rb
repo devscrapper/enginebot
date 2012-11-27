@@ -104,6 +104,63 @@ module Building_inputs
       !(@id_uri == NOT_FOUND)
     end
   end
+
+  class Device_platform
+    attr_accessor :browser,
+         :browser_version,
+         :os,
+         :os_version,
+         :flash_version,
+         :java_enabled,
+         :screen_colors,
+         :screen_resolution,
+         :count_visits
+
+    def initialize(plugin, resolution)
+
+          @browser = plugin.browser
+          @browser_version = plugin.browser_version
+          @os = plugin.os
+          @os_version = plugin.os_version
+          @flash_version = plugin.flash_version
+          @java_enabled = plugin.java_enabled
+          @screen_colors = resolution.screen_colors
+          @screen_resolution = resolution.screen_resolution
+          @count_visits = Common.min(plugin.count_visits, resolution.count_visits)
+
+    end
+
+    def to_s(*a)
+
+      "#{@browser}#{SEPARATOR2}#{@browser_version}#{SEPARATOR2}#{@os}#{SEPARATOR2}#{@os_version}#{SEPARATOR2}#{@flash_version}#{SEPARATOR2}#{@java_enabled}#{SEPARATOR2}#{@screen_colors}#{SEPARATOR2}#{@screen_resolution}#{SEPARATOR2}#{@count_visits}"
+    end
+  end
+
+  class Device_plugin < Device_platform
+    def initialize(plugin)
+      splitted_plugin = plugin.strip.split(SEPARATOR2)
+      @browser = splitted_plugin[0]
+      @browser_version = splitted_plugin[1]
+      @os = splitted_plugin[2]
+      @os_version = splitted_plugin[3]
+      @flash_version = splitted_plugin[4]
+      @java_enabled = splitted_plugin[5]
+      @count_visits = splitted_plugin[6].to_i
+    end
+  end
+
+  class Device_resolution < Device_platform
+    def initialize(resolution)
+      splitted_resolution = resolution.strip.split(SEPARATOR2)
+      @browser = splitted_resolution[0]
+      @browser_version = splitted_resolution[1]
+      @os = splitted_resolution[2]
+      @os_version = splitted_resolution[3]
+      @screen_colors = splitted_resolution[4]
+      @screen_resolution = splitted_resolution[5]
+      @count_visits = splitted_resolution[6].to_i
+    end
+  end
 #inputs
 
 # local
@@ -202,12 +259,59 @@ module Building_inputs
   end
 
   def Building_device_platform(label, date)
-    #TODO selectionner le fichier <Device_platform_resolution, Device_platform_plugin> le plus récent
-    #TODO developper   Building_device_platform
     information("Building device platform for #{label} is starting")
+    device_plugin = select_file(INPUT, "Device-platform-plugin", label, date)
+
+    if device_plugin.nil?
+      alert("Building_device_platform for #{label} fails because inputs Device_platform_plugin file is missing")
+      return false
+    end
+    device_resolution = select_file(INPUT, "Device-platform-resolution", label, date)
+    if device_resolution.nil?
+      alert("Building_device_platform for #{label} fails because inputs Device_platform_resolution file is missing")
+      return false
+    end
+    device_plugins = []
+    IO.foreach(device_plugin, EOFLINE2, encoding: "BOM|UTF-8:-") { |plugin|
+      #Chrome;23.0.1271.64;Windows;7;11.5 r31;Yes;685
+      device_plugins << Device_plugin.new(plugin)
+    }
+
+    device_plugins.sort_by!{|a| [a.browser, a.browser_version, a.os, a.os_version] }
+
+    device_resolutions = []
+    IO.foreach(device_resolution, EOFLINE2, encoding: "BOM|UTF-8:-") { |resolution|
+      #Chrome;23.0.1271.64;Windows;7;11.5 r31;Yes;685
+      device_resolutions << Device_resolution.new(resolution)
+    }
+    device_resolutions.sort_by!{|a| [a.browser, a.browser_version, a.os, a.os_version] }
+
+    p = ProgressBar.create(:title => "Consolidation plugin & resolution files", :length => 180, :starting_at => 0, :total => device_plugins.size, :format => '%t, %c/%C, %a|%w|')
+    device_platforms = []
+    count_visits = 0
+    device_plugins.each{|plugin|
+      select_device_resolution = device_resolutions.collect {|x| x if x.browser == plugin.browser and
+                                      x.browser_version == plugin.browser_version and
+                                      x.os == plugin.os and
+                                      x.os_version == plugin.os_version}
+      select_device_resolution.compact!.each{|resolution|
+        device =  Device_platform.new(plugin, resolution)
+        device_platforms << device
+        count_visits += device.count_visits
+        plugin.count_visits = plugin.count_visits -  Common.min(plugin.count_visits, resolution.count_visits)
+        break   unless plugin.count_visits > 0
+      }
+      p.increment
+    }
+
+    device_platform_file = File.open(TMP + "Device-platform-#{label}-#{date}.txt", "w:utf-8")
+    device_platforms.each{|device|
+          device.count_visits =  (device.count_visits.to_f * 100/count_visits )
+          device_platform_file.write("#{device.to_s}#{EOFLINE2}")
+    }
+    device_platform_file.close
     information("Building device platform for #{label} is over")
   end
-
 
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
@@ -233,29 +337,30 @@ module Building_inputs
 
   #private
   def Choosing_landing(label, date, medium_type, medium_percent, count_visit)
-      landing_pages = select_file(TMP, "landing-pages-#{medium_type}", label, date)
-      return false if landing_pages.nil?
+    landing_pages = select_file(TMP, "landing-pages-#{medium_type}", label, date)
+    return false if landing_pages.nil?
 
-      landing_pages_file = File.open(landing_pages, "r:utf-8")
-      medium_count = (medium_percent * count_visit / 100).to_i
-      landing_pages_file_lines = File.foreach(landing_pages).inject(0) { |c, line| c+1 }
-      chosen_landing_pages_file = File.open(TMP + "chosen_landing_pages-#{label}-#{date}.txt", "a:utf-8")
-      chosen_landing_pages_file.sync =true
+    landing_pages_file = File.open(landing_pages, "r:utf-8")
+    medium_count = (medium_percent * count_visit / 100).to_i
+    landing_pages_file_lines = File.foreach(landing_pages).inject(0) { |c, line| c+1 }
+    chosen_landing_pages_file = File.open(TMP + "chosen_landing_pages-#{label}-#{date}.txt", "a:utf-8")
+    chosen_landing_pages_file.sync =true
 
-      p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => 180, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
-      while medium_count > 0 and landing_pages_file_lines > 0
-        chose = rand(landing_pages_file_lines - 1) + 1
-        landing_pages_file.rewind
-        (chose - 1).times { landing_pages_file.readline(EOFLINE2) }
-        page = landing_pages_file.readline(EOFLINE2)
-        chosen_landing_pages_file.write(page)
-        medium_count -= 1
-        p.increment
-      end
-      chosen_landing_pages_file.close
-      landing_pages_file.close
-      true
+    p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => 180, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
+    while medium_count > 0 and landing_pages_file_lines > 0
+      chose = rand(landing_pages_file_lines - 1) + 1
+      landing_pages_file.rewind
+      (chose - 1).times { landing_pages_file.readline(EOFLINE2) }
+      page = landing_pages_file.readline(EOFLINE2)
+      chosen_landing_pages_file.write(page)
+      medium_count -= 1
+      p.increment
     end
+    chosen_landing_pages_file.close
+    landing_pages_file.close
+    true
+  end
+
   def information(msg)
     Common.information(msg)
   end
