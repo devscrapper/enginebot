@@ -284,7 +284,6 @@ module Building_visits
       hourly_distribution.each_index { |hour|
         @count_visits_by_hour << [hour, (hourly_distribution[hour].to_f * count_visits).divmod(100)[0]]
         rest_sum += (hourly_distribution[hour].to_f * count_visits).divmod(100)[1]
-        #TODO creer une alerte si le fichier <planed-visits> est absent
         @planed_visits_by_hour_file[hour] = File.open(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", "w:utf-8")
         @planed_visits_by_hour_file[hour].sync = true
       }
@@ -311,13 +310,14 @@ module Building_visits
 #
 # --------------------------------------------------------------------------------------------------------------
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
-    #TODO integrer le return visitor
+
     #TODO integrer le device platform
 
     begin
       information("Extending visits for #{label} is starting")
+      return_visitors = Array.new(count_visit,false)
+      return_visitors.fill(true, 0..(count_visit * return_visitor_rate / 100).to_i).shuffle!
       p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
-
       24.times { |hour|
         #TODO selectionner le fichier <pages> le plus récent
         pages_file = File.open(TMP + "pages-#{label}-#{date}.txt", "r:utf-8")
@@ -325,7 +325,7 @@ module Building_visits
         final_visits_by_hour_file.sync = true
         #TODO creer une alerte si le fichier <planed_visit> est absent
         IO.foreach(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
-          return_visitor = true
+          return_visitor = return_visitors.shift
           v = Final_visit.new(visit, account_ga, return_visitor, pages_file)
           final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE2}")
           p.increment
