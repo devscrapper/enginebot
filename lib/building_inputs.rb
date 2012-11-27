@@ -327,7 +327,6 @@ module Building_inputs
       total += device.count_visits
       device_platform_file.write("#{device.to_s}#{EOFLINE2}")
     }
-    p "---------------------------#{total}"
     device_platform_file.close
     information("Building device platform for #{label} is over")
   end
@@ -351,7 +350,7 @@ module Building_inputs
     device_platform = select_file(TMP, "device-platform", label, date)
 
     if device_platform.nil?
-      alert("Choosing_device_platform for #{label} fails because inputs <#{device_platform}> file is missing")
+      alert("Choosing_device_platform for #{label} fails because inputs device-platforme file for #{label} in date of #{date} is missing")
       return false
     end
     chosen_device_platform_file = File.open(TMP + "chosen-device-platform-#{label}-#{date}.txt", "w:utf-8")
