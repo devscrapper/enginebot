@@ -106,27 +106,28 @@ module Building_inputs
   end
 
   class Device_platform
-    attr_accessor :browser,
+    attr_accessor :count_visits
+    attr :browser,
          :browser_version,
          :os,
          :os_version,
          :flash_version,
          :java_enabled,
          :screen_colors,
-         :screen_resolution,
-         :count_visits
+         :screen_resolution
+
 
     def initialize(plugin, resolution)
 
-          @browser = plugin.browser
-          @browser_version = plugin.browser_version
-          @os = plugin.os
-          @os_version = plugin.os_version
-          @flash_version = plugin.flash_version
-          @java_enabled = plugin.java_enabled
-          @screen_colors = resolution.screen_colors
-          @screen_resolution = resolution.screen_resolution
-          @count_visits = Common.min(plugin.count_visits, resolution.count_visits)
+      @browser = plugin.browser
+      @browser_version = plugin.browser_version
+      @os = plugin.os
+      @os_version = plugin.os_version
+      @flash_version = plugin.flash_version
+      @java_enabled = plugin.java_enabled
+      @screen_colors = resolution.screen_colors
+      @screen_resolution = resolution.screen_resolution
+      @count_visits = Common.min(plugin.count_visits, resolution.count_visits)
 
     end
 
@@ -135,7 +136,24 @@ module Building_inputs
       "#{@browser}#{SEPARATOR2}#{@browser_version}#{SEPARATOR2}#{@os}#{SEPARATOR2}#{@os_version}#{SEPARATOR2}#{@flash_version}#{SEPARATOR2}#{@java_enabled}#{SEPARATOR2}#{@screen_colors}#{SEPARATOR2}#{@screen_resolution}#{SEPARATOR2}#{@count_visits}"
     end
   end
+  class Chosen_device_platform < Device_platform
+    def initialize(device)
+      splitted_device = device.strip.split(SEPARATOR2)
+      @browser = splitted_device[0]
+      @browser_version = splitted_device[1]
+      @os = splitted_device[2]
+      @os_version = splitted_device[3]
+      @flash_version = splitted_device[4]
+      @java_enabled = splitted_device[5]
+      @screen_colors = splitted_device[6]
+      @screen_resolution = splitted_device[7]
+      @count_visits = splitted_device[8].to_f
+    end
 
+    def to_s(*a)
+      "#{@browser}#{SEPARATOR2}#{@browser_version}#{SEPARATOR2}#{@os}#{SEPARATOR2}#{@os_version}#{SEPARATOR2}#{@flash_version}#{SEPARATOR2}#{@java_enabled}#{SEPARATOR2}#{@screen_colors}#{SEPARATOR2}#{@screen_resolution}"
+    end
+  end
   class Device_plugin < Device_platform
     def initialize(plugin)
       splitted_plugin = plugin.strip.split(SEPARATOR2)
@@ -273,42 +291,43 @@ module Building_inputs
     end
     device_plugins = []
     IO.foreach(device_plugin, EOFLINE2, encoding: "BOM|UTF-8:-") { |plugin|
-      #Chrome;23.0.1271.64;Windows;7;11.5 r31;Yes;685
       device_plugins << Device_plugin.new(plugin)
     }
 
-    device_plugins.sort_by!{|a| [a.browser, a.browser_version, a.os, a.os_version] }
+    device_plugins.sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
 
     device_resolutions = []
     IO.foreach(device_resolution, EOFLINE2, encoding: "BOM|UTF-8:-") { |resolution|
-      #Chrome;23.0.1271.64;Windows;7;11.5 r31;Yes;685
       device_resolutions << Device_resolution.new(resolution)
     }
-    device_resolutions.sort_by!{|a| [a.browser, a.browser_version, a.os, a.os_version] }
+    device_resolutions.sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
 
     p = ProgressBar.create(:title => "Consolidation plugin & resolution files", :length => 180, :starting_at => 0, :total => device_plugins.size, :format => '%t, %c/%C, %a|%w|')
     device_platforms = []
     count_visits = 0
-    device_plugins.each{|plugin|
-      select_device_resolution = device_resolutions.collect {|x| x if x.browser == plugin.browser and
-                                      x.browser_version == plugin.browser_version and
-                                      x.os == plugin.os and
-                                      x.os_version == plugin.os_version}
-      select_device_resolution.compact!.each{|resolution|
-        device =  Device_platform.new(plugin, resolution)
+    device_plugins.each { |plugin|
+      select_device_resolution = device_resolutions.collect { |x| x if x.browser == plugin.browser and
+          x.browser_version == plugin.browser_version and
+          x.os == plugin.os and
+          x.os_version == plugin.os_version }
+      select_device_resolution.compact!.each { |resolution|
+        device = Device_platform.new(plugin, resolution)
         device_platforms << device
         count_visits += device.count_visits
-        plugin.count_visits = plugin.count_visits -  Common.min(plugin.count_visits, resolution.count_visits)
-        break   unless plugin.count_visits > 0
+        plugin.count_visits = plugin.count_visits - Common.min(plugin.count_visits, resolution.count_visits)
+        break unless plugin.count_visits > 0
       }
       p.increment
     }
 
     device_platform_file = File.open(TMP + "Device-platform-#{label}-#{date}.txt", "w:utf-8")
-    device_platforms.each{|device|
-          device.count_visits =  (device.count_visits.to_f * 100/count_visits )
-          device_platform_file.write("#{device.to_s}#{EOFLINE2}")
+    total = 0
+    device_platforms.sort_by! { |a| [a.count_visits] }.reverse!.each { |device|
+      device.count_visits = (device.count_visits.to_f * 100/count_visits)
+      total += device.count_visits
+      device_platform_file.write("#{device.to_s}#{EOFLINE2}")
     }
+    p "---------------------------#{total}"
     device_platform_file.close
     information("Building device platform for #{label} is over")
   end
@@ -326,11 +345,27 @@ module Building_inputs
   end
 
 
-  def Choosing_device_platform(label, date, count_visit)
-    #TODO selectionner le fichier <Device_platform> le plus récent
-    #TODO developper  Choosing_device_platform
-    #TODO inserer progress bar si possible
+  def Choosing_device_platform(label, date, count_visits)
+
     information("Choosing device platform for #{label} is starting")
+    device_platform = select_file(TMP, "Device-platform", label, date)
+
+    if device_platform.nil?
+      alert("Choosing_device_platform for #{label} fails because inputs Device_platform file is missing")
+      return false
+    end
+    chosen_device_platform_file = File.open(TMP + "Chosen-device-platform-#{label}-#{date}.txt", "w:utf-8")
+    total_visits = 0
+    pob = ProgressBar.create(:title => File.basename(device_platform), :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
+    IO.foreach(device_platform, EOFLINE2, encoding: "BOM|UTF-8:-") { |device|
+      chosen_device = Chosen_device_platform.new(device)
+      count_device = Common.max((chosen_device.count_visits * count_visits / 100).to_i,1)
+      count_device = count_visits - total_visits if total_visits + count_device > count_visits  # pour eviter de peasser le nombre de visite attendues
+      total_visits += count_device
+      count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE2}")  ; pob.increment }
+
+    }
+    chosen_device_platform_file.close
     information("Choosing device platform for #{label} is over")
     execute_next_step("Building_visits", label, date)
   end
