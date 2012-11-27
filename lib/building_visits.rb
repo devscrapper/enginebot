@@ -233,7 +233,6 @@ module Building_visits
       avg_time_on_site,
       min_durations,
       min_pages)
-    #TODO: dans le building_visits sauvegarder à chaque visit et non pas à la fin => remplacer @visit[s] par @visit
 
     begin
       information("Building visits for #{label} is starting")
@@ -397,8 +396,13 @@ module Building_visits
       Logging.send(LOG_FILE, Logger::DEBUG, "count_pages_not_bounce_visit #{count_pages_not_bounce_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_pages_per_visits #{count_pages_per_visits}")
       p = ProgressBar.create(:title => "Building not bounce visits", :length => 180, :starting_at => 0, :total => count_not_bounce_visit, :format => '%t, %c/%C, %a|%w|')
-      #TODO selectionner le fichier <matrix> le plus récent
-      @matrix_file = File.open(TMP + "matrix-#{label}-#{date}.txt", "r:utf-8")
+
+      matrix_id_file = select_file(TMP, "matrix", label, date)
+      if matrix_id_file.nil?
+        alert("Building not bounce visit fails because inputs matrix file for #{label}  is missing")
+        return
+      end
+      @matrix_file = File.open(matrix_id_file, "r:utf-8")
       count_not_bounce_visit.times { |visit|
         begin
           v = @visits.shuffle![0]
