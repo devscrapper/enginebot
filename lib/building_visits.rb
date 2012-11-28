@@ -20,8 +20,9 @@ module Building_visits
   SEPARATOR="%SEP%"
   EOFLINE="%EOFL%"
   SEPARATOR2=";"
-  SEPARATOR3=","
+  SEPARATOR3="!"
   SEPARATOR4="|"
+  SEPARATOR5=","
   EOFLINE2 ="\n"
   LOG_FILE = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
 
@@ -37,10 +38,10 @@ module Building_visits
 
   class Page
     attr :id_uri,
-         :delay_from_start,
-         :hostname,
-         :page_path,
-         :title
+         :delay_from_start
+    attr_writer :hostname,
+                :page_path,
+                :title
 
 
     def initialize(id_page, duration)
@@ -75,7 +76,13 @@ module Building_visits
     end
 
     def to_json(*a)
-
+       {
+           "id_uri" => @id_uri,
+           "delay_from_start" => @delay_from_start,
+           "hostname" => @hostname,
+           "page_path" => @page_path,
+           "title" => @title
+       }.to_json(*a)
     end
   end
 
@@ -216,6 +223,65 @@ module Building_visits
 
     end
   end
+
+  class Published_visit < Visit
+    def initialize(visit)
+      splitted_visit = visit.strip.split(SEPARATOR2)
+      @id_visit = splitted_visit[0]
+      @start_date_time = splitted_visit[1]
+      @account_ga = splitted_visit[2]
+      @return_visitor = splitted_visit[3]
+      @browser = splitted_visit[4]
+      @browser_version = splitted_visit[5]
+      @operating_system = splitted_visit[6]
+      @operating_system_version = splitted_visit[7]
+      @flash_version = splitted_visit[8]
+      @java_enabled = splitted_visit[9]
+      @screens_colors = splitted_visit[10]
+      @screen_resolution = splitted_visit[11]
+      @referral_path = splitted_visit[12]
+      @source = splitted_visit[13]
+      @medium = splitted_visit[14]
+      @keyword = splitted_visit[15]
+
+      @pages = []
+      splitted_visit[16].strip.split(SEPARATOR3).each { |page|
+        splitted_page = page.split(SEPARATOR4)
+        id_uri = splitted_page[0]
+        delay_from_start = splitted_page[1]
+        p = Page.new(id_uri, delay_from_start)
+        p.hostname=splitted_page[2]
+        p.page_path=splitted_page[3]
+        p.title=splitted_page[4]
+        @pages << p
+      }
+
+    end
+
+
+
+    def to_json(*a)
+      {"id_visit" => @id_visit,
+       "start_date_time" => @start_date_time,
+       "account_ga" => @account_ga,
+       "return_visitor" => @return_visitor,
+       "browser" => @browser,
+       "browser_version" => @browser_version,
+       "operating_system" => @operating_system,
+       "operating_system_version" => @operating_system_version,
+       "flash_version" => @flash_version,
+       "java_enabled" => @java_enabled,
+       "screens_colors" => @screens_colors,
+       "screen_resolution" => @screen_resolution,
+       "referral_path" => @referral_path,
+       "source" => @source,
+       "medium" => @medium,
+       "keyword" => @keyword ,
+       "pages" => @pages
+      }.to_json(*a)
+    end
+
+  end
 #--------------------------------------------------------------------------------------------------------------
 # Building_visits
 #--------------------------------------------------------------------------------------------------------------
@@ -258,7 +324,7 @@ module Building_visits
         }
 
         building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
-        @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:utf-8")
+        @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:UTF-8")
         @visits_file.sync = true
         p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}"); p.increment }
@@ -291,7 +357,7 @@ module Building_visits
       hourly_distribution.each_index { |hour|
         @count_visits_by_hour << [hour, (hourly_distribution[hour].to_f * count_visits).divmod(100)[0]]
         rest_sum += (hourly_distribution[hour].to_f * count_visits).divmod(100)[1]
-        @planed_visits_by_hour_file[hour] = File.open(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", "w:utf-8")
+        @planed_visits_by_hour_file[hour] = File.open(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", "w:UTF-8")
         @planed_visits_by_hour_file[hour].sync = true
       }
       @count_visits_by_hour[rand(23)][1] += (rest_sum/count_visits).to_i # permet d'eviter de perdre des visits lors de la division qd le reste est non nul => n'arrive pas si le nombre de viste est grand
@@ -331,15 +397,15 @@ module Building_visits
         return
       end
 
-      device_platform_file = File.open(device_platforme_id_file, "r:utf-8")
-       device_platforms = device_platform_file.readlines(EOFLINE2).shuffle
-       pages_file = File.open(pages_id_file, "r:utf-8")
+      device_platform_file = File.open(device_platforme_id_file, "r:BOM|UTF-8:-")
+      device_platforms = device_platform_file.readlines(EOFLINE2).shuffle
+      pages_file = File.open(pages_id_file, "r:BOM|UTF-8:-")
       return_visitors = Array.new(count_visit, false)
       return_visitors.fill(true, 0..(count_visit * return_visitor_rate / 100).to_i).shuffle!
       p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
       24.times { |hour|
 
-        final_visits_by_hour_file = File.open(TMP + "final-visits-#{label}-#{date}-#{hour}.txt", "w:utf-8")
+        final_visits_by_hour_file = File.open(TMP + "final-visits-#{label}-#{date}-#{hour}.txt", "w:UTF-8")
         final_visits_by_hour_file.sync = true
 
         alert("<#{TMP + "planed-visits-#{label}-#{date}-#{hour}.txt"}> file is not found") if !File.exist?(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt")
@@ -351,7 +417,7 @@ module Building_visits
           p.increment
 
         } unless File.zero?(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt")
-
+        final_visits_by_hour_file.close
       }
       device_platform_file.close
       pages_file.close
@@ -369,11 +435,24 @@ module Building_visits
 # --------------------------------------------------------------------------------------------------------------
 
   def Publishing_visits(label, date)
-    #TODO creer une alert si le fichiers <final_visits> est absent
-    #TODO developper Publishing_visits
-    #TODO: integrer ruby-progressbar
     begin
       information("Publishing visits for #{label} is starting")
+      24.times { |hour|
+        published_visits_to_json_file = File.open(TMP + "published-visits-#{label}-#{date}-#{hour}.json", "w:UTF-8")
+        published_visits_to_json_file.sync = true
+        final_visits_file = TMP + "final-visits-#{label}-#{date}-#{hour}.txt"
+        count_line = File.foreach(final_visits_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+        p = ProgressBar.create(:title => "publish #{File.basename(final_visits_file)}", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
+        IO.foreach(final_visits_file, EOFLINE2, encoding: "UTF-8:-") { |visit|
+          v = Published_visit.new(visit)
+          published_visits_to_json_file.write("#{JSON.generate(v)}#{EOFLINE2}")
+          #TODO developper publish to db
+          #Thread.new { v.publish_to_db(label, date, hour) }
+
+        }
+        p.increment
+        published_visits_to_json_file.close
+      }
 
       information("Publishing visits for #{label} is over")
     rescue Exception => e
@@ -402,7 +481,7 @@ module Building_visits
         alert("Building not bounce visit fails because inputs matrix file for #{label}  is missing")
         return
       end
-      @matrix_file = File.open(matrix_id_file, "r:utf-8")
+      @matrix_file = File.open(matrix_id_file, "r:BOM|UTF-8:-")
       count_not_bounce_visit.times { |visit|
         begin
           v = @visits.shuffle![0]
@@ -434,7 +513,7 @@ module Building_visits
       @matrix[pt] = []
       @matrix_file.rewind
       (pt.to_i - 1).times { @matrix_file.readline(EOFLINE2) }
-      @matrix_file.readline(EOFLINE2).split(SEPARATOR2)[1].strip.split(SEPARATOR3).each { |page| @matrix[pt] << page.strip }
+      @matrix_file.readline(EOFLINE2).split(SEPARATOR2)[1].strip.split(SEPARATOR5).each { |page| @matrix[pt] << page.strip }
     end
     Array.new(@matrix[pt])
   end
