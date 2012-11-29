@@ -12,20 +12,18 @@ require File.dirname(__FILE__) + '/../lib/building_inputs'
 
 
 module LoadServer
+  INPUT = File.dirname(__FILE__) + "/../input/"
   #TODO supprimer la variable globale COUNT_VISIT
   COUNT_VISIT = 1000
   #TODO remplacer la variable d'instance @@log_file par une constante
   @@log_file
+
   # definition des conditions d'exécution des taches
   # à chaque tache est associé un nombre d'operation qui doit être réalisée
   @@conditions_start = {"Building_device_platform" => 2, #TASK_CHOOSING_DEVICE_PLATFORME, TASK_CHOOSING_LANDING_PAGES, CALENDAR
                         "Building_visits" => 3} #TASK_CHOOSING_DEVICE_PLATFORME, TASK_CHOOSING_LANDING_PAGES, CALENDAR
-      def initialize()
 
-      end
 
-  def post_init
-  end
 
   def receive_data param
     #TODO multithreader ou spawner les traitements du load server
@@ -48,7 +46,7 @@ module LoadServer
           when "website"
             execute_next_step("Building_matrix_and_pages", label, date) if last_volume
           when "Traffic_source_landing_page"
-            execute_next_step("Building_landing_pages", label, date)  if last_volume
+            execute_next_step("Building_landing_pages", label, date) if last_volume
           when "Device_platform_plugin"
             execute_next_step("Building_device_platform", label, date) if last_volume
           when "Device_platform_resolution"
@@ -158,6 +156,8 @@ module LoadServer
         date_building = data["date_building"]
         Building_visits.Publishing_visits(label, date_building)
 
+      when "Pushing_visits_file"
+
       when "exit"
         close_connection
         EventMachine.stop
@@ -206,6 +206,11 @@ $log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb")
 scraper_servers_ip = ["localhost"] #liste de tous les scraper_server separer par une virgule
 listening_port = 9002 # port d'ecoute du load_server
 scraper_server_port = 9003 # port d'ecoute du scraper_server
+$authentification_server_port = 9001
+$authentification_server_ip = "localhost"
+$statupbot_server_ip = "localhost"
+$statupbot_server_port = 9006
+
 $envir = "prod"
 
 #--------------------------------------------------------------------------------------------------------------------
@@ -215,6 +220,10 @@ ARGV.each { |arg|
   listening_port = arg.split("=")[1] if arg.split("=")[0] == "--port"
   scraper_servers_ip = arg.split("=")[1] if arg.split("=")[0] == "--scraper_servers_ip"
   scraper_server_port = arg.split("=")[1] if arg.split("=")[0] == "--scraper_server_port"
+  $authentification_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--authentification_servers_ip"
+  $authentification_server_port = arg.split("=")[1] if arg.split("=")[0] == "--authentification_server_port"
+  $statupbot_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_servers_ip"
+  $statupbot_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_server_port"
   $envir = arg.split("=")[1] if arg.split("=")[0] == "--envir"
   #TODO passer en parametre l'url de l'application rail afin de pourvoir executer les requetes rest de selection de données
 } if ARGV.size > 0
@@ -223,6 +232,10 @@ Logging.send($log_file, Logger::INFO, "parameters of load server : ")
 Logging.send($log_file, Logger::INFO, "listening port : #{listening_port}")
 Logging.send($log_file, Logger::INFO, "scraper servers ip : #{scraper_servers_ip}")
 Logging.send($log_file, Logger::INFO, "scraper server port : #{scraper_server_port}")
+Logging.send($log_file, Logger::INFO, "authentification servers ip : #{$authentification_server_ip}")
+Logging.send($log_file, Logger::INFO, "authentification server port : #{$authentification_server_port}")
+Logging.send($log_file, Logger::INFO, "statupbot servers ip : #{$statupbot_server_ip}")
+Logging.send($log_file, Logger::INFO, "statupbot server port : #{$statupbot_server_port}")
 $listening_port = listening_port
 # sert à propager le port vers les module appeler par le load _server
 #afin qu'il lui demande d'executer des commandes

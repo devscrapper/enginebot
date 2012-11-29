@@ -329,7 +329,7 @@ module Building_visits
         p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}"); p.increment }
         @visits_file.close
-        execute_next_step("Building_planification", label, date)
+        execute_next_task("Building_planification", label, date)
       else
         alert("Building visits is failed because <#{chosen_landing_pages_file}> file is not found")
       end
@@ -371,7 +371,7 @@ module Building_visits
       }
       24.times { |hour| @planed_visits_by_hour_file[hour].close }
       information("Building planification of visit for #{label} is over")
-      execute_next_step("Extending_visits", label, date)
+      execute_next_task("Extending_visits", label, date)
     rescue Exception => e
       error(e.message)
     end
@@ -422,7 +422,7 @@ module Building_visits
       device_platform_file.close
       pages_file.close
       information("Extending visits for #{label} is over")
-      execute_next_step("Publishing_visits", label, date)
+      execute_next_task("Publishing_visits", label, date)
     rescue Exception => e
       error(e.message)
     end
@@ -438,7 +438,8 @@ module Building_visits
     begin
       information("Publishing visits for #{label} is starting")
       24.times { |hour|
-        published_visits_to_json_file = File.open(TMP + "published-visits-#{label}-#{date}-#{hour}.json", "w:UTF-8")
+        published_visits_to_json_id_file = OUTPUT + "published-visits-#{label}-#{date}-#{hour}.json"
+        published_visits_to_json_file = File.open(published_visits_to_json_id_file, "w:UTF-8")
         published_visits_to_json_file.sync = true
         final_visits_file = TMP + "final-visits-#{label}-#{date}-#{hour}.txt"
         count_line = File.foreach(final_visits_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
@@ -448,12 +449,11 @@ module Building_visits
           published_visits_to_json_file.write("#{JSON.generate(v)}#{EOFLINE2}")
           #TODO developper publish to db
           #Thread.new { v.publish_to_db(label, date, hour) }
-
         }
         p.increment
         published_visits_to_json_file.close
+       Common.push_file(File.basename(published_visits_to_json_file), true)
       }
-
       information("Publishing visits for #{label} is over")
     rescue Exception => e
       error(e.message)
@@ -625,8 +625,8 @@ module Building_visits
     Common.error(msg)
   end
 
-  def execute_next_step(task, label, date)
-    Common.execute_next_task(task, label, date)
+  def execute_next_task(task, label, date, data=nil)
+    Common.execute_next_task(task, label, date, data)
   end
 
   def select_file(dir, type_file, label, date)
@@ -651,6 +651,6 @@ module Building_visits
   module_function :error
   module_function :alert
   module_function :information
-  module_function :execute_next_step
+  module_function :execute_next_task
   module_function :select_file
 end
