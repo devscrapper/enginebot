@@ -181,6 +181,9 @@ $authentification_server_port = 9001
 $authentification_server_ip = "localhost"
 $statupbot_server_ip = "localhost"
 $statupbot_server_port = 9006
+$statupweb_server_ip="localhost"
+$statupweb_server_port=3000
+
 
 $envir = "prod"
 
@@ -194,7 +197,9 @@ ARGV.each { |arg|
   $authentification_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--authentification_servers_ip"
   $authentification_server_port = arg.split("=")[1] if arg.split("=")[0] == "--authentification_server_port"
   $statupbot_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_servers_ip"
-  $statupbot_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_server_port"
+  $statupbot_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_servers_ip"
+  $statupweb_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupweb_server_port"
+  $statupweb_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupweb_server_port"
   $envir = arg.split("=")[1] if arg.split("=")[0] == "--envir"
   #TODO passer en parametre le nom de domaine du serveur qui héberge l'application rail afin de pourvoir executer les requetes rest de selection de données
 } if ARGV.size > 0
@@ -207,6 +212,8 @@ Logging.send($log_file, Logger::INFO, "authentification servers ip : #{$authenti
 Logging.send($log_file, Logger::INFO, "authentification server port : #{$authentification_server_port}")
 Logging.send($log_file, Logger::INFO, "statupbot servers ip : #{$statupbot_server_ip}")
 Logging.send($log_file, Logger::INFO, "statupbot server port : #{$statupbot_server_port}")
+Logging.send($log_file, Logger::INFO, "statupweb server ip : #{$statupweb_server_ip}")
+Logging.send($log_file, Logger::INFO, "statupweb server port : #{$statupweb_server_port}")
 $listening_port = listening_port
 # sert à propager le port vers les module appeler par le load _server
 #afin qu'il lui demande d'executer des commandes
