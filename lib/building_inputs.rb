@@ -24,6 +24,7 @@ module Building_inputs
   LOG_FILE = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
   $log_file = LOG_FILE
   $b = false
+
   class Page
     NO_LINK = "*"
     attr :id_uri,
@@ -334,6 +335,8 @@ module Building_inputs
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
     information("Choosing landing pages for #{label} is starting")
+
+    File.delete(TMP + "chosen_landing_pages-#{label}-#{date}.txt") if File.exist?(TMP + "chosen_landing_pages-#{label}-#{date}.txt")
     result = Choosing_landing(label, date, "direct", direct_medium_percent, count_visit) &&
         Choosing_landing(label, date, "referral", referral_medium_percent, count_visit) &&
         Choosing_landing(label, date, "organic", organic_medium_percent, count_visit)

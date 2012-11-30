@@ -15,15 +15,22 @@ require File.dirname(__FILE__) + '/../model/task'
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
   #TODO supprimer la variable globale COUNT_VISIT
-  COUNT_VISIT = 1000
+  COUNT_VISIT = 100
 
 
   @@conditions_start = Start_conditions.new()
+  def initialize()
+    w = self
+    @execute_task = EM.spawn{|data|     w.execute_task(data)    }
+  end
 
-
-  def receive_data param
+  def receive_data(param)
     #TODO multithreader ou spawner les traitements du load server
-    data = JSON.parse param
+    #@execute_task.notify JSON.parse param
+    execute_task(JSON.parse param)
+  end
+
+  def execute_task(data)
     who = data["who"]
     task = data["cmd"]
     port, ip = Socket.unpack_sockaddr_in(get_peername)
