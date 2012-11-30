@@ -10,6 +10,7 @@ require File.dirname(__FILE__) + '/../lib/logging'
 
 module Common
 
+
   def get_authentification
     begin
       s = TCPSocket.new $authentification_server_ip, $authentification_server_port
@@ -52,6 +53,20 @@ module Common
       end
 
     end
+
+  def get_file(id_file, host_ftp_server, user, pwd)
+    begin
+      ftp = Net::FTP.new(host_ftp_server)
+      ftp.login(user, pwd)
+      ftp.gettextfile(id_file, INPUT + id_file)
+      ftp.delete(id_file)
+      ftp.close
+
+      Logging.send($log_file, Logger::INFO, "download file, #{id_file}to #{INPUT + id_file}")
+    rescue Exception => e
+      Logging.send($log_file, Logger::FATAL, "download file, #{id_file} failed #{e.message}")
+    end
+  end
 
   def information(msg)
     Logging.send($log_file, Logger::INFO, msg)
@@ -110,4 +125,5 @@ module Common
   module_function :error
   module_function :push_file
   module_function :get_authentification
+  module_function :get_file
 end

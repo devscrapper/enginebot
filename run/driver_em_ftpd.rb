@@ -7,7 +7,7 @@ require 'logger'
 
 class FTPDriver
   OUTPUT = File.dirname(__FILE__) + "/../output"
-  @@log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
+  LOG_FILE = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
 
   attr :user, :pwd, :authentification_server_ip, :authentification_server_port
 
@@ -21,15 +21,15 @@ class FTPDriver
       @authentification_server_port = 9001
       p    @authentification_server_ip
       p @authentification_server_port
-      Logging.send(@@log_file, Logger::ERROR, " #{@authentification_server_ip}, #{@authentification_server_port} ")
+      Logging.send(LOG_FILE, Logger::ERROR, " #{@authentification_server_ip}, #{@authentification_server_port} ")
       s = TCPSocket.new @authentification_server_ip, @authentification_server_port
       s.puts JSON.generate({"who" => "ftpd", "cmd" => "check", "user" => user, "pwd" => pass})
       get_response = JSON.parse(s.gets)
       s.close
-      Logging.send(@@log_file, Logger::INFO, "FTPServer check authentification #{user}, #{pass} => #{get_response["check"] == true}")
+      Logging.send(LOG_FILE, Logger::INFO, "FTPServer check authentification #{user}, #{pass} => #{get_response["check"] == true}")
       yield get_response["check"] == true
     rescue Exception => e
-      Logging.send(@@log_file, Logger::ERROR, "FTPServer check authentification #{user}, #{pass} => #{e.message}")
+      Logging.send(LOG_FILE, Logger::ERROR, "FTPServer check authentification #{user}, #{pass} => #{e.message}")
     end
 
   end
@@ -40,10 +40,10 @@ class FTPDriver
       s = TCPSocket.new 'localhost', @authentification_server_port
       s.puts JSON.generate({"who" => "ftpd", "cmd" => "delete", "user" => @user, "pwd" => @pwd})
       s.close
-      Logging.send(@@log_file, Logger::INFO, "FTPServer push file, #{path}")
+      Logging.send(LOG_FILE, Logger::INFO, "FTPServer push file, #{path}")
       yield file
     rescue Exception => e
-      Logging.send(@@log_file, Logger::ERROR, "FTPServer push file, #{path} => #{e.message}")
+      Logging.send(LOG_FILE, Logger::ERROR, "FTPServer push file, #{path} => #{e.message}")
     end
   end
 
@@ -66,10 +66,10 @@ class FTPDriver
   def delete_file(path, &block)
     begin
       File.delete(OUTPUT + path)
-      Logging.send(@@log_file, Logger::INFO, "FTPServer delete file, #{path}")
+      Logging.send(LOG_FILE, Logger::INFO, "FTPServer delete file, #{path}")
       yield true
     rescue Exception => e
-      Logging.send(@@log_file, Logger::ERROR, "FTPServer delete file, #{path} => #{e.message}")
+      Logging.send(LOG_FILE, Logger::ERROR, "FTPServer delete file, #{path} => #{e.message}")
       yield false
     end
   end

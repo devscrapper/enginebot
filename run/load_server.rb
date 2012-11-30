@@ -9,29 +9,26 @@ require 'net/ftp'
 require "ruby-progressbar"
 require File.dirname(__FILE__) + '/../lib/building_visits'
 require File.dirname(__FILE__) + '/../lib/building_inputs'
-
+require File.dirname(__FILE__) + '/../lib/common'
+require File.dirname(__FILE__) + '/../model/task'
 
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
   #TODO supprimer la variable globale COUNT_VISIT
   COUNT_VISIT = 1000
-  #TODO remplacer la variable d'instance @@log_file par une constante
-  @@log_file
 
-  # definition des conditions d'exécution des taches
-  # à chaque tache est associé un nombre d'operation qui doit être réalisée
-  @@conditions_start = {"Building_device_platform" => 2, #TASK_CHOOSING_DEVICE_PLATFORME, TASK_CHOOSING_LANDING_PAGES, CALENDAR
-                        "Building_visits" => 3} #TASK_CHOOSING_DEVICE_PLATFORME, TASK_CHOOSING_LANDING_PAGES, CALENDAR
 
+  @@conditions_start = Start_conditions.new()
 
 
   def receive_data param
     #TODO multithreader ou spawner les traitements du load server
     data = JSON.parse param
     who = data["who"]
+    task = data["cmd"]
     port, ip = Socket.unpack_sockaddr_in(get_peername)
     Logging.send($log_file, Logger::DEBUG, "data receive : #{data}")
-    case data["cmd"]
+    case  task
       when "file"
         label = data["label"]
         date = data["date_scraping"]
@@ -44,13 +41,13 @@ module LoadServer
         get_file(id_file, host_ftp_server, user, pwd)
         case type_file
           when "website"
-            execute_next_step("Building_matrix_and_pages", label, date) if last_volume
+            Common.execute_next_task("Building_matrix_and_pages", label, date) if last_volume
           when "Traffic_source_landing_page"
-            execute_next_step("Building_landing_pages", label, date) if last_volume
+            Common.execute_next_task("Building_landing_pages", label, date) if last_volume
           when "Device_platform_plugin"
-            execute_next_step("Building_device_platform", label, date) if last_volume
+            Common.execute_next_task("Building_device_platform", label, date) if last_volume
           when "Device_platform_resolution"
-            execute_next_step("Building_device_platform", label, date) if last_volume
+            Common.execute_next_task("Building_device_platform", label, date) if last_volume
           else
             Logging.send($log_file, Logger::DEBUG, "type file unknown : #{type_file} for #{id_file}")
         end
@@ -67,19 +64,18 @@ module LoadServer
         Building_inputs.Building_landing_pages(label, date_building)
 
       when "Building_device_platform"
-
-        #TODO  valider le déclenchement de cette tache en dev et prod (TASK_CHOOSING_DEVICE_PLATFORME, TASK_CHOOSING_LANDING_PAGES, CALENDAR)
         label = data["label"]
         date_building = data["date_building"]
-        @@conditions_start["Building_device_platform"] -=1
-        if $envir == "dev" or ($envir == "prod" and @@conditions_start["Building_device_platform"] == 0)
+        task = Task_building_device_platform.new(label)
+        @@conditions_start.add(task)
+        @@conditions_start.decrement(task)
+        if $envir == "dev" or
+            ($envir == "prod" and @@conditions_start.execute?(task))
           Building_inputs.Building_device_platform(label, date_building)
-          #TODO valider la reinitialisation des conditions de demarrage
-          @@conditions_start["Building_device_platform"] = 2
+          @@conditions_start.delete(task)
         end
 
       when "Choosing_landing_pages"
-
         label = data["label"]
         date_building = data["date_building"]
         direct_medium_percent = 60 # sera calculé en fonction des objectif
@@ -112,8 +108,10 @@ module LoadServer
         avg_time_on_site = 120
         min_durations = 1
         min_pages = 2
-        @@conditions_start["Building_visits"] -=1
-        if $envir == "dev" or ($envir == "prod" and @@conditions_start["Building_visits"] == 0)
+        task = Task_building_visits.new(label)
+        @@conditions_start.add(task)
+        @@conditions_start.decrement(task)
+        if $envir == "dev" or ($envir == "prod" and @@conditions_start.execute?(task))
           Building_visits.Building_visits(label, date_building,
                                           count_visit,
                                           visit_bounce_rate,
@@ -121,8 +119,7 @@ module LoadServer
                                           avg_time_on_site,
                                           min_durations,
                                           min_pages)
-          #TODO valider la reinitialisation des conditions de demarrage
-          @@conditions_start["Building_visits"] = 3
+          @@conditions_start.delete(task)
         end
 
       when "Building_planification"
@@ -162,7 +159,7 @@ module LoadServer
         close_connection
         EventMachine.stop
       else
-        Logging.send($log_file, Logger::ERROR, "unknown action : #{data["cmd"]}")
+        Logging.send($log_file, Logger::ERROR, "unknown action : #{task}")
     end
   end
 
@@ -183,17 +180,6 @@ module LoadServer
     end
   end
 
-
-  def execute_next_step(cmd, label, date)
-    s = TCPSocket.new 'localhost', $listening_port
-    s.puts JSON.generate({"cmd" => cmd, "label" => label, "date_building" => date})
-    s.close
-  end
-
-  def information(msg)
-    Logging.send($log_file, Logger::INFO, msg)
-    p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
-  end
 end
 
 

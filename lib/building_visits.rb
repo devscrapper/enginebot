@@ -625,8 +625,8 @@ module Building_visits
     Common.error(msg)
   end
 
-  def execute_next_task(task, label, date, data=nil)
-    Common.execute_next_task(task, label, date, data)
+  def execute_next_task(task, label, date)
+    Common.execute_next_task(task, label, date)
   end
 
   def select_file(dir, type_file, label, date)
