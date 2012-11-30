@@ -11,17 +11,18 @@ require File.dirname(__FILE__) + '/../lib/building_visits'
 require File.dirname(__FILE__) + '/../lib/building_inputs'
 require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../model/task'
+require File.dirname(__FILE__) + '/../model/objective'
 
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
   #TODO supprimer la variable globale COUNT_VISIT
-  COUNT_VISIT = 100
 
 
   @@conditions_start = Start_conditions.new()
+
   def initialize()
     w = self
-    @execute_task = EM.spawn{|data|     w.execute_task(data)    }
+    @execute_task = EM.spawn { |data| w.execute_task(data) }
   end
 
   def receive_data(param)
@@ -35,7 +36,7 @@ module LoadServer
     task = data["cmd"]
     port, ip = Socket.unpack_sockaddr_in(get_peername)
     Logging.send($log_file, Logger::DEBUG, "data receive : #{data}")
-    case  task
+    case task
       when "file"
         label = data["label"]
         date = data["date_scraping"]
@@ -85,10 +86,7 @@ module LoadServer
       when "Choosing_landing_pages"
         label = data["label"]
         date_building = data["date_building"]
-        direct_medium_percent = 60 # sera calculé en fonction des objectif
-        organic_medium_percent = 20 # sera calculé en fonction des objectif
-        referral_medium_percent = 20 # sera calculé en fonction des objectif
-        count_visit = COUNT_VISIT # sera calculé en fonction des objectif
+        count_visit, direct_medium_percent, organic_medium_percent, referral_medium_percent = Objective.new(label, date_building).landing_pages
         Building_inputs.Choosing_landing_pages(label, date_building,
                                                direct_medium_percent,
                                                organic_medium_percent,
@@ -99,7 +97,7 @@ module LoadServer
         #TODO faire une requete rest vers le model et recuperer du json
         label = data["label"]
         date_building = data["date_building"]
-        count_visit = COUNT_VISIT
+        count_visit =  Objective.new(label, date_building).count_visits
         Building_inputs.Choosing_device_platform(label, date_building, count_visit)
 
       when "Building_visits"
@@ -108,12 +106,7 @@ module LoadServer
         label = data["label"]
         date_building = data["date_building"]
         # seront fournis par l'objectif du jour
-        count_visit = COUNT_VISIT
-        visit_bounce_rate = 60
-        page_views_per_visit = 2
-        avg_time_on_site = 120
-        min_durations = 1
-        min_pages = 2
+        count_visit,visit_bounce_rate,page_views_per_visit,avg_time_on_site,min_durations, min_pages    = Objective.new(label, date_building).behaviour
         task = Task_building_visits.new(label)
         @@conditions_start.add(task)
         @@conditions_start.decrement(task)
@@ -134,8 +127,7 @@ module LoadServer
         # seront fournis par l'objectif du jour
         #TODO selectionner la planification du jour dans la base de données
         #TODO faire une requete rest vers le model et recuperer du json
-        hourly_distribution = "0;0;0;1;2;3;3.5;3.5;3;2;1;0.5;1;2;3;6;8;10;11;12;12;11.5;2;2"
-        count_visit = COUNT_VISIT
+        count_visit,hourly_distribution = Objective.new(label, date_building).daily_planification
         Building_visits.Building_planification(label, date_building,
                                                hourly_distribution,
                                                count_visit)
@@ -145,10 +137,7 @@ module LoadServer
         #TODO faire une requete rest vers le model et recuperer du json
         label = data["label"]
         date_building = data["date_building"]
-        # seront fournis par l'objectif du jour
-        count_visit = COUNT_VISIT
-        account_ga = "UA-XXXXXX"
-        return_visitor_rate = 40
+        count_visit,account_ga, return_visitor_rate= Objective.new(label, date_building).details
         Building_visits.Extending_visits(label, date_building,
                                          count_visit,
                                          account_ga,
@@ -217,7 +206,7 @@ ARGV.each { |arg|
   $statupbot_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_servers_ip"
   $statupbot_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_server_port"
   $envir = arg.split("=")[1] if arg.split("=")[0] == "--envir"
-  #TODO passer en parametre l'url de l'application rail afin de pourvoir executer les requetes rest de selection de données
+  #TODO passer en parametre le nom de domaine du serveur qui héberge l'application rail afin de pourvoir executer les requetes rest de selection de données
 } if ARGV.size > 0
 
 Logging.send($log_file, Logger::INFO, "parameters of load server : ")
