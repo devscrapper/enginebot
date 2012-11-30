@@ -25,7 +25,7 @@ module LoadServer
   end
 
   def receive_data(param)
-    #TODO multithreader ou spawner les traitements du load server
+    #TODO multithreader ou spawner les traitements du load server si le besoin est averé
     #@execute_task.notify JSON.parse param
     execute_task(JSON.parse param)
   end
@@ -105,7 +105,6 @@ module LoadServer
       when "Building_visits"
         #TODO: selectionner (visit_bounce_rate, count_visit, page_views_per_visit, avg_time_on_site) de l'objectif du jour dans la base de données
         #TODO faire une requete rest vers le model et recuperer du json
-        #TODO  valider le déclenchement de cette tache en dev et prod (TASK_CHOOSING_DEVICE_PLATFORME, TASK_CHOOSING_LANDING_PAGES, CALENDAR)
         label = data["label"]
         date_building = data["date_building"]
         # seront fournis par l'objectif du jour
