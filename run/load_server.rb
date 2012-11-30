@@ -15,7 +15,7 @@ require File.dirname(__FILE__) + '/../model/objective'
 
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
-  #TODO supprimer la variable globale COUNT_VISIT
+
 
 
   @@conditions_start = Start_conditions.new()
@@ -93,19 +93,14 @@ module LoadServer
                                                referral_medium_percent,
                                                count_visit)
       when "Choosing_device_platform"
-        #TODO: selectionner (count_visit) de l'objectif du jour dans la base de données
-        #TODO faire une requete rest vers le model et recuperer du json
         label = data["label"]
         date_building = data["date_building"]
         count_visit =  Objective.new(label, date_building).count_visits
         Building_inputs.Choosing_device_platform(label, date_building, count_visit)
 
       when "Building_visits"
-        #TODO: selectionner (visit_bounce_rate, count_visit, page_views_per_visit, avg_time_on_site) de l'objectif du jour dans la base de données
-        #TODO faire une requete rest vers le model et recuperer du json
         label = data["label"]
         date_building = data["date_building"]
-        # seront fournis par l'objectif du jour
         count_visit,visit_bounce_rate,page_views_per_visit,avg_time_on_site,min_durations, min_pages    = Objective.new(label, date_building).behaviour
         task = Task_building_visits.new(label)
         @@conditions_start.add(task)
@@ -124,17 +119,12 @@ module LoadServer
       when "Building_planification"
         label = data["label"]
         date_building = data["date_building"]
-        # seront fournis par l'objectif du jour
-        #TODO selectionner la planification du jour dans la base de données
-        #TODO faire une requete rest vers le model et recuperer du json
         count_visit,hourly_distribution = Objective.new(label, date_building).daily_planification
         Building_visits.Building_planification(label, date_building,
                                                hourly_distribution,
                                                count_visit)
 
       when "Extending_visits"
-        #TODO: selectionner (account_ga, count_visit, return_visitor_rate) de l'objectif du jour dans la base de données
-        #TODO faire une requete rest vers le model et recuperer du json
         label = data["label"]
         date_building = data["date_building"]
         count_visit,account_ga, return_visitor_rate= Objective.new(label, date_building).details
