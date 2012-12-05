@@ -115,7 +115,7 @@ class Objective
   def select()
     begin
 
-      url = "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives/#{date}.json"
+      url = "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives/#{date}/select.json"
       p url
       resp = Net::HTTP.get_response(URI.parse(url))
       Common.information("getting objective from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
