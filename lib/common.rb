@@ -22,7 +22,6 @@ module Common
       Logging.send($log_file, Logger::DEBUG, "new authentification #{get_response} from  #{ip}:#{port} to 'localhost':#{$authentification_server_port}")
       s.close
     rescue Exception => e
-      p $log_file
       Logging.send($log_file, Logger::ERROR, "ask new authentification from  localhost':#{$authentification_server_port} failed")
     end
     get_response
@@ -92,18 +91,18 @@ module Common
 
 
 
-  def warning(msg)
-    Logging.send($log_file, Logger::WARN, msg)
+  def warning(msg, line=nil)
+    Logging.send($log_file, Logger::WARN, msg, line)
     p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
   end
 
-  def alert(msg)
-    Logging.send($log_file, Logger::ERROR, msg)
+  def alert(msg, line=nil)
+    Logging.send($log_file, Logger::ERROR, msg, line)
     p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} => #{msg}"
   end
 
-  def error(msg)
-    Logging.send($log_file, Logger::ERROR, msg)
+  def error(msg, line=nil)
+    Logging.send($log_file, Logger::ERROR, msg, line)
     p "#{Time.now.strftime("%Y-%m-%d %H:%M:%S")} ERROR => #{msg}"
   end
 

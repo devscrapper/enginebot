@@ -78,10 +78,10 @@ module Building_visits
       if File.exist?(chosen_landing_pages_file)
         p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         IO.foreach(chosen_landing_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
+          Logging.send(LOG_FILE, Logger::DEBUG, "page  #{page}")
           @visits << Visit.new(page.chop, @duration_pages.pop)
           p.increment
         }
-
         building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
         @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:UTF-8")
         @visits_file.sync = true
@@ -248,6 +248,7 @@ module Building_visits
       count_not_bounce_visit.times { |visit|
         begin
           v = @visits.shuffle![0]
+          Logging.send(LOG_FILE, Logger::DEBUG, "prospect #{v} for #{label}")
         end while !v.bounce?
 
         Logging.send(LOG_FILE, Logger::DEBUG, "Exploring visit #{v} for #{label}")

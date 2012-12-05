@@ -12,10 +12,9 @@ require File.dirname(__FILE__) + '/../lib/building_inputs'
 require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../model/task'
 require File.dirname(__FILE__) + '/../model/objective'
-
+require File.dirname(__FILE__) + '/../model/website'
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
-
 
 
   @@conditions_start = Start_conditions.new()
@@ -91,17 +90,19 @@ module LoadServer
                                                direct_medium_percent,
                                                organic_medium_percent,
                                                referral_medium_percent,
-                                               count_visit)
+                                               count_visit) unless count_visit.nil?
+        Common.alert("retrieving count_visit, direct_medium_percent, organic_medium_percent, referral_medium_percent for #{label} at #{date_building} is failed") if count_visit.nil?
       when "Choosing_device_platform"
         label = data["label"]
         date_building = data["date_building"]
-        count_visit =  Objective.new(label, date_building).count_visits
-        Building_inputs.Choosing_device_platform(label, date_building, count_visit)
-
+        count_visit = Objective.new(label, date_building).count_visits
+        Building_inputs.Choosing_device_platform(label, date_building, count_visit) unless count_visit.nil?
+        Common.alert("getting count_visits for #{label} at #{date_building} is failed", __LINE__) if count_visit.nil?
       when "Building_visits"
         label = data["label"]
         date_building = data["date_building"]
-        count_visit,visit_bounce_rate,page_views_per_visit,avg_time_on_site,min_durations, min_pages    = Objective.new(label, date_building).behaviour
+        count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages = Objective.new(label, date_building).behaviour
+        if !count_visit.nil? and   !visit_bounce_rate.nil? and  !page_views_per_visit.nil? and !avg_time_on_site.nil? and !min_durations.nil? and !min_pages.nil?
         task = Task_building_visits.new(label)
         @@conditions_start.add(task)
         @@conditions_start.decrement(task)
@@ -115,23 +116,28 @@ module LoadServer
                                           min_pages)
           @@conditions_start.delete(task)
         end
-
+        else
+          Common.alert("getting count_visits, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages for #{label} at #{date_building} is failed", __LINE__)
+        end
       when "Building_planification"
         label = data["label"]
         date_building = data["date_building"]
-        count_visit,hourly_distribution = Objective.new(label, date_building).daily_planification
+        count_visit, hourly_distribution = Objective.new(label, date_building).daily_planification
         Building_visits.Building_planification(label, date_building,
                                                hourly_distribution,
-                                               count_visit)
+                                               count_visit)  unless count_visit.nil?
+        Common.alert("getting count_visits, hourly_distribution for #{label} at #{date_building} is failed") if count_visit.nil?
 
       when "Extending_visits"
         label = data["label"]
         date_building = data["date_building"]
-        count_visit,account_ga, return_visitor_rate= Objective.new(label, date_building).details
+        account_ga = Website.new(label)
+        count_visit,return_visitor_rate= Objective.new(label, date_building).return_visitor_rate
         Building_visits.Extending_visits(label, date_building,
                                          count_visit,
                                          account_ga,
-                                         return_visitor_rate)
+                                         return_visitor_rate) unless count_visit.nil?
+        Common.alert("getting count_visit, account_ga, return_visitor_rat for #{label} at #{date_building} is failed") if count_visit.nil?
 
       when "Publishing_visits"
         label = data["label"]
@@ -201,7 +207,6 @@ ARGV.each { |arg|
   $statupweb_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupweb_server_port"
   $statupweb_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupweb_server_port"
   $envir = arg.split("=")[1] if arg.split("=")[0] == "--envir"
-  #TODO passer en parametre le nom de domaine du serveur qui héberge l'application rail afin de pourvoir executer les requetes rest de selection de données
 } if ARGV.size > 0
 
 Logging.send($log_file, Logger::INFO, "parameters of load server : ")
