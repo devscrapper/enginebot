@@ -20,6 +20,7 @@ module Building_inputs
   SEPARATOR="%SEP%"
   EOFLINE="%EOFL%"
   SEPARATOR2=";"
+  SEPARATOR4="|"
   EOFLINE2 ="\n"
   LOG_FILE = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
   $log_file = LOG_FILE
@@ -187,17 +188,17 @@ module Building_inputs
 
   def Building_matrix_and_pages(label, date)
     information("Building matrix and page for #{label} is starting")
-    matrix_file = File.open(TMP + "matrix-#{label}-#{date}.txt", "w:utf-8")
+    matrix_file = open_file(TMP, "matrix", label, date)
     matrix_file.sync = true
-    pages_file = File.open(TMP + "pages-#{label}-#{date}.txt", "w:utf-8")
+    pages_file = open_file(TMP, "pages", label, date)
     pages_file.sync = true
 
     vol = 1
     eof = false
     while !eof
       begin
-        # website_file = "Website-#{label}-#{date}-#{vol}.txt"
-        website_file = select_file(INPUT, "Website", label, date, vol)
+        # website_file = "Website_#{label}_#{date}_#{vol}.txt"
+        website_file = select_file(INPUT, "website", label, date, vol)
         if  !website_file.nil?
           count_line = File.foreach(website_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
           pob = ProgressBar.create(:title => File.basename(website_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
@@ -211,7 +212,7 @@ module Building_inputs
           }
           vol += 1
         else
-          Logging.send(LOG_FILE, Logger::DEBUG, "file <Website-#{label}-#{date}-#{vol}> is not found")
+          Logging.send(LOG_FILE, Logger::DEBUG, "file <website-#{label}-#{date}-#{vol}> is not found")
           eof = true
         end
       rescue Errno::ENOENT => e
@@ -229,17 +230,17 @@ module Building_inputs
 
   def Building_landing_pages(label, date)
     information("Building landing pages for #{label} is starting")
-    landing_pages_direct_file = File.open(TMP + "landing-pages-direct-#{label}-#{date}.txt", "w:utf-8")
+    landing_pages_direct_file = open_file(TMP, "landing-pages-direct", label, date)
     landing_pages_direct_file.sync = true
-    landing_pages_referral_file = File.open(TMP + "landing-pages-referral-#{label}-#{date}.txt", "w:utf-8")
+    landing_pages_referral_file = open_file(TMP, "landing-pages-referral", label, date)
     landing_pages_referral_file.sync = true
-    landing_pages_organic_file = File.open(TMP + "landing-pages-organic-#{label}-#{date}.txt", "w:utf-8")
+    landing_pages_organic_file = open_file(TMP, "landing-pages-organic", label, date)
     landing_pages_organic_file.sync = true
     vol = 1
     eof = false
     while !eof
       begin
-        traffic_source_file = select_file(INPUT, "Traffic-source-landing-page", label, date, vol)
+        traffic_source_file = select_file(INPUT, "traffic-source-landing-page", label, date, vol)
         if  !traffic_source_file.nil?
           count_line = File.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
           pob = ProgressBar.create(:title => File.basename(traffic_source_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
@@ -262,7 +263,7 @@ module Building_inputs
           }
           vol += 1
         else
-          Logging.send(LOG_FILE, Logger::DEBUG, "file <Traffic-source-landing-page-#{label}-#{date}-#{vol}> is not found")
+          Logging.send(LOG_FILE, Logger::DEBUG, "file <traffic-source-landing-page-#{label}-#{date}-#{vol}> is not found")
           eof = true
         end
       rescue Exception => e
@@ -279,13 +280,13 @@ module Building_inputs
 
   def Building_device_platform(label, date)
     information("Building device platform for #{label} is starting")
-    device_plugin = select_file(INPUT, "Device-platform-plugin", label, date)
+    device_plugin = select_file(INPUT, "device-platform-plugin", label, date)
 
     if device_plugin.nil?
       alert("Building_device_platform for #{label} fails because inputs Device_platform_plugin file is missing")
       return false
     end
-    device_resolution = select_file(INPUT, "Device-platform-resolution", label, date)
+    device_resolution = select_file(INPUT, "device-platform-resolution", label, date)
     if device_resolution.nil?
       alert("Building_device_platform for #{label} fails because inputs Device_platform_resolution file is missing")
       return false
@@ -321,7 +322,7 @@ module Building_inputs
       p.increment
     }
 
-    device_platform_file = File.open(TMP + "device-platform-#{label}-#{date}.txt", "w:utf-8")
+    device_platform_file = open_file(TMP, "device-platform", label, date)
     total = 0
     device_platforms.sort_by! { |a| [a.count_visits] }.reverse!.each { |device|
       device.count_visits = (device.count_visits.to_f * 100/count_visits)
@@ -332,11 +333,80 @@ module Building_inputs
     information("Building device platform for #{label} is over")
   end
 
+  def Building_hourly_daily_distribution(label, date)
+    information("Building hourly daily distribution for #{label} is starting")
+    distribution = select_file(INPUT, "hourly-daily-distribution", label, date)
+    if distribution.nil?
+      alert("Building hourly daily distribution for #{label} fails because inputs Hourly-daily-distribution file is missing")
+      return false
+    end
+    distribution_per_day_file = open_file(TMP, "hourly-daily-distribution", label, date)
+    distribution_per_day_file.sync = true
+    distribution_per_day = ""
+    i = 1
+    day_save = ""
+    count_line = File.foreach(distribution, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+    p = ProgressBar.create(:title => "Building hourly daily distribution", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
+    IO.foreach(distribution, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
+      #30;00;20121130;21
+      splitted_line = line.strip.split(SEPARATOR2)
+      day = splitted_line[0]
+      hour = splitted_line[1]
+      date = splitted_line[2]
+      count_visits = splitted_line[3]
+      case day_save
+        when ""
+          distribution_per_day = "#{i}#{SEPARATOR2}#{count_visits}#{SEPARATOR4}"
+        when day
+          distribution_per_day += "#{count_visits}#{SEPARATOR4}"
+        else
+          distribution_per_day = distribution_per_day[0..distribution_per_day.size - 2]
+          distribution_per_day_file.write("#{distribution_per_day}#{EOFLINE2}")
+          i+=1
+          distribution_per_day = "#{i}#{SEPARATOR2}#{count_visits}#{SEPARATOR4}"
+      end
+      day_save = day
+      p.increment
+    }
+    distribution_per_day_file.write("#{distribution_per_day[0..distribution_per_day.size - 2]}#{EOFLINE2}")
+    distribution_per_day_file.close
+    information("Building hourly daily distribution for #{label} is over")
+  end
+
+
+  def Building_behaviour(label, date)
+    information("Building behaviour for #{label} is starting")
+    behaviour = select_file(INPUT, "behaviour", label, date)
+    if behaviour.nil?
+      alert("Building behaviour for #{label} fails because inputs behaviour file is missing")
+      return false
+    end
+    behaviour_file = open_file(TMP, "behaviour", label, date)
+    behaviour_file.sync = true
+    count_line = File.foreach(behaviour, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+    p = ProgressBar.create(:title => "Building hourly daily distribution", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
+    i = 1
+    IO.foreach(behaviour, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
+      splitted_line = line.strip.split(SEPARATOR2)
+      #30;20121130;86.30377524143987;66.900790166813;52.25021949078139;1.9569798068481123;1139
+       percent_new_visit = splitted_line[2].to_f.round(2)
+      visit_bounce_rate = splitted_line[3].to_f.round(2)
+      avg_time_on_site = splitted_line[4].to_f.round(2)
+      page_views_per_visit = splitted_line[5].to_f.round(2)
+      count_visits = splitted_line[6].to_i
+      behaviour_file.write("#{i}#{SEPARATOR2}#{percent_new_visit}#{SEPARATOR2}#{visit_bounce_rate}#{SEPARATOR2}#{avg_time_on_site}#{SEPARATOR2}#{page_views_per_visit}#{SEPARATOR2}#{count_visits}#{EOFLINE2}")
+      i +=1
+      p.increment
+    }
+    behaviour_file.close
+    information("Building behaviour for #{label} is over")
+  end
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
     information("Choosing landing pages for #{label} is starting")
 
-    File.delete(TMP + "chosen_landing_pages-#{label}-#{date}.txt") if File.exist?(TMP + "chosen_landing_pages-#{label}-#{date}.txt")
+    file = id_file(TMP, "chosen-landing-pages", label, date)
+    File.delete(file) if File.exist?(file)
     result = Choosing_landing(label, date, "direct", direct_medium_percent, count_visit) &&
         Choosing_landing(label, date, "referral", referral_medium_percent, count_visit) &&
         Choosing_landing(label, date, "organic", organic_medium_percent, count_visit)
@@ -353,18 +423,18 @@ module Building_inputs
     device_platform = select_file(TMP, "device-platform", label, date)
 
     if device_platform.nil?
-      alert("Choosing_device_platform for #{label} fails because inputs device-platforme file for #{label} in date of #{date} is missing")
+      alert("Choosing_device_platform for #{label} fails because inputs #{device_platform} file for #{label} in date of #{date} is missing")
       return false
     end
-    chosen_device_platform_file = File.open(TMP + "chosen-device-platform-#{label}-#{date}.txt", "w:utf-8")
+    chosen_device_platform_file = open_file(TMP, "chosen-device-platform", label, date)
     total_visits = 0
     pob = ProgressBar.create(:title => File.basename(device_platform), :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
     IO.foreach(device_platform, EOFLINE2, encoding: "BOM|UTF-8:-") { |device|
       chosen_device = Chosen_device_platform.new(device)
-      count_device = Common.max((chosen_device.count_visits * count_visits / 100).to_i,1)
-      count_device = count_visits - total_visits if total_visits + count_device > count_visits  # pour eviter de peasser le nombre de visite attendues
+      count_device = Common.max((chosen_device.count_visits * count_visits / 100).to_i, 1)
+      count_device = count_visits - total_visits if total_visits + count_device > count_visits # pour eviter de peasser le nombre de visite attendues
       total_visits += count_device
-      count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE2}")  ; pob.increment }
+      count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE2}"); pob.increment }
 
     }
     chosen_device_platform_file.close
@@ -380,7 +450,8 @@ module Building_inputs
     landing_pages_file = File.open(landing_pages, "r:utf-8")
     medium_count = (medium_percent * count_visit / 100).to_i
     landing_pages_file_lines = File.foreach(landing_pages).inject(0) { |c, line| c+1 }
-    chosen_landing_pages_file = File.open(TMP + "chosen_landing_pages-#{label}-#{date}.txt", "a:utf-8")
+    Common.archive_file(TMP, "chosen-landing-pages", label)
+    chosen_landing_pages_file = File.open(id_file(TMP, "chosen-landing-pages", label, date), "a:utf-8") #TMP + "chosen_landing_pages-#{label}-#{date}.txt", "a:utf-8")
     chosen_landing_pages_file.sync =true
 
     p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => 180, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
@@ -413,10 +484,17 @@ module Building_inputs
   def select_file(dir, type_file, label, date, vol=nil)
     Common.select_file(dir, type_file, label, date, vol)
   end
-
+  def id_file(dir, type_file, label, date, vol=nil, ext="txt")
+    Common.id_file(dir, type_file, label, date, vol, ext)
+  end
+  def open_file(dir, type_file, label, date, vol=nil, ext="txt")
+    Common.open_file(dir, type_file, label, date, vol, ext)
+  end
   module_function :Building_matrix_and_pages
   module_function :Building_landing_pages
   module_function :Building_device_platform
+  module_function :Building_hourly_daily_distribution
+  module_function :Building_behaviour
   module_function :Choosing_device_platform
   module_function :Choosing_landing_pages
 
@@ -426,5 +504,7 @@ module Building_inputs
   module_function :information
   module_function :alert
   module_function :select_file
+  module_function :id_file
+  module_function :open_file
 
 end

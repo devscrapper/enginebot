@@ -1,15 +1,16 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
 
+require "fileutils"
 require File.dirname(__FILE__) + '/../lib/logging'
 #------------------------------------------------------------------------------------------
 # Pre requis gem
 #------------------------------------------------------------------------------------------
 
 
-
 module Common
-
+  SEPARATOR6 = "_"
+  ARCHIVE = File.dirname(__FILE__) + "/../archive/"
 
   def get_authentification
     begin
@@ -29,29 +30,29 @@ module Common
 
   def push_file(id_file, last_volume = false)
 
-      begin
-        response = get_authentification
-        s = TCPSocket.new $statupbot_server_ip, $statupbot_server_port
-        port, ip = Socket.unpack_sockaddr_in(s.getsockname)
-        data = {"who" => self.class.name,
-                "where" => ip,
-                "cmd" => "file",
-                "type_file" => "published-visits",
-                "id_file" => id_file,
-                "last_volume" => last_volume,
-                "user" => response["user"],
-                "pwd" => response["pwd"]}
-        Logging.send($log_file, Logger::DEBUG, "push file #{data}")
-        s.puts JSON.generate(data)
+    begin
+      response = get_authentification
+      s = TCPSocket.new $statupbot_server_ip, $statupbot_server_port
+      port, ip = Socket.unpack_sockaddr_in(s.getsockname)
+      data = {"who" => self.class.name,
+              "where" => ip,
+              "cmd" => "file",
+              "type_file" => "published-visits",
+              "id_file" => id_file,
+              "last_volume" => last_volume,
+              "user" => response["user"],
+              "pwd" => response["pwd"]}
+      Logging.send($log_file, Logger::DEBUG, "push file #{data}")
+      s.puts JSON.generate(data)
 
-        Logging.send($log_file, Logger::INFO, "push file #{id_file} from #{ip}:#{port} to #{$statupbot_server_ip}:#{$statupbot_server_port}")
+      Logging.send($log_file, Logger::INFO, "push file #{id_file} from #{ip}:#{port} to #{$statupbot_server_ip}:#{$statupbot_server_port}")
 
-        s.close
-      rescue Exception => e
-        Logging.send($log_file, Logger::ERROR, "push file #{id_file} failed to #{$statupbot_server_ip}:#{$statupbot_server_port} : #{e.message}")
-      end
-
+      s.close
+    rescue Exception => e
+      Logging.send($log_file, Logger::ERROR, "push file #{id_file} failed to #{$statupbot_server_ip}:#{$statupbot_server_port} : #{e.message}")
     end
+
+  end
 
   def get_file(id_file, host_ftp_server, user, pwd)
     begin
@@ -59,6 +60,12 @@ module Common
       ftp.login(user, pwd)
       ftp.gettextfile(id_file, INPUT + id_file)
       ftp.delete(id_file)
+      #TODO archiver le vieux fichier => à valider
+      /(?<type_file>(.+))_(?<label>(.+))_(?<date>(.+))_(?<vol>(.+))/ =~ id_file
+      p "#{INPUT}#{Regexp.last_match(:type_file)}#{SEPARATOR6}#{Regexp.last_match(:label)}*.txt"
+      Dir.glob("#{INPUT}#{Regexp.last_match(:type_file)}#{SEPARATOR6}#{Regexp.last_match(:label)}*.txt").each{|file|
+        FileUtils.mv(file, ARCHIVE, :force => true) if File.ctime(file) < File.ctime(INPUT + id_file)
+      }
       ftp.close
 
       Logging.send($log_file, Logger::INFO, "download file, #{id_file}to #{INPUT + id_file}")
@@ -79,17 +86,36 @@ module Common
   end
 
   def select_file(dir, type_file, label, date, vol=nil)
-    volum = "-#{vol}" unless vol.nil?
-    volum  = "" if vol.nil?
-    if File.exist?("#{dir}#{type_file}-#{label}-#{date}#{volum}.txt")
-      "#{dir}#{type_file}-#{label}-#{date}#{volum}.txt"
+    file = id_file(dir, type_file, label, date, vol)
+    if File.exist?(file)
+      file
     else
-      Logging.send($log_file, Logger::WARN, "File <#{dir}#{type_file}-#{label}-#{date}#{volum}.txt> is not found")
-    Dir.glob("#{dir}#{type_file}-#{label}-*#{volum}.txt").sort{|a, b| b<=>a}[0]
+      Logging.send($log_file, Logger::WARN, "File <#{file}> is not found")
+      volum = "#{SEPARATOR6}#{vol}" unless vol.nil?
+      volum = "" if vol.nil?
+      #TODO corriger le moyen de selection : ne pas s'appuyer sur le nom du fichier mais plutot la date de creation
+      Dir.glob("#{dir}#{type_file}#{SEPARATOR6}#{label}#{SEPARATOR6}*#{volum}.txt").sort { |a, b| b<=>a }[0]
     end
   end
+  def archive_file(dir, type_file, label, vol=nil)
+    volum = "#{SEPARATOR6}#{vol}" unless vol.nil?
+    volum = "" if vol.nil?
+    FileUtils.mv Dir.glob("#{dir}#{type_file}#{SEPARATOR6}#{label}#{SEPARATOR6}*#{volum}*"), ARCHIVE, :force => true
+  end
+  def id_file(dir, type_file, label, date, vol=nil, ext="txt")
+    volum = "#{SEPARATOR6}#{vol}" unless vol.nil?
+    volum = "" if vol.nil?
+    "#{dir}#{type_file}#{SEPARATOR6}#{label}#{SEPARATOR6}#{date}#{volum}.#{ext}"
+  end
 
-
+  def open_file(dir, type_file, label, date, vol=nil, ext="txt")
+    #volum = "#{SEPARATOR6}#{vol}" unless vol.nil?
+    #volum = "" if vol.nil?
+    #p Dir.glob("#{dir}#{type_file}#{SEPARATOR6}#{label}#{SEPARATOR6}*#{volum}")
+    #FileUtils.mv Dir.glob("#{dir}#{type_file}#{SEPARATOR6}#{label}#{SEPARATOR6}*#{volum}"), ARCHIVE, :force => true
+    archive_file(dir, type_file, label, vol)
+    File.open(id_file(dir, type_file, label, date, vol, ext), "w:UTF-8")
+  end
 
   def warning(msg, line=nil)
     Logging.send($log_file, Logger::WARN, msg, line)
@@ -107,11 +133,11 @@ module Common
   end
 
   def min(a, b)
-     a < b ? a : b
+    a < b ? a : b
   end
 
   def max(a, b)
-     a > b ? a : b
+    a > b ? a : b
   end
 
   module_function :min
@@ -119,6 +145,9 @@ module Common
   module_function :information
   module_function :execute_next_task
   module_function :select_file
+  module_function :id_file
+  module_function :archive_file
+  module_function :open_file
   module_function :alert
   module_function :warning
   module_function :error

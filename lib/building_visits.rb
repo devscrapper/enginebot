@@ -12,6 +12,8 @@ require 'socket'
 #------------------------------------------------------------------------------------------
 
 
+
+
 module Building_visits
 #------------------------------------------------------------------------------------------
 # Globals variables
@@ -68,12 +70,12 @@ module Building_visits
       Logging.send(LOG_FILE, Logger::DEBUG, "min_durations #{min_durations}")
       Logging.send(LOG_FILE, Logger::DEBUG, "min_pages #{min_pages}")
 
-      count_pages = count_visit * page_views_per_visit
-      count_durations = count_visit * avg_time_on_site
+      count_pages = (count_visit * page_views_per_visit).to_i
+      count_durations = (count_visit * avg_time_on_site).to_i
 
       @duration_pages = distributing(count_pages, count_durations, min_durations)
       @visits = []
-      chosen_landing_pages_file = TMP + "chosen_landing_pages-#{label}-#{date}.txt"
+      chosen_landing_pages_file = id_file(TMP,"chosen-landing-pages", label, date)
 
       if File.exist?(chosen_landing_pages_file)
         p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
@@ -83,7 +85,8 @@ module Building_visits
           p.increment
         }
         building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
-        @visits_file = File.open(TMP + "visits-#{label}-#{date}.txt", "w:UTF-8")
+        #@visits_file = File.open(id_file(TMP,"visits", label, date), "w:UTF-8")
+        @visits_file = open_file(TMP,"visits", label, date)
         @visits_file.sync = true
         p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}"); p.increment }
@@ -109,21 +112,24 @@ module Building_visits
     begin
       information("Building planification of visit for #{label} is starting")
 
-      hourly_distribution = hourly_distribution.split(";")
+      hourly_distribution = hourly_distribution.split(SEPARATOR4)
       @count_visits_by_hour = []
       @planed_visits_by_hour_file = []
       rest_sum = 0
+
       hourly_distribution.each_index { |hour|
         @count_visits_by_hour << [hour, (hourly_distribution[hour].to_f * count_visits).divmod(100)[0]]
         rest_sum += (hourly_distribution[hour].to_f * count_visits).divmod(100)[1]
-        @planed_visits_by_hour_file[hour] = File.open(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", "w:UTF-8")
+        @planed_visits_by_hour_file[hour] = open_file(TMP, "planed-visits",label,date,hour)
         @planed_visits_by_hour_file[hour].sync = true
+
       }
+
       @count_visits_by_hour[rand(23)][1] += (rest_sum/count_visits).to_i # permet d'eviter de perdre des visits lors de la division qd le reste est non nul => n'arrive pas si le nombre de viste est grand
 
       p = ProgressBar.create(:title => "Saving planed visits", :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
 
-      IO.foreach(TMP + "visits-#{label}-#{date}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
+      IO.foreach(id_file(TMP, "visits",label,date), EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
         hour = chose_an_hour()
         v = Planed_visit.new(visit, date, hour)
         @planed_visits_by_hour_file[hour].write("#{v.to_s}#{EOFLINE2}")
@@ -148,7 +154,7 @@ module Building_visits
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
     begin
       information("Extending visits for #{label} is starting")
-      device_platforme_id_file = TMP + "chosen-device-platform-#{label}-#{date}.txt"
+      device_platforme_id_file = id_file(TMP, "chosen-device-platform",label,date)
       if !File.exist?(device_platforme_id_file)
         alert("Extending visits is failed because <#{device_platforme_id_file}> file is not found")
         return
@@ -168,18 +174,19 @@ module Building_visits
       p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
       24.times { |hour|
 
-        final_visits_by_hour_file = File.open(TMP + "final-visits-#{label}-#{date}-#{hour}.txt", "w:UTF-8")
+        final_visits_by_hour_file = open_file(TMP,"final-visits", label, date, hour)
         final_visits_by_hour_file.sync = true
 
-        alert("<#{TMP + "planed-visits-#{label}-#{date}-#{hour}.txt"}> file is not found") if !File.exist?(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt")
+        planed_visits_id_file = id_file(TMP,"planed-visits", label, date, hour )
+        alert("<#{planed_visits_id_file}> file is not found") if !File.exist?(planed_visits_id_file)
 
-        IO.foreach(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt", EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
+        IO.foreach(planed_visits_id_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
           return_visitor = return_visitors.shift
           v = Final_visit.new(visit, account_ga, return_visitor, pages_file, device_platforms.shift)
           final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE2}")
           p.increment
 
-        } unless File.zero?(TMP + "planed-visits-#{label}-#{date}-#{hour}.txt")
+        } unless File.zero?(planed_visits_id_file)
         final_visits_by_hour_file.close
       }
       device_platform_file.close
@@ -201,10 +208,10 @@ module Building_visits
     begin
       information("Publishing visits for #{label} is starting")
       24.times { |hour|
-        published_visits_to_json_id_file = OUTPUT + "published-visits-#{label}-#{date}-#{hour}.json"
+        published_visits_to_json_id_file = id_file(OUTPUT,"published-visits",label,date,hour,"json")
         published_visits_to_json_file = File.open(published_visits_to_json_id_file, "w:UTF-8")
         published_visits_to_json_file.sync = true
-        final_visits_file = TMP + "final-visits-#{label}-#{date}-#{hour}.txt"
+        final_visits_file = id_file(TMP,"final-visits",label,date,hour)
         count_line = File.foreach(final_visits_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
         p = ProgressBar.create(:title => "publish #{File.basename(final_visits_file)}", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
         IO.foreach(final_visits_file, EOFLINE2, encoding: "UTF-8:-") { |visit|
@@ -229,9 +236,11 @@ module Building_visits
   def building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
     begin
       count_bounce_visit = (visit_bounce_rate * count_visit/100).to_i
+      p count_bounce_visit
       count_not_bounce_visit = count_visit - count_bounce_visit
       count_pages_bounce_visit = count_bounce_visit
-      count_pages_not_bounce_visit = count_visit * page_views_per_visit - count_pages_bounce_visit
+      count_pages_not_bounce_visit = (count_visit * page_views_per_visit).to_i - count_pages_bounce_visit
+      p count_pages_not_bounce_visit
       count_pages_per_visits = distributing(count_not_bounce_visit, count_pages_not_bounce_visit, min_pages)
       Logging.send(LOG_FILE, Logger::DEBUG, "count_bounce_visit #{count_bounce_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_not_bounce_visit #{count_not_bounce_visit}")
@@ -329,6 +338,8 @@ module Building_visits
   end
 
   def distributing(into, values, min_values_per_into)
+    p into
+    p values
     information ("distribution is starting")
     values_per_into = (values/into).to_i
     max_values_per_into = 2 * values_per_into - min_values_per_into
@@ -396,7 +407,12 @@ module Building_visits
   def select_file(dir, type_file, label, date)
     Common.select_file(dir, type_file, label, date)
   end
-
+  def id_file(dir, type_file, label, date, vol=nil, ext="txt")
+    Common.id_file(dir, type_file, label, date, vol, ext)
+  end
+  def open_file(dir, type_file, label, date, vol=nil, ext="txt")
+    Common.open_file(dir, type_file, label, date, vol, ext)
+  end
 # public
   module_function :Building_planification
   module_function :Building_visits
@@ -417,4 +433,6 @@ module Building_visits
   module_function :information
   module_function :execute_next_task
   module_function :select_file
+  module_function :id_file
+  module_function :open_file
 end

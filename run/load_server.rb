@@ -9,9 +9,11 @@ require 'net/ftp'
 require "ruby-progressbar"
 require File.dirname(__FILE__) + '/../lib/building_visits'
 require File.dirname(__FILE__) + '/../lib/building_inputs'
+require File.dirname(__FILE__) + '/../lib/building_objectives'
 require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../model/task'
 require File.dirname(__FILE__) + '/../model/objective'
+require File.dirname(__FILE__) + '/../model/policy'
 require File.dirname(__FILE__) + '/../model/website'
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
@@ -55,6 +57,10 @@ module LoadServer
             Common.execute_next_task("Building_device_platform", label, date) if last_volume
           when "Device_platform_resolution"
             Common.execute_next_task("Building_device_platform", label, date) if last_volume
+          when "Hourly_daily_distribution"
+            Common.execute_next_task("Building_hourly_daily_distribution", label, date) if last_volume
+          when "Behaviour"
+            Common.execute_next_task("Building_behaviour", label, date) if last_volume
           else
             Logging.send($log_file, Logger::DEBUG, "type file unknown : #{type_file} for #{id_file}")
         end
@@ -82,40 +88,66 @@ module LoadServer
           @@conditions_start.delete(task)
         end
 
+      when "Building_hourly_daily_distribution"
+        label = data["label"]
+        date_building = data["date_building"]
+        Building_inputs.Building_hourly_daily_distribution(label, date_building)
+
+      when "Building_behaviour"
+        label = data["label"]
+        date_building = data["date_building"]
+        Building_inputs.Building_behaviour(label, date_building)
+
       when "Choosing_landing_pages"
         label = data["label"]
         date_building = data["date_building"]
         count_visit, direct_medium_percent, organic_medium_percent, referral_medium_percent = Objective.new(label, date_building).landing_pages
-        Building_inputs.Choosing_landing_pages(label, date_building,
-                                               direct_medium_percent,
-                                               organic_medium_percent,
-                                               referral_medium_percent,
-                                               count_visit) unless count_visit.nil?
-        Common.alert("retrieving count_visit, direct_medium_percent, organic_medium_percent, referral_medium_percent for #{label} at #{date_building} is failed") if count_visit.nil?
+        Logging.send($log_file, Logger::DEBUG, "Choosing_landing_pages : count_visit = #{count_visit}, \
+              direct_medium_percent #{direct_medium_percent} \
+              organic_medium_percent #{organic_medium_percent} \
+              referral_medium_percent #{referral_medium_percent}")
+
+        if !count_visit.nil? and !direct_medium_percent.nil? and !organic_medium_percent.nil? and !referral_medium_percent.nil?
+          Building_inputs.Choosing_landing_pages(label, date_building,
+                                                 direct_medium_percent.to_i,
+                                                 organic_medium_percent.to_i,
+                                                 referral_medium_percent.to_i,
+                                                 count_visit.to_i)
+        else
+          Common.alert("retrieving count_visit, direct_medium_percent, organic_medium_percent, referral_medium_percent for #{label} at #{date_building} is failed")
+        end
       when "Choosing_device_platform"
         label = data["label"]
         date_building = data["date_building"]
         count_visit = Objective.new(label, date_building).count_visits
-        Building_inputs.Choosing_device_platform(label, date_building, count_visit) unless count_visit.nil?
+        Logging.send($log_file, Logger::DEBUG, "Choosing_device_platform : count_visit = #{count_visit}")
+        Building_inputs.Choosing_device_platform(label, date_building, count_visit.to_i) unless count_visit.nil?
         Common.alert("getting count_visits for #{label} at #{date_building} is failed", __LINE__) if count_visit.nil?
+
       when "Building_visits"
         label = data["label"]
         date_building = data["date_building"]
         count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages = Objective.new(label, date_building).behaviour
-        if !count_visit.nil? and   !visit_bounce_rate.nil? and  !page_views_per_visit.nil? and !avg_time_on_site.nil? and !min_durations.nil? and !min_pages.nil?
-        task = Task_building_visits.new(label)
-        @@conditions_start.add(task)
-        @@conditions_start.decrement(task)
-        if $envir == "dev" or ($envir == "prod" and @@conditions_start.execute?(task))
-          Building_visits.Building_visits(label, date_building,
-                                          count_visit,
-                                          visit_bounce_rate,
-                                          page_views_per_visit,
-                                          avg_time_on_site,
-                                          min_durations,
-                                          min_pages)
-          @@conditions_start.delete(task)
-        end
+        Logging.send($log_file, Logger::DEBUG, "Building_visits : count_visit = #{count_visit}, \
+              visit_bounce_rate #{visit_bounce_rate} \
+              page_views_per_visit #{page_views_per_visit} \
+              avg_time_on_site #{avg_time_on_site} \
+              min_durations #{min_durations} \
+              min_pages #{min_pages}")
+        if !count_visit.nil? and !visit_bounce_rate.nil? and !page_views_per_visit.nil? and !avg_time_on_site.nil? and !min_durations.nil? and !min_pages.nil?
+          task = Task_building_visits.new(label)
+          @@conditions_start.add(task)
+          @@conditions_start.decrement(task)
+          if $envir == "dev" or ($envir == "prod" and @@conditions_start.execute?(task))
+            Building_visits.Building_visits(label, date_building,
+                                            count_visit.to_i,
+                                            visit_bounce_rate.to_f,
+                                            page_views_per_visit.to_f,
+                                            avg_time_on_site.to_f,
+                                            min_durations.to_i,
+                                            min_pages.to_i)
+            @@conditions_start.delete(task)
+          end
         else
           Common.alert("getting count_visits, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages for #{label} at #{date_building} is failed", __LINE__)
         end
@@ -123,29 +155,62 @@ module LoadServer
         label = data["label"]
         date_building = data["date_building"]
         count_visit, hourly_distribution = Objective.new(label, date_building).daily_planification
-        Building_visits.Building_planification(label, date_building,
-                                               hourly_distribution,
-                                               count_visit)  unless count_visit.nil?
-        Common.alert("getting count_visits, hourly_distribution for #{label} at #{date_building} is failed") if count_visit.nil?
-
+        Logging.send($log_file, Logger::DEBUG, "Building_planification : count_visit = #{count_visit}, \
+            hourly_distribution #{hourly_distribution}")
+        if !count_visit.nil? and !hourly_distribution.nil?
+          Building_visits.Building_planification(label, date_building,
+                                                 hourly_distribution,
+                                                 count_visit.to_i)
+        else
+          Common.alert("getting count_visits, hourly_distribution for #{label} at #{date_building} is failed")
+        end
       when "Extending_visits"
         label = data["label"]
         date_building = data["date_building"]
-        account_ga = Website.new(label)
-        count_visit,return_visitor_rate= Objective.new(label, date_building).return_visitor_rate
-        Building_visits.Extending_visits(label, date_building,
-                                         count_visit,
-                                         account_ga,
-                                         return_visitor_rate) unless count_visit.nil?
-        Common.alert("getting count_visit, account_ga, return_visitor_rat for #{label} at #{date_building} is failed") if count_visit.nil?
+        account_ga = Website.new(label).account_ga
+        Logging.send($log_file, Logger::DEBUG, "Extending_visits : account_ga = #{account_ga}")
+        count_visit, return_visitor_rate= Objective.new(label, date_building).return_visitor_rate
+        Logging.send($log_file, Logger::DEBUG, "Extending_visits : count_visit = #{count_visit} \
+                                                                   return_visitor_rate = #{return_visitor_rate} ")
+        if !account_ga.nil? and !count_visit.nil? and !return_visitor_rate.nil?
+          Building_visits.Extending_visits(label, date_building,
+                                           count_visit.to_i,
+                                           account_ga,
+                                           return_visitor_rate.to_f)
+        else
+          Common.alert("getting count_visit, account_ga, return_visitor_rat for #{label} at #{date_building} is failed")
+        end
 
       when "Publishing_visits"
         label = data["label"]
         date_building = data["date_building"]
         Building_visits.Publishing_visits(label, date_building)
 
-      when "Pushing_visits_file"
+      when "Building_objectives"
+        label = data["label"]
+        date_building = data["date_building"]
+        change_count_visits_percent, change_bounce_visits_percent, direct_medium_percent, organic_medium_percent, referral_medium_percent = Policy.new(label, date_building).properties
+        Logging.send($log_file, Logger::DEBUG, "Building_objectives : change_count_visits_percent = #{change_count_visits_percent}, \
+                     change_bounce_visits_percent #{change_bounce_visits_percent} \
+                     direct_medium_percent #{direct_medium_percent} \
+                     organic_medium_percent #{organic_medium_percent} \
+                     referral_medium_percent #{referral_medium_percent}")
 
+        if !change_count_visits_percent.nil? and !change_bounce_visits_percent.nil? and !direct_medium_percent.nil? and !organic_medium_percent.nil? and !referral_medium_percent.nil?
+          task = Task_building_objectives.new(label)
+          @@conditions_start.add(task)
+          @@conditions_start.decrement(task)
+          if $envir == "dev" or ($envir == "prod" and @@conditions_start.execute?(task))
+            Building_objectives.Publishing(label, date_building,
+                                           change_count_visits_percent.to_i,
+                                           change_bounce_visits_percent.to_i,
+                                           direct_medium_percent.to_i,
+                                           organic_medium_percent.to_i,
+                                           referral_medium_percent.to_i)
+          end
+        else
+          Common.alert("getting change_count_visits_percent, change_bounce_visits_percent, direct_medium_percent, organic_medium_percent, referral_medium_percent for #{label} at #{date_building} is failed", __LINE__)
+        end
       when "exit"
         close_connection
         EventMachine.stop

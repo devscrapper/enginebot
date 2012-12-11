@@ -1,5 +1,7 @@
-require 'net/http'
+require 'rubygems'
+require "em-http-request"
 require 'uri'
+require 'net/http'
 require File.dirname(__FILE__) + '/../lib/logging'
 require File.dirname(__FILE__) + '/../lib/common'
 class Objective
@@ -16,8 +18,7 @@ class Objective
        :direct_medium_percent,
        :referral_medium_percent,
        :organic_medium_percent,
-       :hourly_distribution,
-       :website_id
+       :hourly_distribution
 
   def initialize(label, date,
       count_visits =nil,
@@ -30,9 +31,7 @@ class Objective
       direct_medium_percent=nil,
       referral_medium_percent=nil,
       organic_medium_percent=nil,
-      hourly_distribution=nil,
-      policy_id=nil,
-      website_id=nil)
+      hourly_distribution=nil)
     #TODO securiser le fait qu'il ne peut y avoir 2 profils pour un website pour un jour donné lors de la creation du profil avec un callback
     @date = date
     @label = label
@@ -47,14 +46,13 @@ class Objective
     @referral_medium_percent=referral_medium_percent
     @organic_medium_percent=organic_medium_percent
     @hourly_distribution=hourly_distribution
-    @website_id=website_id
   end
 
   def to_json(*a)
     {
-        "objective" => {"day(1i)" => Date.parse(@date).year.to_s,
-                        "day(2i)" => Date.parse(@date).month.to_s,
-                        "day(3i)" => Date.parse(@date).day.to_s,
+        "objective" => {"day(1i)" => @date.year.to_s,
+                        "day(2i)" => @date.month.to_s,
+                        "day(3i)" => @date.day.to_s,
                         "count_visits" => @count_visits.to_s,
                         "visit_bounce_rate" => @visit_bounce_rate.to_s,
                         "return_visitor_rate" => @return_visitor_rate.to_s,
@@ -65,45 +63,43 @@ class Objective
                         "direct_medium_percent" => @direct_medium_percent.to_s,
                         "organic_medium_percent" => @organic_medium_percent.to_s,
                         "referral_medium_percent" => @referral_medium_percent.to_s,
-                        "hourly_distribution" => @hourly_distribution,
-                        "website_id" => @website_id.to_s
+                        "hourly_distribution" => @hourly_distribution
         }
     }
 
   end
 
   def count_visits()
-    select["count_visits"].to_i
+    select["count_visits"]
   end
 
   def landing_pages()
     result = select
-    [result["count_visits"].to_i,
-     result["direct_medium_percent"].to_i,
-     result["organic_medium_percent"].to_i,
-     result["referral_medium_percent"].to_i]
+    [result["count_visits"],
+     result["direct_medium_percent"],
+     result["organic_medium_percent"],
+     result["referral_medium_percent"]]
   end
 
   def behaviour()
     result = select
-    [result["count_visits"].to_i,
-     result["visit_bounce_rate"].to_i,
-     result["page_views_per_visit"].to_i,
-     result["avg_time_on_site"].to_i,
-     result["min_durations"].to_i,
-     result["min_pages"].to_i]
+    [result["count_visits"],
+     result["visit_bounce_rate"],
+     result["page_views_per_visit"],
+     result["avg_time_on_site"],
+     result["min_durations"],
+     result["min_pages"]]
   end
 
   def return_visitor_rate()
     result = select
-    [result["count_visits"].to_i,
-     result["return_visitor_rate"].to_i]
+    [result["count_visits"],
+     result["return_visitor_rate"]]
   end
 
   def daily_planification()
     result = select
-    p result
-    [result["count_visits"].to_i,
+    [result["count_visits"],
      result["hourly_distribution"]]
   end
 
@@ -116,17 +112,38 @@ class Objective
     begin
 
       url = "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives/#{date}/select.json"
-      p url
+
       resp = Net::HTTP.get_response(URI.parse(url))
-      Common.information("getting objective from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
-      JSON.parse(resp.body)
+
+      if  resp.is_a?(Net::HTTPSuccess) and !(resp.body == "null")
+
+          res = JSON.parse(resp.body)
+          Common.information("getting objective websites = #{label}, objectives = #{date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
+      else
+      if resp.is_a?(Net::HTTPSuccess) and resp.body == "null"
+
+          res = {}
+          Common.alert("getting objective websites = #{label}, objectives = #{date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} not found")
+      else
+      if !resp.is_a?(Net::HTTPSuccess)
+
+          res = {}
+          Common.alert("getting objective websites = #{label}, objectives = #{date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : http error : #{resp.error}")
+      end
+      end
+      end
+
+      res
     rescue Exception => e
-      Common.alert("getting objective from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : #{e.message}", __LINE__)
+      Common.alert("getting  objective websites = #{label}, objectives = #{date} from statupweb from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : #{e.message}", __LINE__)
       {}
     end
   end
 
   def insert()
+
+    #TODO : gerer le WARNING: Can't verify CSRF token authenticity
+    #TODO : etudier la necessite de faire du https et d'une authentification pour faire l'insertion
     uri = URI("http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives")
     http = EventMachine::HttpRequest.new(uri).post :body => self.to_json
     http.callback {
@@ -135,5 +152,6 @@ class Objective
     http.errback {
       Common.alert("saving objective #{@date} for #{@label} in statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : #{http.state}", __LINE__)
     }
+
   end
 end

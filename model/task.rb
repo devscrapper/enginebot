@@ -60,3 +60,9 @@ class Task_building_visits  < Task
   end
 end
 
+
+class Task_building_objectives  < Task
+  def initialize(label)
+    super("Building_objectives", label, 1)
+  end
+end
