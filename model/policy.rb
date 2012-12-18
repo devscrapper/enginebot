@@ -8,7 +8,7 @@ class Policy
        :date
 
   def initialize(label, date)
-    #TODO securiser le fait qu'il ne peut y avoir 2 profils pour un website pour un jour donné lors de la creation du profil avec un callback
+
      @label = label
     @date = date
   end
@@ -33,15 +33,15 @@ class Policy
       resp = Net::HTTP.get_response(URI.parse(url))
       if  resp.is_a?(Net::HTTPSuccess) and !(resp.body == "null")
           res = JSON.parse(resp.body)
-          Common.information("getting policy websites = #{@label}, objectives = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
+          Common.information("getting policy websites = #{@label}, policies = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
       else
       if resp.is_a?(Net::HTTPSuccess) and resp.body == "null"
           res = {}
-          Common.alert("getting policy websites = #{@label}, objectives = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} not found")
+          Common.alert("getting policy websites = #{@label}, policies = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} not found")
       else
       if !resp.is_a?(Net::HTTPSuccess)
           res = {}
-          Common.alert("getting policy websites = #{@label}, objectives = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : http error : #{resp.error}")
+          Common.alert("getting policy websites = #{@label}, policies = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : http error : #{resp}")
       end
       end
       end

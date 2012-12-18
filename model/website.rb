@@ -29,7 +29,7 @@ class Website
         else
           if !resp.is_a?(Net::HTTPSuccess)
             res = {}
-            Common.alert("getting website websites = #{@label}, objectives = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : http error : #{resp.error}")
+            Common.alert("getting website websites = #{@label}, objectives = #{@date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : http error : #{resp}")
           end
         end
       end
