@@ -75,7 +75,7 @@ module Building_visits
 
       @duration_pages = distributing(count_pages, count_durations, min_durations)
       @visits = []
-      #TODO remplacer id_file par select file
+
       chosen_landing_pages_file = select_file(TMP, "chosen-landing-pages", label, date)
       #chosen_landing_pages_file = id_file(TMP,"chosen-landing-pages", label, date)
 
@@ -157,8 +157,6 @@ module Building_visits
     begin
 
       information("Extending visits for #{label} is starting")
-      #TODO remplacer id_file par select file
-      #device_platforme_id_file = id_file(TMP, "chosen-device-platform",label,date)
       device_platforme_id_file = select_file(TMP, "chosen-device-platform", label, date)
       if !File.exist?(device_platforme_id_file)
         alert("Extending visits is failed because <#{device_platforme_id_file}> file is not found")

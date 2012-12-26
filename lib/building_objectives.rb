@@ -87,7 +87,7 @@ module Building_objectives
       behaviour.size.times { |line|
         splitted_behaviour = behaviour[line].strip.split(SEPARATOR2)
         splitted_hourly_daily_distribution = hourly_daily_distribution[line].strip.split(SEPARATOR2)
-        #TODO enregistrer dans le calendar local de la creation des nouveau objectifs
+
         obj = Objective.new(label, day,
                             (splitted_behaviour[5].to_i * (1 + (change_count_visits_percent.to_f / 100))).to_i,
                             (splitted_behaviour[2].to_f * (1 + (change_bounce_visits_percent.to_f / 100))).round(2),
