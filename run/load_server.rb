@@ -100,6 +100,7 @@ module LoadServer
       when "Choosing_landing_pages"
         label = data["label"]
         date_building = data["date_building"]
+        #TODO recuperer les data business dans la requete
         count_visit, direct_medium_percent, organic_medium_percent, referral_medium_percent = Objective.new(label, date_building).landing_pages
         Logging.send($log_file, Logger::DEBUG, "Choosing_landing_pages : count_visit = #{count_visit}, \
               direct_medium_percent #{direct_medium_percent} \
@@ -118,6 +119,7 @@ module LoadServer
       when "Choosing_device_platform"
         label = data["label"]
         date_building = data["date_building"]
+        #TODO recuperer les data business dans la requete
         count_visit = Objective.new(label, date_building).count_visits
         Logging.send($log_file, Logger::DEBUG, "Choosing_device_platform : count_visit = #{count_visit}")
         Building_inputs.Choosing_device_platform(label, date_building, count_visit.to_i) unless count_visit.nil?
@@ -126,6 +128,7 @@ module LoadServer
       when "Building_visits"
         label = data["label"]
         date_building = data["date_building"]
+        #TODO recuperer les data business dans la requete
         #TODO sauvegarder dans un fichier (label-date_building.json)les données de l'objectif dans TMP
         count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages = Objective.new(label, date_building).behaviour
         Logging.send($log_file, Logger::DEBUG, "Building_visits : count_visit = #{count_visit}, \
@@ -155,6 +158,7 @@ module LoadServer
         #TODO recuperer les données de l'objectif à partir du fichier (label-date_building.json)
         label = data["label"]
         date_building = data["date_building"]
+        #TODO recuperer les data business dans la requete
         count_visit, hourly_distribution = Objective.new(label, date_building).daily_planification
         Logging.send($log_file, Logger::DEBUG, "Building_planification : count_visit = #{count_visit}, \
             hourly_distribution #{hourly_distribution}")
@@ -169,6 +173,7 @@ module LoadServer
         #TODO recuperer les données de l'objectif à partir du fichier (label-date_building.json)
         label = data["label"]
         date_building = data["date_building"]
+        #TODO recuperer les data business dans la requete
         account_ga = Website.new(label).account_ga
         Logging.send($log_file, Logger::DEBUG, "Extending_visits : account_ga = #{account_ga}")
         count_visit, return_visitor_rate= Objective.new(label, date_building).return_visitor_rate
@@ -189,7 +194,6 @@ module LoadServer
         Building_visits.Publishing_visits(label, date_building)
 
       when "Building_objectives"
-        p data
         label = data["label"]
         date_building = data["date_building"]
         change_count_visits_percent = data["data"]["change_count_visits_percent"]
