@@ -53,6 +53,7 @@ class Events
   end
 
   def execute_all_at_time(time=Date.today)
+    #TODO controler l'execution de execute all at time
     @events.each { |evt|
       schedule =IceCube::Schedule.from_yaml(evt.periodicity)
       p schedule
