@@ -13,7 +13,6 @@ require File.dirname(__FILE__) + '/../lib/building_objectives'
 require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../model/task'
 require File.dirname(__FILE__) + '/../model/objective'
-require File.dirname(__FILE__) + '/../model/policy'
 require File.dirname(__FILE__) + '/../model/website'
 module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
@@ -127,6 +126,7 @@ module LoadServer
       when "Building_visits"
         label = data["label"]
         date_building = data["date_building"]
+        #TODO sauvegarder dans un fichier (label-date_building.json)les données de l'objectif dans TMP
         count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages = Objective.new(label, date_building).behaviour
         Logging.send($log_file, Logger::DEBUG, "Building_visits : count_visit = #{count_visit}, \
               visit_bounce_rate #{visit_bounce_rate} \
@@ -152,6 +152,7 @@ module LoadServer
           Common.alert("getting count_visits, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages for #{label} at #{date_building} is failed", __LINE__)
         end
       when "Building_planification"
+        #TODO recuperer les données de l'objectif à partir du fichier (label-date_building.json)
         label = data["label"]
         date_building = data["date_building"]
         count_visit, hourly_distribution = Objective.new(label, date_building).daily_planification
@@ -165,6 +166,7 @@ module LoadServer
           Common.alert("getting count_visits, hourly_distribution for #{label} at #{date_building} is failed")
         end
       when "Extending_visits"
+        #TODO recuperer les données de l'objectif à partir du fichier (label-date_building.json)
         label = data["label"]
         date_building = data["date_building"]
         account_ga = Website.new(label).account_ga
@@ -187,16 +189,26 @@ module LoadServer
         Building_visits.Publishing_visits(label, date_building)
 
       when "Building_objectives"
+        p data
         label = data["label"]
         date_building = data["date_building"]
-        change_count_visits_percent, change_bounce_visits_percent, direct_medium_percent, organic_medium_percent, referral_medium_percent = Policy.new(label, date_building).properties
+        change_count_visits_percent = data["data"]["change_count_visits_percent"]
+        change_bounce_visits_percent =data["data"]["change_bounce_visits_percent"]
+        direct_medium_percent =data["data"]["direct_medium_percent"]
+        organic_medium_percent = data["data"]["organic_medium_percent"]
+        referral_medium_percent = data["data"]["referral_medium_percent"]
+        website_id = data["data"]["website_id"]
+        policy_id = data["data"]["policy_id"]
+
+
         Logging.send($log_file, Logger::DEBUG, "Building_objectives : change_count_visits_percent = #{change_count_visits_percent}, \
                      change_bounce_visits_percent #{change_bounce_visits_percent} \
                      direct_medium_percent #{direct_medium_percent} \
                      organic_medium_percent #{organic_medium_percent} \
-                     referral_medium_percent #{referral_medium_percent}")
+                     referral_medium_percent #{referral_medium_percent} \
+                      website_id #{website_id}")
 
-        if !change_count_visits_percent.nil? and !change_bounce_visits_percent.nil? and !direct_medium_percent.nil? and !organic_medium_percent.nil? and !referral_medium_percent.nil?
+        if !change_count_visits_percent.nil? and !change_bounce_visits_percent.nil? and !direct_medium_percent.nil? and !organic_medium_percent.nil? and !referral_medium_percent.nil? and !website_id.nil?
           task = Task_building_objectives.new(label)
           @@conditions_start.add(task)
           @@conditions_start.decrement(task)
@@ -206,7 +218,9 @@ module LoadServer
                                            change_bounce_visits_percent.to_i,
                                            direct_medium_percent.to_i,
                                            organic_medium_percent.to_i,
-                                           referral_medium_percent.to_i)
+                                           referral_medium_percent.to_i,
+                                           policy_id,
+                                           website_id)
           end
         else
           Common.alert("getting change_count_visits_percent, change_bounce_visits_percent, direct_medium_percent, organic_medium_percent, referral_medium_percent for #{label} at #{date_building} is failed", __LINE__)

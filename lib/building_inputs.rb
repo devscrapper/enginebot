@@ -197,8 +197,8 @@ module Building_inputs
     eof = false
     while !eof
       begin
-        # website_file = "Website_#{label}_#{date}_#{vol}.txt"
-        website_file = select_file(INPUT, "website", label, date, vol)
+        website_file_id = id_file(INPUT, "website",label,date, vol)
+        website_file = File.open(website_file_id, "r:BOM|UTF-8:-")
         if  !website_file.nil?
           count_line = File.foreach(website_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
           pob = ProgressBar.create(:title => File.basename(website_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
@@ -240,7 +240,8 @@ module Building_inputs
     eof = false
     while !eof
       begin
-        traffic_source_file = select_file(INPUT, "traffic-source-landing-page", label, date, vol)
+        traffic_source_file = id_file(INPUT, "traffic-source-landing-page",label,date, vol)
+        #traffic_source_file = File.open(traffic_source_file_id, "r:BOM|UTF-8:-")
         if  !traffic_source_file.nil?
           count_line = File.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
           pob = ProgressBar.create(:title => File.basename(traffic_source_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
@@ -280,14 +281,17 @@ module Building_inputs
 
   def Building_device_platform(label, date)
     information("Building device platform for #{label} is starting")
-    device_plugin = select_file(INPUT, "device-platform-plugin", label, date)
 
-    if device_plugin.nil?
+    device_plugin = id_file(INPUT, "device-platform-plugin",label,date)
+
+
+    if !File.exist?(device_plugin)
       alert("Building_device_platform for #{label} fails because inputs Device_platform_plugin file is missing")
       return false
     end
-    device_resolution = select_file(INPUT, "device-platform-resolution", label, date)
-    if device_resolution.nil?
+    device_resolution = id_file(INPUT, "device-platform-resolution",label,date)
+
+    if !File.exist?(device_resolution)
       alert("Building_device_platform for #{label} fails because inputs Device_platform_resolution file is missing")
       return false
     end
@@ -335,8 +339,8 @@ module Building_inputs
 
   def Building_hourly_daily_distribution(label, date)
     information("Building hourly daily distribution for #{label} is starting")
-    distribution = select_file(INPUT, "hourly-daily-distribution", label, date)
-    if distribution.nil?
+       distribution = id_file(INPUT, "hourly-daily-distribution",label,date)
+    if !File.exist?(distribution)
       alert("Building hourly daily distribution for #{label} fails because inputs Hourly-daily-distribution file is missing")
       return false
     end
@@ -376,17 +380,18 @@ module Building_inputs
 
   def Building_behaviour(label, date)
     information("Building behaviour for #{label} is starting")
-    behaviour = select_file(INPUT, "behaviour", label, date)
-    if behaviour.nil?
+    behaviour_input = id_file(INPUT, "behaviour",label,date)
+
+    if !File.exist?(behaviour_input)
       alert("Building behaviour for #{label} fails because inputs behaviour file is missing")
       return false
     end
     behaviour_file = open_file(TMP, "behaviour", label, date)
     behaviour_file.sync = true
-    count_line = File.foreach(behaviour, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+    count_line = File.foreach(behaviour_input, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
     p = ProgressBar.create(:title => "Building hourly daily distribution", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
     i = 1
-    IO.foreach(behaviour, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
+    IO.foreach(behaviour_input, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
       splitted_line = line.strip.split(SEPARATOR2)
       #30;20121130;86.30377524143987;66.900790166813;52.25021949078139;1.9569798068481123;1139
        percent_new_visit = splitted_line[2].to_f.round(2)
@@ -420,6 +425,7 @@ module Building_inputs
   def Choosing_device_platform(label, date, count_visits)
 
     information("Choosing device platform for #{label} is starting")
+
     device_platform = select_file(TMP, "device-platform", label, date)
 
     if device_platform.nil?

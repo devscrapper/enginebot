@@ -75,7 +75,9 @@ module Building_visits
 
       @duration_pages = distributing(count_pages, count_durations, min_durations)
       @visits = []
-      chosen_landing_pages_file = id_file(TMP,"chosen-landing-pages", label, date)
+      #TODO remplacer id_file par select file
+      chosen_landing_pages_file = select_file(TMP, "chosen-landing-pages", label, date)
+      #chosen_landing_pages_file = id_file(TMP,"chosen-landing-pages", label, date)
 
       if File.exist?(chosen_landing_pages_file)
         p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
@@ -86,8 +88,8 @@ module Building_visits
         }
         building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
         #@visits_file = File.open(id_file(TMP,"visits", label, date), "w:UTF-8")
-        @visits_file = open_file(TMP,"visits", label, date)
-        @visits_file.sync = true
+        @visits_file = open_file(TMP,"visits", label, date)  #TODO renommer cette fonction en open_file_for_write
+        @visits_file.sync = true  #TODO deplacer cette ligne dans la fonction open_file de COmmon.rb
         p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}"); p.increment }
         @visits_file.close
@@ -154,7 +156,9 @@ module Building_visits
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
     begin
       information("Extending visits for #{label} is starting")
-      device_platforme_id_file = id_file(TMP, "chosen-device-platform",label,date)
+      #TODO remplacer id_file par select file
+      #device_platforme_id_file = id_file(TMP, "chosen-device-platform",label,date)
+      device_platforme_id_file = select_file(TMP, "chosen-device-platform", label, date)
       if !File.exist?(device_platforme_id_file)
         alert("Extending visits is failed because <#{device_platforme_id_file}> file is not found")
         return

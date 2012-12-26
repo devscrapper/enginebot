@@ -1,107 +1,78 @@
 require 'rubygems' # if you use RubyGems
+
 require 'eventmachine'
 require 'json'
 require 'json/ext'
-require File.dirname(__FILE__) + '/../lib/logging'
 require 'logger'
 require 'rufus-scheduler'
 require 'ice_cube'
+require File.dirname(__FILE__) + '/../lib/logging'
+require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../model/event.rb'
+require File.dirname(__FILE__) + '/../model/events.rb'
 
 module CalendarServer
 
+  attr :events
+
+  def initialize(events)
+    @events = events
+  end
+
   def receive_data param
     port, ip = Socket.unpack_sockaddr_in(get_peername)
-    p "data recu : #{param}"
+    Common.information ("data receive : #{param}")
     begin
       data_receive = JSON.parse param
-      p "data parse : #{data_receive}"
       close_connection
-      who = data_receive["who"]
-      what = data_receive["what"]
+      Logging.send($log_file, Logger::DEBUG, "data receive parsed : #{data_receive}")
+      object = data_receive["object"]
       cmd = data_receive["cmd"]
+      data_event = data_receive["data"]
+      event = nil
 
-      Logging.send($log_file, Logger::DEBUG, "data receive : #{data_receive}")
-      case what
-        when "calendar"
-          case cmd
-            when "execute_jobs"
-              p "execute jobs of the day #{Date.today}"
-              Logging.send($log_file, Logger::DEBUG, "execute jobs of the day #{Date.today}")
-              execute_jobs
-            when "execute_one_job"
-              p "execute one job #{data_receive["id"]}"
-              Logging.send($log_file, Logger::DEBUG, "execute one job #{data_receive["id"]}")
-              execute_one_job(data_receive["id"])
-            else
-              Logging.send($log_file, Logger::ERROR, "unknown action : #{cmd} from  #{ip}:#{port}")
-          end
+      case object
+        when Event.name
+          event = Event.new(data_event["key"],
+                            data_event["cmd"])  if !data_event["key"].nil? and !data_event["cmd"].nil?
+        when Policy.name
+          event = Policy.new(data_event).to_event
+        when Objective.name
+          event = Objective.new(data_event).to_event
         else
-          $sem.synchronize {
-            begin
-              data_file = File.read($data_file)
-              events = JSON.parse(data_file)
-              File.delete($data_file)
-            rescue Exception => e
-              events = Hash.new
-            end
-            data_file = File.open($data_file, "w")
-            events[what] = Array.new if events[what].nil?
-            event = Event.new(data_receive)
-
-            if cmd == "save" and event.belongs_to(events[what])
-              events[what] = event.delete(events[what])
-              events[what] << event.to_json
-              Logging.send($log_file, Logger::DEBUG, "update #{what}  #{event.to_json}")
-              p "update #{what}   #{event.label}"
-            end
-
-            if cmd == "save" and !event.belongs_to(events[what])
-              events[what] << event.to_json
-              Logging.send($log_file, Logger::DEBUG, "new #{what}  #{event.to_json}")
-              p "add #{what}   #{event.label} to repository"
-            end
-
-            if cmd == "delete" and event.belongs_to(events[what])
-              events[what] = event.delete(events[what])
-              Logging.send($log_file, Logger::DEBUG, "delete #{what}  #{event.to_json}")
-              p "delete #{what}   #{event.label}"
-            end
-            data_file.write(JSON.pretty_generate(events))
-            data_file.close
-          }
+          Common.alert("object #{object} is not known")
       end
-    rescue Exception => e
-      Logging.send($log_file, Logger::DEBUG, "param : #{param} : #{e.message}")
+      case cmd
+        when Event::EXECUTE_ALL
+          Common.information("execute all jobs of the day #{Date.today}")
+          @events.execute_all_at_time(Date.parse(data_event["time"])) unless data_event["time"].nil?
+          @events.execute_all_at_time if data_event["time"].nil?
+
+        when Event::EXECUTE_ONE
+          Common.information("execute one event #{event}")
+          @events.execute_one(event)
+
+        when Event::SAVE
+          $sem.synchronize {
+            Common.information("save  #{object}   #{event.to_s}")
+            @events.delete(event) if @events.exist?(event)
+            @events.add(event)
+            @events.save
+          }
+        when Event::DELETE
+          $sem.synchronize {
+            @events.delete(event)
+            @events.save
+          }
+        else
+          Common.alert("command #{cmd} is not known")
+      end
     end
   end
 end
-
-def execute_jobs
-  data_file = File.read($data_file)
-  events = JSON.parse(data_file)
-  events.each_pair { |what, list|
-    list.each { |e|
-      event = JSON.parse(e)
-      schedule =IceCube::Schedule.from_yaml(event["periodicity"])
-      Event.new(event).execute($load_server_port) if schedule.occurs_on?(Date.today)
-    }
-  }
-end
-
-def execute_one_job(id)
-  data_file = File.read($data_file)
-   events = JSON.parse(data_file)
-   events.each_pair { |what, list|
-     list.each { |e|
-       event = JSON.parse(e)
-       Event.new(event).execute($load_server_port) if event["id"]   == id
-     }
-   }
-end
-#--------------------------------------------------------------------------------------------------------------------
-# INIT
-#--------------------------------------------------------------------------------------------------------------------
+                   #--------------------------------------------------------------------------------------------------------------------
+                   # INIT
+                   #--------------------------------------------------------------------------------------------------------------------
 $sem = Mutex.new
 $log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
 $data_file = File.dirname(__FILE__) + "/../data/" + File.basename(__FILE__, ".rb") + ".json"
@@ -129,7 +100,8 @@ EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
   Logging.send($log_file, Logger::INFO, "calendar server is starting")
-  EventMachine.start_server accepted_ip, listening_port, CalendarServer
+  events = Events.new($load_server_port)
+  EventMachine.start_server accepted_ip, listening_port, CalendarServer, events
 
 
   scheduler = Rufus::Scheduler.start_new
