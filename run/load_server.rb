@@ -199,16 +199,25 @@ module LoadServer
         referral_medium_percent = data["data"]["referral_medium_percent"]
         website_id = data["data"]["website_id"]
         policy_id = data["data"]["policy_id"]
-
+        account_ga = data["data"]["account_ga"]
 
         Logging.send($log_file, Logger::DEBUG, "Building_objectives : change_count_visits_percent = #{change_count_visits_percent}, \
                      change_bounce_visits_percent #{change_bounce_visits_percent} \
                      direct_medium_percent #{direct_medium_percent} \
                      organic_medium_percent #{organic_medium_percent} \
                      referral_medium_percent #{referral_medium_percent} \
-                      website_id #{website_id}")
+                      website_id #{website_id} \
+                        policy_id #{policy_id} \
+                      account_ga #{account_ga}")
 
-        if !change_count_visits_percent.nil? and !change_bounce_visits_percent.nil? and !direct_medium_percent.nil? and !organic_medium_percent.nil? and !referral_medium_percent.nil? and !website_id.nil?
+        if !change_count_visits_percent.nil? and
+            !change_bounce_visits_percent.nil? and
+            !direct_medium_percent.nil? and
+            !organic_medium_percent.nil? and
+            !referral_medium_percent.nil? and
+            !website_id.nil? and
+            !policy_id.nil? and
+            !account_ga.nil?
           task = Task_building_objectives.new(label)
           @@conditions_start.add(task)
           @@conditions_start.decrement(task)
@@ -220,10 +229,11 @@ module LoadServer
                                            organic_medium_percent.to_i,
                                            referral_medium_percent.to_i,
                                            policy_id,
-                                           website_id)
+                                           website_id,
+                                           account_ga)
           end
         else
-          Common.alert("getting change_count_visits_percent, change_bounce_visits_percent, direct_medium_percent, organic_medium_percent, referral_medium_percent for #{label} at #{date_building} is failed", __LINE__)
+          Common.alert(" getting change_count_visits_percent, change_bounce_visits_percent, direct_medium_percent, organic_medium_percent, referral_medium_percent, website_id, policy_id, account_ga for #{label} at #{date_building} is failed", __LINE__)
         end
       when "exit"
         close_connection
@@ -268,7 +278,7 @@ $statupbot_server_ip = "localhost"
 $statupbot_server_port = 9006
 $statupweb_server_ip="localhost"
 $statupweb_server_port=3000
-
+$calendar_server_port=9104
 
 $envir = "prod"
 
@@ -285,6 +295,7 @@ ARGV.each { |arg|
   $statupbot_server_ip = arg.split("=")[1] if arg.split("=")[0] == "--statupbot_servers_ip"
   $statupweb_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupweb_server_port"
   $statupweb_server_port = arg.split("=")[1] if arg.split("=")[0] == "--statupweb_server_port"
+  $calendar_server_port = arg.split("=")[1] if arg.split("=")[0] == "--calendar_server_port"
   $envir = arg.split("=")[1] if arg.split("=")[0] == "--envir"
 } if ARGV.size > 0
 
@@ -298,6 +309,7 @@ Logging.send($log_file, Logger::INFO, "statupbot servers ip : #{$statupbot_serve
 Logging.send($log_file, Logger::INFO, "statupbot server port : #{$statupbot_server_port}")
 Logging.send($log_file, Logger::INFO, "statupweb server ip : #{$statupweb_server_ip}")
 Logging.send($log_file, Logger::INFO, "statupweb server port : #{$statupweb_server_port}")
+Logging.send($log_file, Logger::INFO, "calendar server port : #{$calendar_server_port}")
 $listening_port = listening_port
 # sert à propager le port vers les module appeler par le load _server
 #afin qu'il lui demande d'executer des commandes

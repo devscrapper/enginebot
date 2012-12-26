@@ -1,4 +1,4 @@
-require 'singleton'
+
 require File.dirname(__FILE__) + '/../model/event.rb'
 class Events
   # To change this template use File | Settings | File Templates.
@@ -29,20 +29,19 @@ class Events
 
   def exist?(event)
     @events.each { |evt|
-      return true if evt.key == event.key
+      return true if evt.key == event.key and evt.cmd == event.cmd
     } unless @events.nil?
     false
   end
 
   def add(event)
-    event.each{|evt| @events << evt} if event.is_a?(Array)
+    event.each { |evt| @events << evt } if event.is_a?(Array)
     @events << event unless event.is_a?(Array)
   end
 
   def delete(event)
     @events.each_index { |i|
-      @events.delete_at(i) if @events[i].key == event.key
-
+      @events.delete_at(i) if @events[i].key == event.key and @events[i].cmd == event.cmd
     }
   end
 

@@ -2,6 +2,7 @@ require 'rubygems'
 require "em-http-request"
 require 'uri'
 require 'net/http'
+require 'ice_cube'
 require File.dirname(__FILE__) + '/../lib/logging'
 require File.dirname(__FILE__) + '/../lib/common'
 class Objective
@@ -18,7 +19,10 @@ class Objective
        :direct_medium_percent,
        :referral_medium_percent,
        :organic_medium_percent,
-       :hourly_distribution
+       :hourly_distribution,
+       :policy_id,
+       :website_id,
+       :account_ga
 
   def initialize(label, date,
       count_visits =nil,
@@ -31,7 +35,11 @@ class Objective
       direct_medium_percent=nil,
       referral_medium_percent=nil,
       organic_medium_percent=nil,
-      hourly_distribution=nil)
+      hourly_distribution=nil,
+      policy_id=nil,
+      website_id=nil,
+      account_ga=nil
+  )
 
     @date = date
     @label = label
@@ -46,9 +54,12 @@ class Objective
     @referral_medium_percent=referral_medium_percent
     @organic_medium_percent=organic_medium_percent
     @hourly_distribution=hourly_distribution
+    @policy_id = policy_id
+    @website_id = website_id
+    @account_ga = account_ga
   end
 
-  def to_json(*a)
+  def to_db(*a)
     {
         "objective" => {"day(1i)" => @date.year.to_s,
                         "day(2i)" => @date.month.to_s,
@@ -63,95 +74,65 @@ class Objective
                         "direct_medium_percent" => @direct_medium_percent.to_s,
                         "organic_medium_percent" => @organic_medium_percent.to_s,
                         "referral_medium_percent" => @referral_medium_percent.to_s,
-                        "hourly_distribution" => @hourly_distribution
+                        "hourly_distribution" => @hourly_distribution,
+                        "policy_id" => @policy_id,
+                        "website_id" => @website_id
         }
     }
-
   end
 
-  def count_visits()
-    select["count_visits"]
-  end
-
-  def landing_pages()
-    result = select
-    [result["count_visits"],
-     result["direct_medium_percent"],
-     result["organic_medium_percent"],
-     result["referral_medium_percent"]]
-  end
-
-  def behaviour()
-    result = select
-    [result["count_visits"],
-     result["visit_bounce_rate"],
-     result["page_views_per_visit"],
-     result["avg_time_on_site"],
-     result["min_durations"],
-     result["min_pages"]]
-  end
-
-  def return_visitor_rate()
-    result = select
-    [result["count_visits"],
-     result["return_visitor_rate"]]
-  end
-
-  def daily_planification()
-    result = select
-    [result["count_visits"],
-     result["hourly_distribution"]]
+  def to_json(*a)
+    {
+        "building_date" => @date,
+        "label" => @label,
+        "periodicity" => IceCube::Schedule.new(Time.local(@date.year, @date.month, @date.day),
+                                               :end_time => Time.local(@date.year, @date.month, @date.day)).to_yaml,
+        "count_visits" => @count_visits,
+        "visit_bounce_rate" => @visit_bounce_rate,
+        "return_visitor_rate" => @return_visitor_rate,
+        "avg_time_on_site" => @avg_time_on_site,
+        "min_durations" => @min_durations,
+        "min_pages" => @min_pages,
+        "page_views_per_visit" => @page_views_per_visit,
+        "direct_medium_percent" => @direct_medium_percent,
+        "organic_medium_percent" => @organic_medium_percent,
+        "referral_medium_percent" => @referral_medium_percent,
+        "hourly_distribution" => @hourly_distribution,
+        "account_ga" => @account_ga
+    }
   end
 
   def save()
-    insert
-  end
-
-  #private
-  def select()
-    begin
-
-      url = "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives/#{date}/select.json"
-
-      resp = Net::HTTP.get_response(URI.parse(url))
-
-      if  resp.is_a?(Net::HTTPSuccess) and !(resp.body == "null")
-
-          res = JSON.parse(resp.body)
-          Common.information("getting objective websites = #{label}, objectives = #{date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
-      else
-      if resp.is_a?(Net::HTTPSuccess) and resp.body == "null"
-
-          res = {}
-          Common.alert("getting objective websites = #{label}, objectives = #{date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} not found")
-      else
-      if !resp.is_a?(Net::HTTPSuccess)
-
-          res = {}
-          Common.alert("getting objective websites = #{label}, objectives = #{date} from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : http error : #{resp}")
-      end
-      end
-      end
-
-      res
-    rescue Exception => e
-      Common.alert("getting  objective websites = #{label}, objectives = #{date} from statupweb from statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : #{e.message}", __LINE__)
-      {}
-    end
-  end
-
-  def insert()
-
     #TODO : gerer le WARNING: Can't verify CSRF token authenticity
     #TODO : etudier la necessite de faire du https et d'une authentification pour faire l'insertion
     uri = URI("http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives")
-    http = EventMachine::HttpRequest.new(uri).post :body => self.to_json
+    http = EventMachine::HttpRequest.new(uri).post :body => self.to_db
     http.callback {
       Common.information("saving objective #{@date} for #{@label} in statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
     }
     http.errback {
       Common.alert("saving objective #{@date} for #{@label} in statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : #{http.state}", __LINE__)
     }
-
   end
+
+  #private
+
+
+  def register_to_calendar(where_port)
+
+    query = {"cmd" => "save",
+             "object" => self.class.name,
+             "data" => self.to_json}
+    p "query #{query}"
+    begin
+      s = TCPSocket.new "localhost", where_port
+      s.puts JSON.generate(query)
+      s.close
+      p "ok"
+    rescue Exception => e
+      p "ko #{e.message}"
+      #TODO gérer les rebus quand le calendar server n'est pas joignable
+    end
+  end
+
 end

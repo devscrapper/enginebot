@@ -45,7 +45,8 @@ module Building_objectives
       organic_medium_percent,
       referral_medium_percent,
       policy_id,
-      website_id)
+      website_id,
+      account_ga)
 
     begin
       information("Building objectives for #{label} is starting")
@@ -56,19 +57,20 @@ module Building_objectives
       Logging.send(LOG_FILE, Logger::DEBUG, "referral_medium_percent #{referral_medium_percent}")
       Logging.send(LOG_FILE, Logger::DEBUG, "policy_id #{policy_id}")
       Logging.send(LOG_FILE, Logger::DEBUG, "website_id #{website_id}")
+      Logging.send(LOG_FILE, Logger::DEBUG, "account_ga #{account_ga}")
 
       hourly_daily_distribution = []
 
-      #TODO remplacer id_file par select_file
+
       hourly_daily_distribution_file = select_file(TMP, "hourly-daily-distribution", label, date)
-      #hourly_daily_distribution_file = id_file(TMP, "hourly-daily-distribution",label,date)
+
       if !File.exist?(hourly_daily_distribution_file)
         alert("Publishing objectives for #{label} fails because #{hourly_daily_distribution_file} file is missing")
         return false
       end
-      #TODO remplacer id_file par select_file
+
       behaviour_file = select_file(TMP, "behaviour", label, date)
-      #behaviour_file = id_file(TMP,"behaviour",label,date)
+
       if !File.exist?(behaviour_file)
         alert("Publishing objectives for #{label} fails because #{behaviour_file} file is missing")
         return false
@@ -86,8 +88,6 @@ module Building_objectives
         splitted_behaviour = behaviour[line].strip.split(SEPARATOR2)
         splitted_hourly_daily_distribution = hourly_daily_distribution[line].strip.split(SEPARATOR2)
         #TODO enregistrer dans le calendar local de la creation des nouveau objectifs
-        #TODO ajouter l'id de la policy qui a déclenché la creation
-        #TODO ajouter l'id d'apprtenance du website
         obj = Objective.new(label, day,
                             (splitted_behaviour[5].to_i * (1 + (change_count_visits_percent.to_f / 100))).to_i,
                             (splitted_behaviour[2].to_f * (1 + (change_bounce_visits_percent.to_f / 100))).round(2),
@@ -101,8 +101,10 @@ module Building_objectives
                             organic_medium_percent,
                             splitted_hourly_daily_distribution[1],
                             policy_id,
-                            website_id)
+                            website_id,
+                            account_ga)
         obj.save
+        obj.register_to_calendar($calendar_server_port)
         p.increment
         day = day.next_day(1)
       }

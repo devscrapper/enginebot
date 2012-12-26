@@ -15,11 +15,10 @@ module CalendarServer
 
   attr :events
 
-  def initialize(events)
-    @events = events
-  end
+
 
   def receive_data param
+    @events = Events.new($load_server_port)
     port, ip = Socket.unpack_sockaddr_in(get_peername)
     Common.information ("data receive : #{param}")
     begin
@@ -34,7 +33,7 @@ module CalendarServer
       case object
         when Event.name
           event = Event.new(data_event["key"],
-                            data_event["cmd"])  if !data_event["key"].nil? and !data_event["cmd"].nil?
+                            data_event["cmd"]) if !data_event["key"].nil? and !data_event["cmd"].nil?
         when Policy.name
           event = Policy.new(data_event).to_event
         when Objective.name
@@ -50,17 +49,27 @@ module CalendarServer
 
         when Event::EXECUTE_ONE
           Common.information("execute one event #{event}")
-          @events.execute_one(event)
-
+          @events.execute_one(event)  if @events.exist?(event)
+          Common.information("event #{event} is not exist") unless @events.exist?(event)
         when Event::SAVE
           $sem.synchronize {
             Common.information("save  #{object}   #{event.to_s}")
-            @events.delete(event) if @events.exist?(event)
-            @events.add(event)
+            if event.is_a?(Array)
+              event.each { |e|
+                @events.delete(e) if @events.exist?(e)
+                @events.add(e)
+                p e.to_s
+              }
+            else
+              @events.delete(event) if @events.exist?(event)
+              @events.add(event)
+            end
+
             @events.save
           }
         when Event::DELETE
           $sem.synchronize {
+            Common.information("delete  #{object}   #{event.to_s}")
             @events.delete(event)
             @events.save
           }
@@ -100,13 +109,15 @@ EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
   Logging.send($log_file, Logger::INFO, "calendar server is starting")
-  events = Events.new($load_server_port)
-  EventMachine.start_server accepted_ip, listening_port, CalendarServer, events
+
+  EventMachine.start_server accepted_ip, listening_port, CalendarServer
 
 
   scheduler = Rufus::Scheduler.start_new
   scheduler.cron '0 15 21 * * 1-7' do #every day of the week at 22:00 (10pm)
-    execute_jobs
+    #TODO définir si on declenche toutes les heures ou une fois par jour
+    #TODO si toutes les heures alors planifier dans le calendar par heure et par jour comme actuellement
+    events.execute_all_at_time
   end
 
 

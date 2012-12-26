@@ -155,6 +155,7 @@ module Building_visits
 # --------------------------------------------------------------------------------------------------------------
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
     begin
+
       information("Extending visits for #{label} is starting")
       #TODO remplacer id_file par select file
       #device_platforme_id_file = id_file(TMP, "chosen-device-platform",label,date)

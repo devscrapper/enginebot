@@ -32,7 +32,12 @@ class Event
         "business" => @business
     }.to_json(*a)
   end
-
+  def to_s(*a)
+    {
+        "key" => @key,
+        "cmd" => @cmd,
+    }.to_s(*a)
+  end
   def execute(load_server_port)
     begin
       s = TCPSocket.new "localhost", load_server_port
@@ -98,7 +103,7 @@ class Policy
 end
 
 class Objective
-  attr :count_visit,
+  attr :count_visits,
        :label,
        :building_date,
        :visit_bounce_rate,
@@ -115,7 +120,7 @@ class Objective
 
 
   def initialize(data)
-    @count_visit = data["count_visit"]
+    @count_visits = data["count_visits"]
     @building_date = data["building_date"]
     @label = data["label"]
     @visit_bounce_rate = data["visit_bounce_rate"]
@@ -137,13 +142,13 @@ class Objective
            "label" => @label
     }
     business = {
-        "count_visit" => @count_visit
+        "count_visits" => @count_visits
     }
     choosing_device_platform_event = Event.new(key, "Choosing_device_platform", @periodicity, business)
 
 
     business = {
-        "count_visit" => @count_visit,
+        "count_visits" => @count_visits,
         "direct_medium_percent" => @direct_medium_percent,
         "organic_medium_percent" => @organic_medium_percent,
         "referral_medium_percent" => @referral_medium_percent
@@ -153,7 +158,7 @@ class Objective
 
 
     business = {
-        "count_visit" => @count_visit,
+        "count_visits" => @count_visits,
         "visit_bounce_rate" => @visit_bounce_rate,
         "page_views_per_visit" => @page_views_per_visit,
         "avg_time_on_site" => @avg_time_on_site,
@@ -165,6 +170,6 @@ class Objective
     }
     building_visits_event = Event.new(key, "Building_visits", @periodicity, business)
 
-    [choosing_device_platform_event, choosing_landing_page_event,building_visits_event]
+    [choosing_device_platform_event, choosing_landing_page_event, building_visits_event]
   end
 end
