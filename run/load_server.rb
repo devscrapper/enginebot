@@ -158,7 +158,6 @@ module LoadServer
         #TODO recuperer les données de l'objectif à partir du fichier (label-date_building.json)
         label = data["label"]
         date_building = data["date_building"]
-        #TODO recuperer les data business dans la requete
         count_visit, hourly_distribution = Objective.new(label, date_building).daily_planification
         Logging.send($log_file, Logger::DEBUG, "Building_planification : count_visit = #{count_visit}, \
             hourly_distribution #{hourly_distribution}")
@@ -173,7 +172,6 @@ module LoadServer
         #TODO recuperer les données de l'objectif à partir du fichier (label-date_building.json)
         label = data["label"]
         date_building = data["date_building"]
-        #TODO recuperer les data business dans la requete
         account_ga = Website.new(label).account_ga
         Logging.send($log_file, Logger::DEBUG, "Extending_visits : account_ga = #{account_ga}")
         count_visit, return_visitor_rate= Objective.new(label, date_building).return_visitor_rate
