@@ -1,8 +1,10 @@
 require 'rubygems'
 require 'eventmachine'
+require 'ice_cube'
 require 'json'
 require 'json/ext'
 require File.dirname(__FILE__) + '/../lib/logging'
+require File.dirname(__FILE__) + '/../lib/common'
 require 'logger'
 
 
@@ -11,6 +13,7 @@ class Event
   EXECUTE_ONE = "execute_one"
   SAVE = "save"
   DELETE = "delete"
+
   attr :key,
        :periodicity,
        :cmd,
@@ -32,32 +35,33 @@ class Event
         "business" => @business
     }.to_json(*a)
   end
+
   def to_s(*a)
     {
         "key" => @key,
         "cmd" => @cmd,
     }.to_s(*a)
   end
+
   def execute(load_server_port)
     begin
-      s = TCPSocket.new "localhost", load_server_port
       data = {
-          "cmd" => @cmd,
-          "label" => @key["label"],
-          "date_building" => Date.today,
-          "data" => @business}
-      p data
-      s.puts JSON.generate(data)
-      s.close
-      p "send to load_server localhost:#{load_server_port} "
+                "cmd" => @cmd,
+                "label" => @key["label"],
+                "date_building" => Date.today,
+                "data" => @business}
+      Common.send_data_to("localhost", load_server_port, data)
     rescue Exception => e
-      p "failed to send to load_server localhost:#{load_server_port} "
+      Common.alert("send cmd #{cmd} for #{@key["label"]} to load_server failed",__LINE__)
+      raise
     end
   end
 end
 
 
 class Policy
+  BUILDING_OBJECTIVES_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
+  BUILDING_OBJECTIVES_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est 2h du matin
   attr :label,
        :change_count_visits_percent,
        :change_bounce_visits_percent,
@@ -83,6 +87,7 @@ class Policy
   end
 
   def to_event()
+
     key = {"policy_id" => @policy_id,
            "label" => @label
     }
@@ -96,13 +101,38 @@ class Policy
         "policy_id" => @policy_id,
         "account_ga" => @account_ga
     }
-    cmd = "Building_objectives"
-    periodicity = @periodicity
-    Event.new(key, cmd, periodicity, business)
+
+    #Si demande suppression de la policy alors absence de periodicity et de business
+    if @periodicity.nil?
+      Event.new(key,
+                "Building_objectives")
+    else
+      periodicity = IceCube::Schedule.from_yaml(@periodicity)
+      periodicity.start_time += BUILDING_OBJECTIVES_DAY + BUILDING_OBJECTIVES_HOUR
+      periodicity.end_time += BUILDING_OBJECTIVES_DAY
+      periodicity.remove_recurrence_rule IceCube::Rule.weekly.day(:sunday)
+      periodicity.add_recurrence_rule IceCube::Rule.weekly.until(periodicity.end_time)
+      Event.new(key,
+                "Building_objectives",
+                periodicity.to_yaml,
+                business)
+    end
+
+
   end
 end
 
 class Objective
+  CHOOSING_LANDING_PAGES_DAY = -1 * IceCube::ONE_DAY
+  CHOOSING_LANDING_PAGES_HOUR = 3 * IceCube::ONE_HOUR #heure de démarrage est 3h du matin
+  CHOOSING_DEVICE_PLATFORM_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
+  CHOOSING_DEVICE_PLATFORM_HOUR = 4 * IceCube::ONE_HOUR #heure de démarrage est 4h du matin
+  BUILDING_VISITS_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
+  BUILDING_VISITS_HOUR = 5 * IceCube::ONE_HOUR #heure de démarrage est 4h du matin
+  START_PUBLISHING_VISITS_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
+  START_PUBLISHING_VISITS_HOUR = 22 * IceCube::ONE_HOUR #heure de démarrage est 10h du soir
+  END_PUBLISHING_VISITS_DAY = 0 * IceCube::ONE_DAY #on decale d'un  jour j-1
+  END_PUBLISHING_VISITS_HOUR = 21 * IceCube::ONE_HOUR #heure de démarrage est 10h du soir
   attr :count_visits,
        :label,
        :building_date,
@@ -138,13 +168,21 @@ class Objective
   end
 
   def to_event()
+    date_objective = IceCube::Schedule.from_yaml(@periodicity).start_time
     key = {"building_date" => @building_date,
            "label" => @label
     }
     business = {
         "count_visits" => @count_visits
     }
-    choosing_device_platform_event = Event.new(key, "Choosing_device_platform", @periodicity, business)
+
+    start_time = date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR
+    periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
+    periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR)
+    choosing_device_platform_event = Event.new(key,
+                                               "Choosing_device_platform",
+                                               periodicity.to_yaml,
+                                               business)
 
 
     business = {
@@ -154,7 +192,15 @@ class Objective
         "referral_medium_percent" => @referral_medium_percent
 
     }
-    choosing_landing_page_event = Event.new(key, "Choosing_landing_pages", @periodicity, business)
+
+
+    start_time = date_objective + CHOOSING_LANDING_PAGES_DAY + CHOOSING_LANDING_PAGES_HOUR
+    periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
+    periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + CHOOSING_LANDING_PAGES_DAY + CHOOSING_LANDING_PAGES_HOUR)
+    choosing_landing_page_event = Event.new(key,
+                                            "Choosing_landing_pages",
+                                            periodicity.to_yaml,
+                                            business)
 
 
     business = {
@@ -168,8 +214,22 @@ class Objective
         "return_visitor_rate" => @return_visitor_rate,
         "account_ga" => @account_ga
     }
-    building_visits_event = Event.new(key, "Building_visits", @periodicity, business)
 
-    [choosing_device_platform_event, choosing_landing_page_event, building_visits_event]
+    start_time = date_objective + BUILDING_VISITS_DAY + BUILDING_VISITS_HOUR
+    periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
+    periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + BUILDING_VISITS_DAY + BUILDING_VISITS_HOUR)
+    building_visits_event = Event.new(key,
+                                      "Building_visits",
+                                      periodicity.to_yaml,
+                                      business)
+
+
+    periodicity = IceCube::Schedule.new(date_objective + START_PUBLISHING_VISITS_DAY + START_PUBLISHING_VISITS_HOUR,
+    :end_time => date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR )
+    periodicity.add_recurrence_rule IceCube::Rule.hourly.until(date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR)
+    publishing_visits_event = Event.new(key,
+                                        "Publishing_visits",
+                                        periodicity.to_yaml)
+    [choosing_device_platform_event, choosing_landing_page_event, building_visits_event, publishing_visits_event]
   end
 end

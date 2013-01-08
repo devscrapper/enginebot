@@ -197,7 +197,7 @@ module Building_inputs
     eof = false
     while !eof
       begin
-        website_file_id = id_file(INPUT, "website",label,date, vol)
+        website_file_id = id_file(INPUT, "website", label, date, vol)
         website_file = File.open(website_file_id, "r:BOM|UTF-8:-")
         if  !website_file.nil?
           count_line = File.foreach(website_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
@@ -240,7 +240,7 @@ module Building_inputs
     eof = false
     while !eof
       begin
-        traffic_source_file = id_file(INPUT, "traffic-source-landing-page",label,date, vol)
+        traffic_source_file = id_file(INPUT, "traffic-source-landing-page", label, date, vol)
         #traffic_source_file = File.open(traffic_source_file_id, "r:BOM|UTF-8:-")
         if  !traffic_source_file.nil?
           count_line = File.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
@@ -282,14 +282,14 @@ module Building_inputs
   def Building_device_platform(label, date)
     information("Building device platform for #{label} is starting")
 
-    device_plugin = id_file(INPUT, "device-platform-plugin",label,date)
+    device_plugin = id_file(INPUT, "device-platform-plugin", label, date)
 
 
     if !File.exist?(device_plugin)
       alert("Building_device_platform for #{label} fails because inputs Device_platform_plugin file is missing")
       return false
     end
-    device_resolution = id_file(INPUT, "device-platform-resolution",label,date)
+    device_resolution = id_file(INPUT, "device-platform-resolution", label, date)
 
     if !File.exist?(device_resolution)
       alert("Building_device_platform for #{label} fails because inputs Device_platform_resolution file is missing")
@@ -339,7 +339,7 @@ module Building_inputs
 
   def Building_hourly_daily_distribution(label, date)
     information("Building hourly daily distribution for #{label} is starting")
-       distribution = id_file(INPUT, "hourly-daily-distribution",label,date)
+    distribution = id_file(INPUT, "hourly-daily-distribution", label, date)
     if !File.exist?(distribution)
       alert("Building hourly daily distribution for #{label} fails because inputs Hourly-daily-distribution file is missing")
       return false
@@ -380,7 +380,7 @@ module Building_inputs
 
   def Building_behaviour(label, date)
     information("Building behaviour for #{label} is starting")
-    behaviour_input = id_file(INPUT, "behaviour",label,date)
+    behaviour_input = id_file(INPUT, "behaviour", label, date)
 
     if !File.exist?(behaviour_input)
       alert("Building behaviour for #{label} fails because inputs behaviour file is missing")
@@ -394,7 +394,7 @@ module Building_inputs
     IO.foreach(behaviour_input, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
       splitted_line = line.strip.split(SEPARATOR2)
       #30;20121130;86.30377524143987;66.900790166813;52.25021949078139;1.9569798068481123;1139
-       percent_new_visit = splitted_line[2].to_f.round(2)
+      percent_new_visit = splitted_line[2].to_f.round(2)
       visit_bounce_rate = splitted_line[3].to_f.round(2)
       avg_time_on_site = splitted_line[4].to_f.round(2)
       page_views_per_visit = splitted_line[5].to_f.round(2)
@@ -409,15 +409,15 @@ module Building_inputs
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
     information("Choosing landing pages for #{label} is starting")
-
-    file = id_file(TMP, "chosen-landing-pages", label, date)
-    File.delete(file) if File.exist?(file)
-    result = Choosing_landing(label, date, "direct", direct_medium_percent, count_visit) &&
-        Choosing_landing(label, date, "referral", referral_medium_percent, count_visit) &&
-        Choosing_landing(label, date, "organic", organic_medium_percent, count_visit)
-    alert("Choosing landing pages for #{label} fails because inputs Landing files are missing") unless result
-    information("Choosing landing pages for #{label} is over")
-    execute_next_step("Building_visits", label, date) if result
+      file = id_file(TMP, "chosen-landing-pages", label, date)
+      File.delete(file) if File.exist?(file)
+    Common.archive_file(TMP, "chosen-landing-pages", label)
+      result = Choosing_landing(label, date, "direct", direct_medium_percent, count_visit) &&
+          Choosing_landing(label, date, "referral", referral_medium_percent, count_visit) &&
+          Choosing_landing(label, date, "organic", organic_medium_percent, count_visit)
+      alert("Choosing landing pages for #{label} fails because inputs Landing files are missing") unless result
+      information("Choosing landing pages for #{label} is over")
+      #execute_next_step("Building_visits", label, date) if result
 
   end
 
@@ -445,7 +445,7 @@ module Building_inputs
     }
     chosen_device_platform_file.close
     information("Choosing device platform for #{label} is over")
-    execute_next_step("Building_visits", label, date)
+    #execute_next_step("Building_visits", label, date)
   end
 
   #private
@@ -456,7 +456,7 @@ module Building_inputs
     landing_pages_file = File.open(landing_pages, "r:utf-8")
     medium_count = (medium_percent * count_visit / 100).to_i
     landing_pages_file_lines = File.foreach(landing_pages).inject(0) { |c, line| c+1 }
-    Common.archive_file(TMP, "chosen-landing-pages", label)
+
     chosen_landing_pages_file = File.open(id_file(TMP, "chosen-landing-pages", label, date), "a:utf-8") #TMP + "chosen_landing_pages-#{label}-#{date}.txt", "a:utf-8")
     chosen_landing_pages_file.sync =true
 
@@ -490,12 +490,15 @@ module Building_inputs
   def select_file(dir, type_file, label, date, vol=nil)
     Common.select_file(dir, type_file, label, date, vol)
   end
+
   def id_file(dir, type_file, label, date, vol=nil, ext="txt")
     Common.id_file(dir, type_file, label, date, vol, ext)
   end
+
   def open_file(dir, type_file, label, date, vol=nil, ext="txt")
     Common.open_file(dir, type_file, label, date, vol, ext)
   end
+
   module_function :Building_matrix_and_pages
   module_function :Building_landing_pages
   module_function :Building_device_platform

@@ -76,9 +76,8 @@ module Building_visits
       @duration_pages = distributing(count_pages, count_durations, min_durations)
       @visits = []
 
-      chosen_landing_pages_file = select_file(TMP, "chosen-landing-pages", label, date)
-      #chosen_landing_pages_file = id_file(TMP,"chosen-landing-pages", label, date)
 
+      chosen_landing_pages_file = id_file(TMP,"chosen-landing-pages", label, date)
       if File.exist?(chosen_landing_pages_file)
         p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         IO.foreach(chosen_landing_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
@@ -157,7 +156,7 @@ module Building_visits
     begin
 
       information("Extending visits for #{label} is starting")
-      device_platforme_id_file = select_file(TMP, "chosen-device-platform", label, date)
+      device_platforme_id_file = id_file(TMP,"chosen-device-platform", label, date )
       if !File.exist?(device_platforme_id_file)
         alert("Extending visits is failed because <#{device_platforme_id_file}> file is not found")
         return
@@ -195,7 +194,7 @@ module Building_visits
       device_platform_file.close
       pages_file.close
       information("Extending visits for #{label} is over")
-      execute_next_task("Publishing_visits", label, date)
+    #  execute_next_task("Publishing_visits", label, date)
     rescue Exception => e
       error(e.message)
     end
@@ -206,7 +205,7 @@ module Building_visits
 #--------------------------------------------------------------------------------------------------------------
 #
 # --------------------------------------------------------------------------------------------------------------
-
+#TODO transformer le publishing_visits d'une journée en publishing_visits d'une heure
   def Publishing_visits(label, date)
     begin
       information("Publishing visits for #{label} is starting")
@@ -239,11 +238,11 @@ module Building_visits
   def building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
     begin
       count_bounce_visit = (visit_bounce_rate * count_visit/100).to_i
-      p count_bounce_visit
+
       count_not_bounce_visit = count_visit - count_bounce_visit
       count_pages_bounce_visit = count_bounce_visit
       count_pages_not_bounce_visit = (count_visit * page_views_per_visit).to_i - count_pages_bounce_visit
-      p count_pages_not_bounce_visit
+
       count_pages_per_visits = distributing(count_not_bounce_visit, count_pages_not_bounce_visit, min_pages)
       Logging.send(LOG_FILE, Logger::DEBUG, "count_bounce_visit #{count_bounce_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_not_bounce_visit #{count_not_bounce_visit}")
@@ -258,6 +257,7 @@ module Building_visits
       end
       @matrix_file = File.open(matrix_id_file, "r:BOM|UTF-8:-")
       count_not_bounce_visit.times { |visit|
+
         begin
           v = @visits.shuffle![0]
           Logging.send(LOG_FILE, Logger::DEBUG, "prospect #{v} for #{label}")
@@ -341,8 +341,8 @@ module Building_visits
   end
 
   def distributing(into, values, min_values_per_into)
-    p into
-    p values
+    #p into
+    #p values
     information ("distribution is starting")
     values_per_into = (values/into).to_i
     max_values_per_into = 2 * values_per_into - min_values_per_into

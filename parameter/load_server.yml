@@ -1,0 +1,16 @@
+
+development:
+  listening_port: 9101
+  scraper_servers_ip: localhost
+  scraper_server_port: 9151
+  authentification_server_ip: localhost
+  authentification_server_port: 9103
+  statupbot_server_ip: localhost
+  statupbot_server_port: 9201
+  statupweb_server_ip: localhost
+  statupweb_server_port: 3000
+  calendar_server_port: 9104
+
+test:
+
+production:

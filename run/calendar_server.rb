@@ -12,9 +12,8 @@ require File.dirname(__FILE__) + '/../model/event.rb'
 require File.dirname(__FILE__) + '/../model/events.rb'
 
 module CalendarServer
-
+  #TODO supprimer les events qui sont passés dans le referentiel des evenements
   attr :events
-
 
 
   def receive_data param
@@ -43,13 +42,16 @@ module CalendarServer
       end
       case cmd
         when Event::EXECUTE_ALL
-          Common.information("execute all jobs of the day #{Date.today}")
-          @events.execute_all_at_time(Date.parse(data_event["time"])) unless data_event["time"].nil?
-          @events.execute_all_at_time if data_event["time"].nil?
-
+          if !data_event["time"].nil?
+            time = Time._load(data_event["time"])
+            Common.information("execute all jobs at time #{time}")
+            @events.execute_all_at_time(time)
+          else
+            Common.alert("execute all jobs at time failed because no time was set")
+          end
         when Event::EXECUTE_ONE
           Common.information("execute one event #{event}")
-          @events.execute_one(event)  if @events.exist?(event)
+          @events.execute_one(event) if @events.exist?(event)
           Common.information("event #{event} is not exist") unless @events.exist?(event)
         when Event::SAVE
           $sem.synchronize {
@@ -68,6 +70,7 @@ module CalendarServer
             @events.save
           }
         when Event::DELETE
+          #TODO etudier le problème de la suppression d'une policy et de son impact sur la planification construite apres execution du building_objectives
           $sem.synchronize {
             Common.information("delete  #{object}   #{event.to_s}")
             @events.delete(event)
@@ -85,19 +88,26 @@ end
 $sem = Mutex.new
 $log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
 $data_file = File.dirname(__FILE__) + "/../data/" + File.basename(__FILE__, ".rb") + ".json"
+PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
 listening_port = 9014
-$load_server_port = 9002
+$load_server_port = 9101
 accepted_ip = "0.0.0.0" #le serveur peut être installé sur un  machine dédiée
-
+$envir = "production"
 
 #--------------------------------------------------------------------------------------------------------------------
 # INPUT
 #--------------------------------------------------------------------------------------------------------------------
 ARGV.each { |arg|
-  listening_port = arg.split("=")[1] if arg.split("=")[0] == "--port"
-  $load_server_port = arg.split("=")[1] if arg.split("=")[0] == "--load_server_port"
+  $envir = arg.split("=")[1] if arg.split("=")[0] == "--envir"
 } if ARGV.size > 0
-
+begin
+  params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
+  listening_port = params[$envir]["listening_port"] unless params[$envir]["listening_port"].nil?
+  $load_server_port = params[$envir]["load_server_port"] unless params[$envir]["load_server_port"].nil?
+rescue Exception => e
+  p e.message
+  Logging.send($log_file, Logger::INFO, "parameters file #{PARAMETERS} is not found")
+end
 
 Logging.send($log_file, Logger::INFO, "parameters of calendar server : ")
 Logging.send($log_file, Logger::INFO, "listening port : #{listening_port}")
@@ -114,13 +124,20 @@ EventMachine.run {
 
 
   scheduler = Rufus::Scheduler.start_new
-  scheduler.cron '0 15 21 * * 1-7' do #every day of the week at 22:00 (10pm)
-    #TODO définir si on declenche toutes les heures ou une fois par jour
-    #TODO si toutes les heures alors planifier dans le calendar par heure et par jour comme actuellement
-    events.execute_all_at_time
+  #declenche :
+  #toutes les heures de tous les jours de la semaine
+  scheduler.cron '0 0 * * * 1-7 Europe/Paris' do
+    begin
+      now = Time.now
+      data = {"object" => "Event",
+              "cmd" => "execute_all",
+              "data" => {"time" => now._dump.force_encoding("UTF-8")}}
+      Common.send_data_to("localhost", listening_port, data)
+    rescue Exception => e
+      Common.alert("execute all cmd at time #{now} failed", __LINE__)
+    end
+
   end
-
-
 }
 Logging.send($log_file, Logger::INFO, "calendar server stopped")
 

@@ -1,5 +1,6 @@
-
 require File.dirname(__FILE__) + '/../model/event.rb'
+require File.dirname(__FILE__) + '/../lib/common'
+
 class Events
   # To change this template use File | Settings | File Templates.
 
@@ -14,9 +15,7 @@ class Events
       JSON.parse(File.read(EVENTS_FILE)).each { |evt|
         @events << Event.new(evt["key"], evt["cmd"], evt["periodicity"], evt["business"])
       }
-      p @events
     rescue Exception => e
-
     end
   end
 
@@ -51,14 +50,21 @@ class Events
     } unless @events.nil?
   end
 
-  def execute_all_at_time(time=Date.today)
-    #TODO controler l'execution de execute all at time
+  def execute_all_at_time(time=Time.now)
     @events.each { |evt|
       schedule =IceCube::Schedule.from_yaml(evt.periodicity)
-      p schedule
-      evt.execute(@load_server_port) if schedule.occurs_on?(time)
+      if schedule.occurring_at?(time)
+        begin
+          evt.execute(@load_server_port)
+          Common.information("start of cmd #{evt.cmd} for event #{evt.key} success")
+        rescue
+          Common.alert("start of cmd #{evt.cmd} for event #{evt.key} failed")
+        end
+      end
+
     }
   end
+
 end
 
 

@@ -119,20 +119,18 @@ class Objective
 
 
   def register_to_calendar(where_port)
-
-    query = {"cmd" => "save",
-             "object" => self.class.name,
-             "data" => self.to_json}
-    p "query #{query}"
     begin
-      s = TCPSocket.new "localhost", where_port
-      s.puts JSON.generate(query)
-      s.close
-      p "ok"
+      data = {"cmd" => "save",
+              "object" => self.class.name,
+              "data" => self.to_json}
+
+      Common.send_data_to("localhost", where_port, data)
     rescue Exception => e
-      p "ko #{e.message}"
+      Common.alert("objective of #{date} for #{label} is not registered in Calendar repository", __LINE__)
       #TODO gérer les rebus quand le calendar server n'est pas joignable
+      Common.information("objective of #{date} for #{label} is registered to scrap file")
     end
   end
+
 
 end
