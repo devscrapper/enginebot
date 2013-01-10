@@ -2,8 +2,6 @@ require File.dirname(__FILE__) + '/../model/event.rb'
 require File.dirname(__FILE__) + '/../lib/common'
 
 class Events
-  # To change this template use File | Settings | File Templates.
-
   EVENTS_FILE = File.dirname(__FILE__) + "/../data/" + File.basename(__FILE__, ".rb") + ".json"
   attr :events,
        :load_server_port
@@ -13,6 +11,8 @@ class Events
     @events = Array.new
     begin
       JSON.parse(File.read(EVENTS_FILE)).each { |evt|
+        #TODO supprimer les events qui sont passés dans le referentiel des evenements
+
         @events << Event.new(evt["key"], evt["cmd"], evt["periodicity"], evt["business"])
       }
     rescue Exception => e

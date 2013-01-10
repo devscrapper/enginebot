@@ -44,12 +44,15 @@ class Event
   end
 
   def execute(load_server_port)
+    #time est l'heure de declenchement de l'event => utiliser pour le publishing_visit qui s'exécute toute les heure afin de publier la bonne heure
     begin
       data = {
                 "cmd" => @cmd,
                 "label" => @key["label"],
-                "date_building" => Date.today,
+                "date_building"   =>  @key["building_date"] || Date.today,
+                "start_time" =>  (Time.now + 2 * IceCube::ONE_HOUR)._dump.force_encoding("UTF-8"),
                 "data" => @business}
+
       Common.send_data_to("localhost", load_server_port, data)
     rescue Exception => e
       Common.alert("send cmd #{cmd} for #{@key["label"]} to load_server failed",__LINE__)
@@ -132,7 +135,7 @@ class Objective
   START_PUBLISHING_VISITS_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
   START_PUBLISHING_VISITS_HOUR = 22 * IceCube::ONE_HOUR #heure de démarrage est 10h du soir
   END_PUBLISHING_VISITS_DAY = 0 * IceCube::ONE_DAY #on decale d'un  jour j-1
-  END_PUBLISHING_VISITS_HOUR = 21 * IceCube::ONE_HOUR #heure de démarrage est 10h du soir
+  END_PUBLISHING_VISITS_HOUR = 21 * IceCube::ONE_HOUR #heure d'arret est 9h du soir du lendemain
   attr :count_visits,
        :label,
        :building_date,

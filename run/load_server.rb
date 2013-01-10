@@ -206,11 +206,10 @@ module LoadServer
                                          return_visitor_rate.to_f) if !account_ga.nil? and !count_visit.nil? and !return_visitor_rate.nil?
 
       when "Publishing_visits"
-        #TODO publishing visits ne doit pas être déclencher par le extending_visits mais par le Calendar
-        #TODO le publishing_visits doit etre réalisé par heure et pas par jour entier
         label = data["label"]
         date_building = data["date_building"]
-        Building_visits.Publishing_visits(label, date_building)
+        hour = Time._load(data["start_time"]).hour
+        Building_visits.Publishing_visits_by_hour(label, date_building, hour)
 
       when "Building_objectives"
         label = data["label"]

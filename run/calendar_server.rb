@@ -12,7 +12,7 @@ require File.dirname(__FILE__) + '/../model/event.rb'
 require File.dirname(__FILE__) + '/../model/events.rb'
 
 module CalendarServer
-  #TODO supprimer les events qui sont passés dans le referentiel des evenements
+
   attr :events
 
 
@@ -60,7 +60,6 @@ module CalendarServer
               event.each { |e|
                 @events.delete(e) if @events.exist?(e)
                 @events.add(e)
-                p e.to_s
               }
             else
               @events.delete(event) if @events.exist?(event)
@@ -71,6 +70,7 @@ module CalendarServer
           }
         when Event::DELETE
           #TODO etudier le problème de la suppression d'une policy et de son impact sur la planification construite apres execution du building_objectives
+          #TODO premier analyse : la répercution sur les objectives sera réalisée par la suppression de objective dans statupweb par declenchement par callback
           $sem.synchronize {
             Common.information("delete  #{object}   #{event.to_s}")
             @events.delete(event)

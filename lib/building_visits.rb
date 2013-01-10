@@ -12,8 +12,6 @@ require 'socket'
 #------------------------------------------------------------------------------------------
 
 
-
-
 module Building_visits
 #------------------------------------------------------------------------------------------
 # Globals variables
@@ -39,8 +37,6 @@ module Building_visits
        :matrix_file,
        :count_visits_by_hour,
        :planed_visits_by_hour_file
-
-
 
 
 #--------------------------------------------------------------------------------------------------------------
@@ -77,7 +73,7 @@ module Building_visits
       @visits = []
 
 
-      chosen_landing_pages_file = id_file(TMP,"chosen-landing-pages", label, date)
+      chosen_landing_pages_file = id_file(TMP, "chosen-landing-pages", label, date)
       if File.exist?(chosen_landing_pages_file)
         p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         IO.foreach(chosen_landing_pages_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |page|
@@ -87,8 +83,8 @@ module Building_visits
         }
         building_not_bounce_visit(label, date, visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
         #@visits_file = File.open(id_file(TMP,"visits", label, date), "w:UTF-8")
-        @visits_file = open_file(TMP,"visits", label, date)  #TODO renommer cette fonction en open_file_for_write
-        @visits_file.sync = true  #TODO deplacer cette ligne dans la fonction open_file de COmmon.rb
+        @visits_file = open_file(TMP, "visits", label, date) #TODO renommer cette fonction en open_file_for_write
+        @visits_file.sync = true #TODO deplacer cette ligne dans la fonction open_file de COmmon.rb
         p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE2}"); p.increment }
         @visits_file.close
@@ -121,7 +117,7 @@ module Building_visits
       hourly_distribution.each_index { |hour|
         @count_visits_by_hour << [hour, (hourly_distribution[hour].to_f * count_visits).divmod(100)[0]]
         rest_sum += (hourly_distribution[hour].to_f * count_visits).divmod(100)[1]
-        @planed_visits_by_hour_file[hour] = open_file(TMP, "planed-visits",label,date,hour)
+        @planed_visits_by_hour_file[hour] = open_file(TMP, "planed-visits", label, date, hour)
         @planed_visits_by_hour_file[hour].sync = true
 
       }
@@ -130,17 +126,17 @@ module Building_visits
 
       p = ProgressBar.create(:title => "Saving planed visits", :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
 
-      IO.foreach(id_file(TMP, "visits",label,date), EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
+      IO.foreach(id_file(TMP, "visits", label, date), EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
         hour = chose_an_hour()
         v = Planed_visit.new(visit, date, hour)
         @planed_visits_by_hour_file[hour].write("#{v.to_s}#{EOFLINE2}")
-       p.increment
+        p.increment
 
       }
 
 
       24.times { |hour| @planed_visits_by_hour_file[hour].close }
-          information("Building planification of visit for #{label} is over")
+      information("Building planification of visit for #{label} is over")
       execute_next_task("Extending_visits", label, date)
     rescue Exception => e
       error(e.message)
@@ -156,7 +152,7 @@ module Building_visits
     begin
 
       information("Extending visits for #{label} is starting")
-      device_platforme_id_file = id_file(TMP,"chosen-device-platform", label, date )
+      device_platforme_id_file = id_file(TMP, "chosen-device-platform", label, date)
       if !File.exist?(device_platforme_id_file)
         alert("Extending visits is failed because <#{device_platforme_id_file}> file is not found")
         return
@@ -176,10 +172,10 @@ module Building_visits
       p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
       24.times { |hour|
 
-        final_visits_by_hour_file = open_file(TMP,"final-visits", label, date, hour)
+        final_visits_by_hour_file = open_file(TMP, "final-visits", label, date, hour)
         final_visits_by_hour_file.sync = true
 
-        planed_visits_id_file = id_file(TMP,"planed-visits", label, date, hour )
+        planed_visits_id_file = id_file(TMP, "planed-visits", label, date, hour)
         alert("<#{planed_visits_id_file}> file is not found") if !File.exist?(planed_visits_id_file)
 
         IO.foreach(planed_visits_id_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |visit|
@@ -194,7 +190,7 @@ module Building_visits
       device_platform_file.close
       pages_file.close
       information("Extending visits for #{label} is over")
-    #  execute_next_task("Publishing_visits", label, date)
+        #  execute_next_task("Publishing_visits", label, date)
     rescue Exception => e
       error(e.message)
     end
@@ -205,15 +201,14 @@ module Building_visits
 #--------------------------------------------------------------------------------------------------------------
 #
 # --------------------------------------------------------------------------------------------------------------
-#TODO transformer le publishing_visits d'une journée en publishing_visits d'une heure
-  def Publishing_visits(label, date)
+  def Publishing_visits_by_day(label, date)
     begin
       information("Publishing visits for #{label} is starting")
       24.times { |hour|
-        published_visits_to_json_id_file = id_file(OUTPUT,"published-visits",label,date,hour,"json")
+        published_visits_to_json_id_file = id_file(OUTPUT, "published-visits", label, date, hour, "json")
         published_visits_to_json_file = File.open(published_visits_to_json_id_file, "w:UTF-8")
         published_visits_to_json_file.sync = true
-        final_visits_file = id_file(TMP,"final-visits",label,date,hour)
+        final_visits_file = id_file(TMP, "final-visits", label, date, hour)
         count_line = File.foreach(final_visits_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
         p = ProgressBar.create(:title => "publish #{File.basename(final_visits_file)}", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
         IO.foreach(final_visits_file, EOFLINE2, encoding: "UTF-8:-") { |visit|
@@ -227,6 +222,30 @@ module Building_visits
         Common.push_file(File.basename(published_visits_to_json_file), true)
       }
       information("Publishing visits for #{label} is over")
+    rescue Exception => e
+      error(e.message)
+    end
+  end
+
+  def Publishing_visits_by_hour(label, date, hour)
+    begin
+      information("Publishing visits at #{hour} hour for #{label} is starting")
+      published_visits_to_json_id_file = id_file(OUTPUT, "published-visits", label, date, hour, "json")
+      published_visits_to_json_file = File.open(published_visits_to_json_id_file, "w:UTF-8")
+      published_visits_to_json_file.sync = true
+      final_visits_file = id_file(TMP, "final-visits", label, date, hour)
+      count_line = File.foreach(final_visits_file, EOFLINE, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+      p = ProgressBar.create(:title => "publish #{File.basename(final_visits_file)}", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
+      IO.foreach(final_visits_file, EOFLINE2, encoding: "UTF-8:-") { |visit|
+        v = Published_visit.new(visit)
+        published_visits_to_json_file.write("#{JSON.generate(v)}#{EOFLINE2}")
+        #TODO developper publish to db
+        #Thread.new { v.publish_to_db(label, date, hour) }
+      }
+      p.increment
+      published_visits_to_json_file.close
+      Common.push_file(File.basename(published_visits_to_json_file), true)
+      information("Publishing visits at #{hour} hour for #{label} is over")
     rescue Exception => e
       error(e.message)
     end
@@ -410,17 +429,21 @@ module Building_visits
   def select_file(dir, type_file, label, date)
     Common.select_file(dir, type_file, label, date)
   end
+
   def id_file(dir, type_file, label, date, vol=nil, ext="txt")
     Common.id_file(dir, type_file, label, date, vol, ext)
   end
+
   def open_file(dir, type_file, label, date, vol=nil, ext="txt")
     Common.open_file(dir, type_file, label, date, vol, ext)
   end
+
 # public
   module_function :Building_planification
   module_function :Building_visits
   module_function :Extending_visits
-  module_function :Publishing_visits
+  module_function :Publishing_visits_by_day
+  module_function :Publishing_visits_by_hour
 # private
   module_function :chose_an_hour
   module_function :building_not_bounce_visit
