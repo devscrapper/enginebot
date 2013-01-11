@@ -43,20 +43,21 @@ class Event
     }.to_s(*a)
   end
 
-  def execute(load_server_port)
+  def execute(load_server_port, time)
     #time est l'heure de declenchement de l'event => utiliser pour le publishing_visit qui s'exécute toute les heure afin de publier la bonne heure
     begin
+
       data = {
                 "cmd" => @cmd,
                 "label" => @key["label"],
                 "date_building"   =>  @key["building_date"] || Date.today,
-                "start_time" =>  (Time.now + 2 * IceCube::ONE_HOUR)._dump.force_encoding("UTF-8"),
+                "start_time" =>  (time + 2 * IceCube::ONE_HOUR)._dump.force_encoding("UTF-8"),
                 "data" => @business}
 
       Common.send_data_to("localhost", load_server_port, data)
+      Common.information("send cmd #{@cmd} for #{@key["label"]} for #{data["date_building"]} at #{time} to load_server success")
     rescue Exception => e
-      Common.alert("send cmd #{cmd} for #{@key["label"]} to load_server failed",__LINE__)
-      raise
+      Common.alert("send cmd #{@cmd} for #{@key["label"]} for #{data["date_building"]} at #{time} to load_server failed",__LINE__)
     end
   end
 end
@@ -110,6 +111,7 @@ class Policy
       Event.new(key,
                 "Building_objectives")
     else
+      #TODO : creer un class Building_objective qui herite de event
       periodicity = IceCube::Schedule.from_yaml(@periodicity)
       periodicity.start_time += BUILDING_OBJECTIVES_DAY + BUILDING_OBJECTIVES_HOUR
       periodicity.end_time += BUILDING_OBJECTIVES_DAY
@@ -178,7 +180,7 @@ class Objective
     business = {
         "count_visits" => @count_visits
     }
-
+    #TODO : creer un class Choosing_device_platform qui herite de event
     start_time = date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR
     periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
     periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR)
@@ -196,7 +198,7 @@ class Objective
 
     }
 
-
+    #TODO : creer un class Choosing_landing_pages qui herite de event
     start_time = date_objective + CHOOSING_LANDING_PAGES_DAY + CHOOSING_LANDING_PAGES_HOUR
     periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
     periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + CHOOSING_LANDING_PAGES_DAY + CHOOSING_LANDING_PAGES_HOUR)
@@ -217,7 +219,7 @@ class Objective
         "return_visitor_rate" => @return_visitor_rate,
         "account_ga" => @account_ga
     }
-
+    #TODO : creer un class Building_visits qui herite de event
     start_time = date_objective + BUILDING_VISITS_DAY + BUILDING_VISITS_HOUR
     periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
     periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + BUILDING_VISITS_DAY + BUILDING_VISITS_HOUR)
@@ -226,7 +228,7 @@ class Objective
                                       periodicity.to_yaml,
                                       business)
 
-
+     #TODO : creer un class Publishing_visits qui herite de event
     periodicity = IceCube::Schedule.new(date_objective + START_PUBLISHING_VISITS_DAY + START_PUBLISHING_VISITS_HOUR,
     :end_time => date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR )
     periodicity.add_recurrence_rule IceCube::Rule.hourly.until(date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR)

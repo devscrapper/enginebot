@@ -187,7 +187,7 @@ module Building_inputs
 
 
   def Building_matrix_and_pages(label, date)
-    information("Building matrix and page for #{label} is starting")
+    information("Building matrix and page for #{label} for #{date} is starting")
     matrix_file = open_file(TMP, "matrix", label, date)
     matrix_file.sync = true
     pages_file = open_file(TMP, "pages", label, date)
@@ -229,7 +229,7 @@ module Building_inputs
   end
 
   def Building_landing_pages(label, date)
-    information("Building landing pages for #{label} is starting")
+    information("Building landing pages for #{label} for #{date} is starting")
     landing_pages_direct_file = open_file(TMP, "landing-pages-direct", label, date)
     landing_pages_direct_file.sync = true
     landing_pages_referral_file = open_file(TMP, "landing-pages-referral", label, date)
@@ -280,7 +280,7 @@ module Building_inputs
   end
 
   def Building_device_platform(label, date)
-    information("Building device platform for #{label} is starting")
+    information("Building device platform for #{label} for #{date} is starting")
 
     device_plugin = id_file(INPUT, "device-platform-plugin", label, date)
 
@@ -338,7 +338,7 @@ module Building_inputs
   end
 
   def Building_hourly_daily_distribution(label, date)
-    information("Building hourly daily distribution for #{label} is starting")
+    information("Building hourly daily distribution for #{label} for #{date} is starting")
     distribution = id_file(INPUT, "hourly-daily-distribution", label, date)
     if !File.exist?(distribution)
       alert("Building hourly daily distribution for #{label} fails because inputs Hourly-daily-distribution file is missing")
@@ -379,7 +379,7 @@ module Building_inputs
 
 
   def Building_behaviour(label, date)
-    information("Building behaviour for #{label} is starting")
+    information("Building behaviour for #{label} for #{date} is starting")
     behaviour_input = id_file(INPUT, "behaviour", label, date)
 
     if !File.exist?(behaviour_input)
@@ -408,7 +408,7 @@ module Building_inputs
   end
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
-    information("Choosing landing pages for #{label} is starting")
+    information("Choosing landing pages for #{label} for #{date} is starting")
       file = id_file(TMP, "chosen-landing-pages", label, date)
       File.delete(file) if File.exist?(file)
     Common.archive_file(TMP, "chosen-landing-pages", label)
@@ -424,7 +424,7 @@ module Building_inputs
 
   def Choosing_device_platform(label, date, count_visits)
 
-    information("Choosing device platform for #{label} is starting")
+    information("Choosing device platform for #{label} for #{date} is starting")
 
     device_platform = select_file(TMP, "device-platform", label, date)
 

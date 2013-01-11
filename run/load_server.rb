@@ -19,25 +19,37 @@ module LoadServer
   INPUT = File.dirname(__FILE__) + "/../input/"
   TMP = File.dirname(__FILE__) + "/../tmp/"
 
-  @@conditions_start = Start_conditions.new()
+  # @@conditions_start = Start_conditions.new()
 
   def initialize()
     w = self
-    @execute_task = EM.spawn { |data| w.execute_task(data) }
+    @execute_task = EM.spawn { |data|
+      begin
+        w.execute_task(JSON.parse data)
+      rescue Exception => e
+        Common.warning("data receive #{data} : #{e.message}")
+      end
+    }
+
   end
 
-  def receive_data(param)
-    #TODO multithreader ou spawner les traitements du load server si le besoin est averé
-    #TODO gérer la cohérence des dates de building
-    #@execute_task.notify JSON.parse param
-    Common.information ("data receive : #{param}")
-    execute_task(JSON.parse param)
+
+  def receive_data param
+
+    close_connection
+    begin
+      #TODO on reste en thread tant que pas effet de bord et pas d'explosion du nombre de thread car plus rapide
+       Thread.new { execute_task(JSON.parse param) }
+      #@execute_task.notify param
+    rescue Exception => e
+      Common.warning("data receive #{param} : #{e.message}")
+    end
   end
 
   def execute_task(data)
     who = data["who"]
     task = data["cmd"]
-    port, ip = Socket.unpack_sockaddr_in(get_peername)
+    Common.information ("processing request : task : #{task}")
     Logging.send($log_file, Logger::DEBUG, "data receive : #{data}")
     case task
       when "file"
@@ -66,7 +78,7 @@ module LoadServer
           else
             Logging.send($log_file, Logger::DEBUG, "type file unknown : #{type_file} for #{id_file}")
         end
-        close_connection
+      # close_connection
 
       when "Building_matrix_and_pages"
         label = data["label"]
@@ -81,14 +93,14 @@ module LoadServer
       when "Building_device_platform"
         label = data["label"]
         date_building = data["date_building"]
-        task = Task_building_device_platform.new(label)
-        @@conditions_start.add(task)
-        @@conditions_start.decrement(task)
-        if $envir == "development" or
-            ($envir == "production" and @@conditions_start.execute?(task))
-          Building_inputs.Building_device_platform(label, date_building)
-          @@conditions_start.delete(task)
-        end
+        #task = Task_building_device_platform.new(label)
+        #@@conditions_start.add(task)
+        #@@conditions_start.decrement(task)
+        #if $envir == "development" or
+        #    ($envir == "production" and @@conditions_start.execute?(task))
+        Building_inputs.Building_device_platform(label, date_building)
+      #@@conditions_start.delete(task)
+      #end
 
       when "Building_hourly_daily_distribution"
         label = data["label"]
@@ -196,9 +208,9 @@ module LoadServer
         Common.alert("Extending_visits is not start because account_ga is not define", __LINE__) if objective["account_ga"].nil?
 
         begin
-           File.delete(objective_id_file)
+          File.delete(objective_id_file)
         rescue Exception => e
-           Common.warn("suppress of file #{objective_id_file} failed : #{e.message}")
+          Common.warn("suppress of file #{objective_id_file} failed : #{e.message}")
         end
         Building_visits.Extending_visits(label, date_building,
                                          count_visit.to_i,

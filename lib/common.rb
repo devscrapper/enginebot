@@ -18,10 +18,9 @@ module Common
       s = TCPSocket.new ip_server, port_server
       s.puts data_to_json
       s.close
-      Common.information("send to #{ip_server}:#{port_server}, data :#{data_to_json}")
+      Logging.send($log_file, Logger::DEBUG, "send to #{ip_server}:#{port_server}, data :#{data_to_json}")
     rescue Exception => e
       Common.alert("send to #{ip_server}:#{port_server} failed : #{e.message}")
-      raise
     end
   end
 

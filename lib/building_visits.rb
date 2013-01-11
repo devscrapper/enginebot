@@ -58,7 +58,7 @@ module Building_visits
       min_pages)
 
     begin
-      information("Building visits for #{label} is starting")
+      information("Building visits for #{label} for #{date} is starting")
       Logging.send(LOG_FILE, Logger::DEBUG, "count_visit #{count_visit}")
       Logging.send(LOG_FILE, Logger::DEBUG, "visit_bounce_rate #{visit_bounce_rate}")
       Logging.send(LOG_FILE, Logger::DEBUG, "page_views_per_visit #{page_views_per_visit}")
@@ -107,7 +107,7 @@ module Building_visits
 
 
     begin
-      information("Building planification of visit for #{label} is starting")
+      information("Building planification of visit for #{label}  for #{date} is starting")
 
       hourly_distribution = hourly_distribution.split(SEPARATOR4)
       @count_visits_by_hour = []
@@ -151,7 +151,7 @@ module Building_visits
   def Extending_visits(label, date, count_visit, account_ga, return_visitor_rate)
     begin
 
-      information("Extending visits for #{label} is starting")
+      information("Extending visits for #{label}  for #{date} is starting")
       device_platforme_id_file = id_file(TMP, "chosen-device-platform", label, date)
       if !File.exist?(device_platforme_id_file)
         alert("Extending visits is failed because <#{device_platforme_id_file}> file is not found")
@@ -203,7 +203,7 @@ module Building_visits
 # --------------------------------------------------------------------------------------------------------------
   def Publishing_visits_by_day(label, date)
     begin
-      information("Publishing visits for #{label} is starting")
+      information("Publishing visits for #{label}  for #{date} is starting")
       24.times { |hour|
         published_visits_to_json_id_file = id_file(OUTPUT, "published-visits", label, date, hour, "json")
         published_visits_to_json_file = File.open(published_visits_to_json_id_file, "w:UTF-8")
@@ -229,7 +229,7 @@ module Building_visits
 
   def Publishing_visits_by_hour(label, date, hour)
     begin
-      information("Publishing visits at #{hour} hour for #{label} is starting")
+      information("Publishing visits for #{label} for #{date} at #{hour} hour is starting")
       published_visits_to_json_id_file = id_file(OUTPUT, "published-visits", label, date, hour, "json")
       published_visits_to_json_file = File.open(published_visits_to_json_id_file, "w:UTF-8")
       published_visits_to_json_file.sync = true

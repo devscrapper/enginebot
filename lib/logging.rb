@@ -26,7 +26,7 @@ module Logging
         progname += (methode.nil?) ? "_".ljust(5) : methode.to_s
         progname += " | "
         progname += (prog.nil?) ? "_".ljust(5) : prog
-        puts "ENVOIE D UN MAIL" + message.to_s
+        puts "ENVOIE D UN MAIL " + message.to_s if $envir == "production"
       else
         p "code severity unknown #{severity}"
     end

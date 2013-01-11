@@ -11,9 +11,8 @@ class Events
     @events = Array.new
     begin
       JSON.parse(File.read(EVENTS_FILE)).each { |evt|
-        #TODO supprimer les events qui sont passés dans le referentiel des evenements
-
-        @events << Event.new(evt["key"], evt["cmd"], evt["periodicity"], evt["business"])
+        #TODO VALIDER que les events qui sont passés dans le referentiel des evenements sont supprimé
+        @events << Event.new(evt["key"], evt["cmd"], evt["periodicity"], evt["business"]) unless IceCube::Schedule.from_yaml(evt["periodicity"]).next_occurrence.nil?
       }
     rescue Exception => e
     end
@@ -55,10 +54,9 @@ class Events
       schedule =IceCube::Schedule.from_yaml(evt.periodicity)
       if schedule.occurring_at?(time)
         begin
-          evt.execute(@load_server_port)
-          Common.information("start of cmd #{evt.cmd} for event #{evt.key} success")
-        rescue
-          Common.alert("start of cmd #{evt.cmd} for event #{evt.key} failed")
+          evt.execute(@load_server_port, time)
+        rescue Exception => e
+          Common.alert("#{e.message}", __LINE__, __FILE__)
         end
       end
 

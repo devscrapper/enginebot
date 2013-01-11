@@ -17,18 +17,24 @@ module CalendarServer
 
 
   def receive_data param
-    @events = Events.new($load_server_port)
-    port, ip = Socket.unpack_sockaddr_in(get_peername)
-    Common.information ("data receive : #{param}")
+    close_connection
     begin
-      data_receive = JSON.parse param
-      close_connection
-      Logging.send($log_file, Logger::DEBUG, "data receive parsed : #{data_receive}")
+      #TODO on reste en thread tant que pas effet de bord et pas d'explosion du nombre de thread car plus rapide
+     Thread.new{ execute_cmd(JSON.parse param)}
+    rescue Exception => e
+      Common.warning("data receive #{param} : #{e.message}")
+    end
+  end
+
+  def execute_cmd(data_receive)
+    @events = Events.new($load_server_port)
+    begin
       object = data_receive["object"]
       cmd = data_receive["cmd"]
       data_event = data_receive["data"]
       event = nil
-
+      Common.information ("processing request : object : #{object}, cmd : #{cmd}")
+      Logging.send($log_file, Logger::DEBUG, "data receive : #{data_event}")
       case object
         when Event.name
           event = Event.new(data_event["key"],
@@ -38,7 +44,7 @@ module CalendarServer
         when Objective.name
           event = Objective.new(data_event).to_event
         else
-          Common.alert("object #{object} is not known")
+          Common.alert("object #{object} is not knowned")
       end
       case cmd
         when Event::EXECUTE_ALL
@@ -128,7 +134,7 @@ EventMachine.run {
   #toutes les heures de tous les jours de la semaine
   scheduler.cron '0 0 * * * 1-7 Europe/Paris' do
     begin
-      now = Time.now
+      now = Time.now      #
       data = {"object" => "Event",
               "cmd" => "execute_all",
               "data" => {"time" => now._dump.force_encoding("UTF-8")}}
@@ -140,6 +146,5 @@ EventMachine.run {
   end
 }
 Logging.send($log_file, Logger::INFO, "calendar server stopped")
-
 
 
