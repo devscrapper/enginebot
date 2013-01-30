@@ -11,106 +11,54 @@ require 'yaml'
 require File.dirname(__FILE__) + '/../lib/building_visits'
 require File.dirname(__FILE__) + '/../lib/building_inputs'
 require File.dirname(__FILE__) + '/../lib/building_objectives'
-require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../model/task'
 require File.dirname(__FILE__) + '/../model/objective'
 require File.dirname(__FILE__) + '/../model/website'
+require File.dirname(__FILE__) + '/../lib/common'
+require File.dirname(__FILE__) + '/../model/flow'
+require File.dirname(__FILE__) + '/../model/communication'
+
 module LoadServer
-  INPUT = File.dirname(__FILE__) + "/../input/"
+  include Common
   TMP = File.dirname(__FILE__) + "/../tmp/"
 
-  # @@conditions_start = Start_conditions.new()
-
   def initialize()
-    w = self
-    @execute_task = EM.spawn { |data|
-      begin
-        w.execute_task(JSON.parse data)
-      rescue Exception => e
-        Common.warning("data receive #{data} : #{e.message}")
-      end
-    }
-
   end
 
-
   def receive_data param
-
-    close_connection
+    debug("data receive : #{param}")
+     close_connection
     begin
       #TODO on reste en thread tant que pas effet de bord et pas d'explosion du nombre de thread car plus rapide
-       Thread.new { execute_task(JSON.parse param) }
-      #@execute_task.notify param
+      Thread.new { execute_task(YAML::load param) }
     rescue Exception => e
-      Common.warning("data receive #{param} : #{e.message}")
+      alert("data receive #{param} : #{e.message}")
     end
   end
 
   def execute_task(data)
-    who = data["who"]
     task = data["cmd"]
     Common.information ("processing request : task : #{task}")
-    Logging.send($log_file, Logger::DEBUG, "data receive : #{data}")
-    case task
-      when "file"
-        label = data["label"]
-        date = data["date_scraping"]
-        type_file = data["type_file"]
-        id_file = data["id_file"]
-        last_volume = data["last_volume"]
-        user = data["user"]
-        pwd = data["pwd"]
-        host_ftp_server = data["where"]
-        get_file(id_file, host_ftp_server, user, pwd)
-        case type_file
-          when "website"
-            Common.execute_next_task("Building_matrix_and_pages", label, date) if last_volume
-          when "Traffic_source_landing_page"
-            Common.execute_next_task("Building_landing_pages", label, date) if last_volume
-          when "Device_platform_plugin"
-            Common.execute_next_task("Building_device_platform", label, date) if last_volume
-          when "Device_platform_resolution"
-            Common.execute_next_task("Building_device_platform", label, date) if last_volume
-          when "Hourly_daily_distribution"
-            Common.execute_next_task("Building_hourly_daily_distribution", label, date) if last_volume
-          when "Behaviour"
-            Common.execute_next_task("Building_behaviour", label, date) if last_volume
-          else
-            Logging.send($log_file, Logger::DEBUG, "type file unknown : #{type_file} for #{id_file}")
-        end
-      # close_connection
 
+    case task
       when "Building_matrix_and_pages"
         label = data["label"]
         date_building = data["date_building"]
         Building_inputs.Building_matrix_and_pages(label, date_building)
 
       when "Building_landing_pages"
-        label = data["label"]
-        date_building = data["date_building"]
-        Building_inputs.Building_landing_pages(label, date_building)
+        Building_inputs.Building_landing_pages(data["input_flow"])
 
       when "Building_device_platform"
         label = data["label"]
         date_building = data["date_building"]
-        #task = Task_building_device_platform.new(label)
-        #@@conditions_start.add(task)
-        #@@conditions_start.decrement(task)
-        #if $envir == "development" or
-        #    ($envir == "production" and @@conditions_start.execute?(task))
         Building_inputs.Building_device_platform(label, date_building)
-      #@@conditions_start.delete(task)
-      #end
 
       when "Building_hourly_daily_distribution"
-        label = data["label"]
-        date_building = data["date_building"]
-        Building_inputs.Building_hourly_daily_distribution(label, date_building)
+        Building_inputs.Building_hourly_daily_distribution(data["input_flow"])
 
       when "Building_behaviour"
-        label = data["label"]
-        date_building = data["date_building"]
-        Building_inputs.Building_behaviour(label, date_building)
+        Building_inputs.Building_behaviour(data["input_flow"])
 
       when "Choosing_landing_pages"
         label = data["label"]
@@ -271,19 +219,6 @@ module LoadServer
   def unbind
   end
 
-  def get_file(id_file, host_ftp_server, user, pwd)
-    begin
-      ftp = Net::FTP.new(host_ftp_server)
-      ftp.login(user, pwd)
-      ftp.gettextfile(id_file, INPUT + id_file)
-      ftp.delete(id_file)
-      ftp.close
-
-      Logging.send($log_file, Logger::INFO, "download file, #{id_file}to #{INPUT + id_file}")
-    rescue Exception => e
-      Logging.send($log_file, Logger::FATAL, "download file, #{id_file} failed #{e.message}")
-    end
-  end
 
 end
 
@@ -299,13 +234,11 @@ scraper_servers_ip = "localhost" #liste de tous les scraper_server separer par u
 listening_port = 9002 # port d'ecoute du load_server
 scraper_server_port = 9003 # port d'ecoute du scraper_server
 $authentification_server_port = 9001
-$authentification_server_ip = "localhost"
 $statupbot_server_ip = "localhost"
 $statupbot_server_port = 9006
 $statupweb_server_ip="localhost"
 $statupweb_server_port=3000
 $calendar_server_port=9104
-
 $envir = "production"
 
 #--------------------------------------------------------------------------------------------------------------------
@@ -320,7 +253,6 @@ begin
   listening_port = params[$envir]["listening_port"] unless params[$envir]["listening_port"].nil?
   scraper_servers_ip = params[$envir]["scraper_servers_ip"] unless params[$envir]["scraper_servers_ip"].nil?
   scraper_server_port = params[$envir]["scraper_server_port"] unless params[$envir]["scraper_server_port"].nil?
-  $authentification_server_ip = params[$envir]["authentification_server_ip"] unless params[$envir]["authentification_server_ip"].nil?
   $authentification_server_port = params[$envir]["authentification_server_port"] unless params[$envir]["authentification_server_port"].nil?
   $statupbot_server_ip = params[$envir]["statupbot_server_ip"] unless params[$envir]["statupbot_server_ip"].nil?
   $statupbot_server_port = params[$envir]["statupbot_server_port"] unless params[$envir]["statupbot_server_port"].nil?
@@ -328,21 +260,20 @@ begin
   $statupweb_server_port = params[$envir]["statupweb_server_port"] unless params[$envir]["statupweb_server_port"].nil?
   $calendar_server_port = params[$envir]["calendar_server_port"] unless params[$envir]["calendar_server_port"].nil?
 rescue Exception => e
-  p e.message
-  Logging.send($log_file, Logger::INFO, "parameters file #{PARAMETERS} is not found")
+  Common.information("parameters file #{PARAMETERS} is not found")
 end
 
-Logging.send($log_file, Logger::INFO, "parameters of load server : ")
-Logging.send($log_file, Logger::INFO, "listening port : #{listening_port}")
-Logging.send($log_file, Logger::INFO, "scraper servers ip : #{scraper_servers_ip}")
-Logging.send($log_file, Logger::INFO, "scraper server port : #{scraper_server_port}")
-Logging.send($log_file, Logger::INFO, "authentification servers ip : #{$authentification_server_ip}")
-Logging.send($log_file, Logger::INFO, "authentification server port : #{$authentification_server_port}")
-Logging.send($log_file, Logger::INFO, "statupbot servers ip : #{$statupbot_server_ip}")
-Logging.send($log_file, Logger::INFO, "statupbot server port : #{$statupbot_server_port}")
-Logging.send($log_file, Logger::INFO, "statupweb server ip : #{$statupweb_server_ip}")
-Logging.send($log_file, Logger::INFO, "statupweb server port : #{$statupweb_server_port}")
-Logging.send($log_file, Logger::INFO, "calendar server port : #{$calendar_server_port}")
+Common.information( "parameters of load server : ")
+Common.information( "listening port : #{listening_port}")
+Common.information( "scraper servers ip : #{scraper_servers_ip}")
+Common.information( "scraper server port : #{scraper_server_port}")
+Common.information( "authentification server port : #{$authentification_server_port}")
+Common.information( "statupbot servers ip : #{$statupbot_server_ip}")
+Common.information( "statupbot server port : #{$statupbot_server_port}")
+Common.information( "statupweb server ip : #{$statupweb_server_ip}")
+Common.information( "statupweb server port : #{$statupweb_server_port}")
+Common.information( "calendar server port : #{$calendar_server_port}")
+Common.information("environement : #{$envir}")
 $listening_port = listening_port
 # sert à propager le port vers les module appeler par le load _server
 #afin qu'il lui demande d'executer des commandes
@@ -355,22 +286,10 @@ $listening_port = listening_port
 EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
-  Logging.send($log_file, Logger::INFO, "load server is starting")
-  EventMachine.start_server "0.0.0.0", listening_port, LoadServer
-
-  # recuperer les fichiers jamais chargés en base
-  scraper_servers_ip.split(",").each { |scraper_server_ip|
-
-    begin
-      data = {"who" => "load server", "cmd" => "send_me_all_files"}
-      Common.send_data_to(scraper_server_ip, scraper_server_port, data)
-      Common.information("getting all scrapping files from scraper server #{scraper_server_ip}:#{scraper_server_port}")
-    rescue Exception => e
-      Common.alert("getting all scrapping files from scraper server #{scraper_server_ip}:#{scraper_server_port} failed", __LINE__)
-    end
-  }
+  Common.information( "load server is starting")
+  EventMachine.start_server "localhost", listening_port, LoadServer
 }
-Logging.send($log_file, Logger::INFO, "load server stopped")
+Common.information( "load server stopped")
 
 #--------------------------------------------------------------------------------------------------------------------
 # END

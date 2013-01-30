@@ -15,6 +15,7 @@ module Building_inputs
 #------------------------------------------------------------------------------------------
 # Globals variables
 #------------------------------------------------------------------------------------------
+#TODO faire l'include de common
   INPUT = File.dirname(__FILE__) + "/../input/"
   TMP = File.dirname(__FILE__) + "/../tmp/"
   SEPARATOR="%SEP%"
@@ -35,7 +36,7 @@ module Building_inputs
          :links
 
     def initialize(page)
-      splitted_page = page.split(SEPARATOR)
+      splitted_page = page.split(SEPARATOR2)
       @id_uri = splitted_page[0].to_i
       if @id_uri == 24185
         $b = true
@@ -68,7 +69,8 @@ module Building_inputs
 
 
     def initialize(page)
-      splitted_page = page.split(SEPARATOR)
+      #TODO remplacement de SEPARATOR par SEPARATOR2 à valider
+      splitted_page = page.split(SEPARATOR2)
       @id_uri = ""
       @hostname = splitted_page[0]
       @landing_page_path = splitted_page[1]
@@ -187,6 +189,7 @@ module Building_inputs
 
 
   def Building_matrix_and_pages(label, date)
+    #TODO mettre en oeuvre les flow
     information("Building matrix and page for #{label} for #{date} is starting")
     matrix_file = open_file(TMP, "matrix", label, date)
     matrix_file.sync = true
@@ -228,47 +231,52 @@ module Building_inputs
     information("Building matrix and page for #{label} is over")
   end
 
-  def Building_landing_pages(label, date)
-    information("Building landing pages for #{label} for #{date} is starting")
-    landing_pages_direct_file = open_file(TMP, "landing-pages-direct", label, date)
-    landing_pages_direct_file.sync = true
-    landing_pages_referral_file = open_file(TMP, "landing-pages-referral", label, date)
-    landing_pages_referral_file.sync = true
-    landing_pages_organic_file = open_file(TMP, "landing-pages-organic", label, date)
-    landing_pages_organic_file.sync = true
+  def Building_landing_pages(traffic_source_file)
+    information("Building landing pages for #{traffic_source_file.label} for #{traffic_source_file.date} is starting")
+    if !traffic_source_file.exist?
+      alert("Building hourly landing page for #{traffic_source_file.label} fails because inputs #{traffic_source_file.basename} file is missing")
+      return false
+    end
+    label = traffic_source_file.label
+    date = traffic_source_file.date
+
+    landing_pages_direct_file = Flow.from_basename(TMP, traffic_source_file.basename)
+    landing_pages_direct_file.type_flow = "landing-pages-direct"
+    landing_pages_referral_file = Flow.from_basename(TMP, traffic_source_file.basename)
+    landing_pages_referral_file.type_flow = "landing-pages-referral"
+    landing_pages_organic_file = Flow.from_basename(TMP, traffic_source_file.basename)
+    landing_pages_organic_file.type_flow = "landing-pages-organic"
+
+
     vol = 1
-    eof = false
-    while !eof
+    e = nil
+    #TODO valider que le multi volume fonctionne
+    #TODO valider qu'une exception arrete bien la boucle
+    while traffic_source_file.exist? and e.nil?
       begin
-        traffic_source_file = id_file(INPUT, "traffic-source-landing-page", label, date, vol)
-        #traffic_source_file = File.open(traffic_source_file_id, "r:BOM|UTF-8:-")
-        if  !traffic_source_file.nil?
-          count_line = File.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
-          pob = ProgressBar.create(:title => File.basename(traffic_source_file), :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
-          IO.foreach(traffic_source_file, EOFLINE2, encoding: "BOM|UTF-8:-") { |p|
-            page = Traffic_source.new(p)
-            page.set_id_uri(label, date)
-            if page.isknown?
-              case page.medium
-                when "(none)"
-                  landing_pages_direct_file.write(page.to_landing_page)
-                when "referral"
-                  landing_pages_referral_file.write(page.to_landing_page)
-                when "organic"
-                  landing_pages_organic_file.write(page.to_landing_page)
-                else
-                  Logging.send(LOG_FILE, Logger::ERROR, "medium unknown : #{ page.medium}")
-              end
+        count_line = traffic_source_file.count_lines(EOFLINE2)
+        pob = ProgressBar.create(:title => "Building landing pages", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
+        IO.foreach(traffic_source_file.absolute_path, EOFLINE2, encoding: "BOM|UTF-8:-") { |p|
+          page = Traffic_source.new(p)
+          page.set_id_uri(label, date)
+          if page.isknown?
+            case page.medium
+              when "(none)"
+                landing_pages_direct_file.write(page.to_landing_page)
+              when "referral"
+                landing_pages_referral_file.write(page.to_landing_page)
+              when "organic"
+                landing_pages_organic_file.write(page.to_landing_page)
+              else
+                Logging.send(LOG_FILE, Logger::ERROR, "medium unknown : #{ page.medium}")
             end
-            pob.increment
-          }
-          vol += 1
-        else
-          Logging.send(LOG_FILE, Logger::DEBUG, "file <traffic-source-landing-page-#{label}-#{date}-#{vol}> is not found")
-          eof = true
-        end
+          end
+          pob.increment
+        }
+        vol += 1
+        traffic_source_file = Flow.from_absolute_path(traffic_source_file)
+        traffic_source_file.vol = vol
       rescue Exception => e
-        eof = true
         Logging.send(LOG_FILE, Logger::ERROR, "#{e.message}", __LINE__)
       end
     end
@@ -280,33 +288,25 @@ module Building_inputs
   end
 
   def Building_device_platform(label, date)
+    #TODO valider le multi volume car la requete GA ne limite pas le nombre de resultats
     information("Building device platform for #{label} for #{date} is starting")
 
-    device_plugin = id_file(INPUT, "device-platform-plugin", label, date)
+    device_plugin = Flow.new(INPUT, "scraping-device-platform-plugin", label, date, 1)
 
-
-    if !File.exist?(device_plugin)
-      alert("Building_device_platform for #{label} fails because inputs Device_platform_plugin file is missing")
+    if !device_plugin.exist?
+      alert("Building_device_platform for #{label} fails because #{device_plugin.basename} file is missing")
       return false
     end
-    device_resolution = id_file(INPUT, "device-platform-resolution", label, date)
 
-    if !File.exist?(device_resolution)
-      alert("Building_device_platform for #{label} fails because inputs Device_platform_resolution file is missing")
+    device_resolution = Flow.new(INPUT, "scraping-device-platform-resolution", label, date, 1)
+
+    if !device_resolution.exist?()
+      alert("Building_device_platform for #{label} fails because #{device_resolution.basename} file is missing")
       return false
     end
-    device_plugins = []
-    IO.foreach(device_plugin, EOFLINE2, encoding: "BOM|UTF-8:-") { |plugin|
-      device_plugins << Device_plugin.new(plugin)
-    }
 
-    device_plugins.sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
-
-    device_resolutions = []
-    IO.foreach(device_resolution, EOFLINE2, encoding: "BOM|UTF-8:-") { |resolution|
-      device_resolutions << Device_resolution.new(resolution)
-    }
-    device_resolutions.sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
+    device_plugins = device_plugin.load_to_array(EOFLINE2, Device_plugin).sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
+    device_resolutions = device_resolution.load_to_array(EOFLINE2, Device_resolution).sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
 
     p = ProgressBar.create(:title => "Consolidation plugin & resolution files", :length => 180, :starting_at => 0, :total => device_plugins.size, :format => '%t, %c/%C, %a|%w|')
     device_platforms = []
@@ -326,7 +326,7 @@ module Building_inputs
       p.increment
     }
 
-    device_platform_file = open_file(TMP, "device-platform", label, date)
+    device_platform_file = Flow.new(TMP, "device-platform", label, date)
     total = 0
     device_platforms.sort_by! { |a| [a.count_visits] }.reverse!.each { |device|
       device.count_visits = (device.count_visits.to_f * 100/count_visits)
@@ -337,21 +337,22 @@ module Building_inputs
     information("Building device platform for #{label} is over")
   end
 
-  def Building_hourly_daily_distribution(label, date)
-    information("Building hourly daily distribution for #{label} for #{date} is starting")
-    distribution = id_file(INPUT, "hourly-daily-distribution", label, date)
-    if !File.exist?(distribution)
-      alert("Building hourly daily distribution for #{label} fails because inputs Hourly-daily-distribution file is missing")
+  def Building_hourly_daily_distribution(input_distribution)
+    #pas de gestion du multi-volume nécessaire car la requete vers ga limite le nombre de resultat
+    information("Building hourly daily distribution for #{input_distribution.label} for #{input_distribution.date} is starting")
+    #   distribution = id_file(INPUT, "hourly-daily-distribution", label, date)
+    if !input_distribution.exist?
+      alert("Building hourly daily distribution for #{input_distribution.label} fails because inputs Hourly-daily-distribution file is missing")
       return false
     end
-    distribution_per_day_file = open_file(TMP, "hourly-daily-distribution", label, date)
-    distribution_per_day_file.sync = true
+    tmp_distribution = Flow.from_basename(TMP, input_distribution.basename.sub!("scraping-", ""))
+
     distribution_per_day = ""
     i = 1
     day_save = ""
-    count_line = File.foreach(distribution, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+    count_line = input_distribution.count_lines(EOFLINE2)
     p = ProgressBar.create(:title => "Building hourly daily distribution", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
-    IO.foreach(distribution, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
+    IO.foreach(input_distribution.absolute_path, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
       #30;00;20121130;21
       splitted_line = line.strip.split(SEPARATOR2)
       day = splitted_line[0]
@@ -365,33 +366,31 @@ module Building_inputs
           distribution_per_day += "#{count_visits}#{SEPARATOR4}"
         else
           distribution_per_day = distribution_per_day[0..distribution_per_day.size - 2]
-          distribution_per_day_file.write("#{distribution_per_day}#{EOFLINE2}")
+          tmp_distribution.write("#{distribution_per_day}#{EOFLINE2}")
           i+=1
           distribution_per_day = "#{i}#{SEPARATOR2}#{count_visits}#{SEPARATOR4}"
       end
       day_save = day
       p.increment
     }
-    distribution_per_day_file.write("#{distribution_per_day[0..distribution_per_day.size - 2]}#{EOFLINE2}")
-    distribution_per_day_file.close
-    information("Building hourly daily distribution for #{label} is over")
+    tmp_distribution.write("#{distribution_per_day[0..distribution_per_day.size - 2]}#{EOFLINE2}")
+    tmp_distribution.close
+    information("Building hourly daily distribution for #{tmp_distribution.label} is over")
   end
 
 
-  def Building_behaviour(label, date)
-    information("Building behaviour for #{label} for #{date} is starting")
-    behaviour_input = id_file(INPUT, "behaviour", label, date)
-
-    if !File.exist?(behaviour_input)
-      alert("Building behaviour for #{label} fails because inputs behaviour file is missing")
+  def Building_behaviour(input_behaviour)
+    #pas de prise en compte du multi-volume car la requete ga limite le nombre de resultats
+    information("Building behaviour for #{input_behaviour.label} for #{input_behaviour.date} is starting")
+    if !input_behaviour.exist?
+      alert("Building behaviour for #{input_behaviour.label} fails because inputs behaviour file is missing")
       return false
     end
-    behaviour_file = open_file(TMP, "behaviour", label, date)
-    behaviour_file.sync = true
-    count_line = File.foreach(behaviour_input, EOFLINE2, encoding: "BOM|UTF-8:-").inject(0) { |c, line| c+1 }
+    tmp_behaviour = Flow.from_basename(TMP, input_behaviour.basename.sub!("scraping-", ""))
+    count_line = input_behaviour.count_lines(EOFLINE2)
     p = ProgressBar.create(:title => "Building hourly daily distribution", :length => 180, :starting_at => 0, :total => count_line, :format => '%t, %c/%C, %a|%w|')
     i = 1
-    IO.foreach(behaviour_input, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
+    IO.foreach(input_behaviour.absolute_path, EOFLINE2, encoding: "BOM|UTF-8:-") { |line|
       splitted_line = line.strip.split(SEPARATOR2)
       #30;20121130;86.30377524143987;66.900790166813;52.25021949078139;1.9569798068481123;1139
       percent_new_visit = splitted_line[2].to_f.round(2)
@@ -399,31 +398,34 @@ module Building_inputs
       avg_time_on_site = splitted_line[4].to_f.round(2)
       page_views_per_visit = splitted_line[5].to_f.round(2)
       count_visits = splitted_line[6].to_i
-      behaviour_file.write("#{i}#{SEPARATOR2}#{percent_new_visit}#{SEPARATOR2}#{visit_bounce_rate}#{SEPARATOR2}#{avg_time_on_site}#{SEPARATOR2}#{page_views_per_visit}#{SEPARATOR2}#{count_visits}#{EOFLINE2}")
+      tmp_behaviour.write("#{i}#{SEPARATOR2}#{percent_new_visit}#{SEPARATOR2}#{visit_bounce_rate}#{SEPARATOR2}#{avg_time_on_site}#{SEPARATOR2}#{page_views_per_visit}#{SEPARATOR2}#{count_visits}#{EOFLINE2}")
       i +=1
       p.increment
     }
-    behaviour_file.close
-    information("Building behaviour for #{label} is over")
+    tmp_behaviour.close
+    information("Building behaviour for #{tmp_behaviour.label} is over")
   end
 
   def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
+    #TODO mettre en oeuvre les flow
+    #TODO prendre en compte le multi volume
     information("Choosing landing pages for #{label} for #{date} is starting")
-      file = id_file(TMP, "chosen-landing-pages", label, date)
-      File.delete(file) if File.exist?(file)
+    file = id_file(TMP, "chosen-landing-pages", label, date)
+    File.delete(file) if File.exist?(file)
     Common.archive_file(TMP, "chosen-landing-pages", label)
-      result = Choosing_landing(label, date, "direct", direct_medium_percent, count_visit) &&
-          Choosing_landing(label, date, "referral", referral_medium_percent, count_visit) &&
-          Choosing_landing(label, date, "organic", organic_medium_percent, count_visit)
-      alert("Choosing landing pages for #{label} fails because inputs Landing files are missing") unless result
-      information("Choosing landing pages for #{label} is over")
-      #execute_next_step("Building_visits", label, date) if result
+    result = Choosing_landing(label, date, "direct", direct_medium_percent, count_visit) &&
+        Choosing_landing(label, date, "referral", referral_medium_percent, count_visit) &&
+        Choosing_landing(label, date, "organic", organic_medium_percent, count_visit)
+    alert("Choosing landing pages for #{label} fails because inputs Landing files are missing") unless result
+    information("Choosing landing pages for #{label} is over")
+    #execute_next_step("Building_visits", label, date) if result
 
   end
 
 
   def Choosing_device_platform(label, date, count_visits)
-
+    #TODO mettre en oeuvre les flow
+    #TODO prendre en compte le multi volume
     information("Choosing device platform for #{label} for #{date} is starting")
 
     device_platform = select_file(TMP, "device-platform", label, date)
@@ -450,6 +452,7 @@ module Building_inputs
 
   #private
   def Choosing_landing(label, date, medium_type, medium_percent, count_visit)
+    #TODO mettre en oeuvre les flow
     landing_pages = select_file(TMP, "landing-pages-#{medium_type}", label, date)
     return false if landing_pages.nil?
 
