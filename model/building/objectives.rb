@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
-
 require 'eventmachine'
 require File.dirname(__FILE__) + '/../lib/common'
 require File.dirname(__FILE__) + '/../lib/logging'
@@ -11,7 +10,8 @@ require 'socket'
 #------------------------------------------------------------------------------------------
 
 
-module Building_objectives
+module Building
+  include Common
 #------------------------------------------------------------------------------------------
 # Globals variables
 #------------------------------------------------------------------------------------------
@@ -27,10 +27,6 @@ module Building_objectives
   LOG_FILE = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
 
 #inputs
-
-# local
-  attr
-
 
 #--------------------------------------------------------------------------------------------------------------
 # Publishing
@@ -49,7 +45,7 @@ module Building_objectives
       account_ga)
 
     begin
-      information("Building objectives for #{label} is starting")
+      Common.information("Building objectives for #{label} is starting")
       Logging.send(LOG_FILE, Logger::DEBUG, "change_count_visits_percent #{change_count_visits_percent}")
       Logging.send(LOG_FILE, Logger::DEBUG, "change_bounce_visits_percent #{change_bounce_visits_percent}")
       Logging.send(LOG_FILE, Logger::DEBUG, "direct_medium_percent #{direct_medium_percent}")
@@ -61,31 +57,39 @@ module Building_objectives
 
       hourly_daily_distribution = []
 
+      hourly_daily_distribution_file =  Flow.from_basename(TMP, Flow.new(TMP, "hourly-daily-distribution", label, date).last)
 
-      hourly_daily_distribution_file = select_file(TMP, "hourly-daily-distribution", label, date)
-
-      if !File.exist?(hourly_daily_distribution_file)
-        alert("Publishing objectives for #{label} fails because #{hourly_daily_distribution_file} file is missing")
+      if !hourly_daily_distribution_file.exist?
+        Common.alert("Publishing objectives for #{label} fails because #{hourly_daily_distribution_file.basename} file is missing")
         return false
       end
 
-      behaviour_file = select_file(TMP, "behaviour", label, date)
-
-      if !File.exist?(behaviour_file)
-        alert("Publishing objectives for #{label} fails because #{behaviour_file} file is missing")
+      behaviour_file =  Flow.from_basename(TMP, Flow.new(TMP, "behaviour", label, date).last)
+      if !behaviour_file.exist?
+        Common.alert("Publishing objectives for #{label} fails because #{behaviour_file.basename} file is missing")
         return false
       end
 
-      behaviour = File.open(behaviour_file, "r:BOM|UTF-8:-").readlines(EOFLINE2)
-      hourly_daily_distribution = File.open(hourly_daily_distribution_file, "r:BOM|UTF-8:-").readlines(EOFLINE2)
-      if behaviour.size != hourly_daily_distribution.size
-        alert("Publishing objectives for #{label} fails because behaviour and hourly_daily_distribution have not the same number of days #{behaviour.size} and #{hourly_daily_distribution.size}")
+      behaviour_file_size = behaviour_file.count_lines(EOFLINE2)
+      hourly_daily_distribution_file_size = hourly_daily_distribution_file.count_lines(EOFLINE2)
+      if behaviour_file_size != hourly_daily_distribution_file_size
+        Common.alert("Publishing objectives for #{label} fails because #{behaviour_file.basename} and #{hourly_daily_distribution_file.basename} have not the same number of days #{behaviour_file_size} and #{hourly_daily_distribution_file_size}")
         return false
       end
-      p = ProgressBar.create(:title => "Building objectives", :length => 180, :starting_at => 0, :total => behaviour.size, :format => '%t, %c/%C, %a|%w|')
+
+      hourly_daily_distribution = hourly_daily_distribution_file.load_to_array(EOFLINE2)
+      behaviour = behaviour_file.load_to_array(EOFLINE2)
+
+
+      p = ProgressBar.create(:title => "Building objectives", :length => 180, :starting_at => 0, :total => behaviour_file_size, :format => '%t, %c/%C, %a|%w|')
+
+
       day = next_monday(date)
-      behaviour.size.times { |line|
+
+      behaviour_file_size.times { |line|
+
         splitted_behaviour = behaviour[line].strip.split(SEPARATOR2)
+
         splitted_hourly_daily_distribution = hourly_daily_distribution[line].strip.split(SEPARATOR2)
 
         obj = Objective.new(label, day,
@@ -108,15 +112,16 @@ module Building_objectives
         p.increment
         day = day.next_day(1)
       }
-      information("Building objectives for #{label} is over")
+      Common.information("Building objectives for #{label} is over")
     rescue Exception => e
-      error(e.message)
+      Common.error(e.message)
     end
   end
 
   #private
   def next_monday(date)
-    today = Date.parse(date)
+    today = Date.parse(date)  if date.is_a?(String)
+    today = date if date.is_a?(Date)
     return today.next_day(1) if today.sunday?
     return today if today.monday?
     return today.next_day(6) if today.tuesday?
@@ -126,17 +131,6 @@ module Building_objectives
     return today.next_day(2) if today.saturday?
   end
 
-  def alert(msg)
-    Common.alert(msg)
-  end
-
-  def information(msg)
-    Common.information(msg)
-  end
-
-  def error(msg)
-    Common.error(msg)
-  end
 
   def execute_next_task(task, label, date)
     Common.execute_next_task(task, label, date)
@@ -154,9 +148,6 @@ module Building_objectives
   module_function :Publishing
   # private
   module_function :next_monday
-  module_function :error
-  module_function :alert
-  module_function :information
   module_function :execute_next_task
   module_function :select_file
   module_function :id_file

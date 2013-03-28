@@ -1,29 +1,27 @@
-require 'socket'
-require File.dirname(__FILE__) + '/../lib/common'
-require 'ruby-progressbar'
+require 'net/ftp'
+require_relative 'communication'
+require_relative '../lib/logging'
 
-#TODO publier vers les autres projet
 class Flow
   class FlowException < StandardError;
   end
-  include Common
-  include Enumerable
 
-  SEPARATOR = "_"
-  ARCHIVE = File.dirname(__FILE__) + "/../archive/"
+  MAX_SIZE = 1000000 # taille max d'un volume
+  SEPARATOR = "_" # separateur entre elemet composant (type_flow, label, date, vol) le nom du volume (basename)
+  ARCHIVE = File.dirname(__FILE__) + "/../archive/" #localisation du repertoire d'archive
+  FORBIDDEN_CHAR = /[_ ]/ # liste des caractères interdits dans le typeflow et label d'un volume
+  attr :descriptor,
+       :dir,
+       :type_flow,
+       :ext,
+       :logger
 
-  attr :descriptor
+  attr_reader :label,:vol, :date
 
-  attr_accessor :dir,
-                :label,
-                :type_flow,
-                :date,
-                :vol,
-                :ext
+  #----------------------------------------------------------------------------------------------------------------
+  # class methods
+  #----------------------------------------------------------------------------------------------------------------
 
-#----------------------------------------------------------------------------------------------------------------
-# class methods
-#----------------------------------------------------------------------------------------------------------------
   def self.from_basename(dir, basename)
     ext = File.extname(basename)
     basename = File.basename(basename, ext)
@@ -48,32 +46,43 @@ class Flow
 
   def initialize(dir, type_flow, label, date, vol=nil, ext=".txt")
     @dir = dir
-    @type_flow = type_flow
-    @label = label
+    @type_flow = type_flow.gsub(FORBIDDEN_CHAR, "-") #le label ne doit pas contenir les caractères interdits
+    @label = label.gsub(FORBIDDEN_CHAR, "-") #le label ne doit pas contenir les caractères interdits
     @date = date.strftime("%Y-%m-%d") if date.is_a?(Date)
     @date = date unless date.is_a?(Date)
-    @vol = vol if vol.is_a?(String)
-    @vol = vol.to_s unless vol.is_a?(String)
+    @vol = vol.to_s unless vol.nil?
     @ext = ext
+    @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
+    if  !(@dir && @type_flow && @label && @date && @ext) and $debugging
+      @logger.an_event.debug "dir <#{dir}>"
+      @logger.an_event.debug "type_flow <#{type_flow}>"
+      @logger.an_event.debug "label <#{label}>"
+      @logger.an_event.debug "date <#{date}>"
+      @logger.an_event.debug "vol <#{vol}>"
+      @logger.an_event.debug "ext <#{ext}>"
+      @logger.an_event.debug "details flow <#{self.to_s}>"
+
+    end
     raise FlowException, "Flow not initialize" unless @dir && @type_flow && @label && @date && @ext
+
   end
 
+  def vol=(vol)
+    @vol = vol.to_s
+  end
 
   def absolute_path
     File.join(@dir, basename)
   end
 
   def basename
+    @logger.an_event.debug self.inspect
     basename = @type_flow + SEPARATOR + @label + SEPARATOR + @date
     basename += SEPARATOR + @vol unless @vol.nil?
     basename += @ext
     basename
   end
 
-  def vol=(vol)
-    @vol = vol if vol.is_a?(String)
-    @vol = vol.to_s unless vol.is_a?(String)
-  end
 
   def write(data)
     @descriptor = File.open(absolute_path, "w:UTF-8") if @descriptor.nil?
@@ -87,8 +96,20 @@ class Flow
     @descriptor.write(data)
   end
 
+  def rewind()
+    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    @descriptor = File.open(absolute_path, "r:UTF-8") if @descriptor.nil?
+    @descriptor.rewind
+  end
+
   def close
-    @descriptor.close if @descriptor.nil?
+    @descriptor.close unless @descriptor.nil?
+    @descriptor = nil
+  end
+
+  def size
+    @descriptor = File.open(absolute_path, "r:BOM|UTF-8:-") if @descriptor.nil?
+    @descriptor.size
   end
 
   def count_lines(eofline)
@@ -101,16 +122,17 @@ class Flow
     volumes.each { |flow| total_lines += flow.count_lines(eofline) }
     total_lines
   end
+
   def descriptor
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
-    @descriptor = File.open(absolute_path, "BOM|UTF-8:-") if @descriptor.nil?
+    @descriptor = File.open(absolute_path, "r:BOM|UTF-8:-") if @descriptor.nil?
     @descriptor
   end
 
-  def readline
+  def readline(eofline)
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     @descriptor = File.open(absolute_path, "BOM|UTF-8:-") if @descriptor.nil?
-    @descriptor.readline()
+    @descriptor.readline(eofline)
   end
 
   def exist?
@@ -128,10 +150,9 @@ class Flow
   end
 
   def last()
-    #TODO rework en utilisant la methode volumes
     return basename if exist?
-    volum = "#{SEPARATOR}#{@vol}" unless @vol.nil?
-    volum = "" if @vol.nil?
+    volum = "#{SEPARATOR}#{@vol}" unless @vol.empty?
+    volum = "" if @vol.empty?
     max_time = Time.new(2001, 01, 01)
     chosen_file = nil
     Dir.glob("#{@dir}#{@type_flow}#{SEPARATOR}#{@label}#{SEPARATOR}*#{volum}#{@ext}").each { |file|
@@ -143,50 +164,29 @@ class Flow
     chosen_file
   end
 
-  def archive
+  def archive()
+    # archive le flow courant : deplace le fichier dans le repertoire ARCHIVE
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     FileUtils.mv(absolute_path, ARCHIVE, :force => true)
+    @logger.an_event.info "archive <#{basename}>"
+    @logger.an_event.debug "archive <#{basename}> to #{ARCHIVE}"
   end
 
-  def put(ip_to, port_to, ip_ftp_server, port_ftp_server, user, pwd, last_volume = false)
-    data = {"ip_ftp_server" => ip_ftp_server,
-            "port_ftp_server" => port_ftp_server,
-            "user" => user,
-            "pwd" => pwd,
-            "cmd" => CMD,
-            "type_flow" => @type_flow,
-            "basename" => basename,
-            "last_volume" => last_volume,
-    }
-    begin
-      data_to_json = JSON.generate(data).strip
-      s = TCPSocket.new ip_to, port_to
-      s.puts data_to_json
-      s.close
-    rescue Exception => e
-      alert("put flow <#{basename}> to #{ip_to}:#{port_to} failed : #{e.message}")
-      raise FlowException
-    end
-  end
-
-  def get(ip_from, port_from, user, pwd)
-    begin
-      ftp = Net::FTP.new
-      ftp.connect(ip_from, port_from)
-      ftp.login(user, pwd)
-      ftp.gettextfile(basename, absolute_path)
-      ftp.delete(basename)
-      ftp.close
-      information("get flow <#{basename}> from #{ip_from}:#{port_from}")
-    rescue Exception => e
-      alert("get flow <#{basename}> from #{ip_from}:#{port_from} failed : #{e.message}")
-      raise FlowException, e.message
-    end
+  def archive_previous
+    # N'ARCHIVE PAS L'INSTANCE COURANTE
+    # archive le flow ou les flows qui sont antérieurs à l'instance courante
+    # l'objectif est de faire le ménage dans le répertoire qui contient l'instance courante
+    # le ou les flow sont déplacés dans ARCHIVE
+    @logger.an_event.info "archive previous <#{basename}>"
+    @logger.an_event.debug "archive previous <#{basename}> to #{ARCHIVE}"
   end
 
   def volumes
     #renvoi un array contenant les flow de tous les volumes
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+
+    return [self] if @vol.empty? # si le flow n'a pas de volume alors renvoi un tableau avec le flow
+
     array = []
     crt = self
     vol = 1
@@ -203,6 +203,7 @@ class Flow
   def volumes?
     #renvoi le nombre de volume
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    return 0 if @vol.empty? # si le flow n'a pas de volume alors renvoi 0
     count = 0
     crt = self
     vol = 1
@@ -216,22 +217,162 @@ class Flow
     count
   end
 
+  def put(ip_to, port_to, port_ftp_server, user, pwd, last_volume = false)
+    data = {
+        "type_flow" => @type_flow,
+        "data" => {"port_ftp_server" => port_ftp_server,
+                   "user" => user,
+                   "pwd" => pwd,
+                   "basename" => basename,
+                   "last_volume" => last_volume}
+    }
+    begin
+      Information.new(data).send_to(ip_to, port_to)
+      @logger.an_event.debug "send properties flow <#{basename}> to #{ip_to}:#{port_to}"
+    rescue Exception => e
+      @logger.an_event.error "cannot send properties flow <#{basename}> to #{ip_to}:#{port_to}"
+      @logger.an_event.debug e
+      raise FlowException, e.message
+    end
+  end
+
+  def get(ip_from, port_from, user, pwd)
+    begin
+      ftp = Net::FTP.new
+      ftp.connect(ip_from, port_from)
+      ftp.login(user, pwd)
+      ftp.gettextfile(basename, absolute_path)
+      ftp.delete(basename)
+      ftp.close
+      @logger.an_event.debug "get flow <#{basename}> from #{ip_from}:#{port_from}"
+    rescue Exception => e
+      @logger.an_event.error "cannnot get flow <#{basename}> from #{ip_from}:#{port_from}"
+      @logger.an_event.debug e
+      raise FlowException, e.message
+    end
+  end
+
+  def push(authentification_server_port,
+      input_flows_server_ip,
+      input_flows_server_port,
+      ftp_server_port,
+      vol = nil,
+      last_volume = false)
+
+    if @vol.empty?
+
+      # le flow n'a pas de volume => on pousse le flow vers sa destination  et last_volume= true
+      begin
+        push_vol(authentification_server_port,
+                 input_flows_server_ip,
+                 input_flows_server_port,
+                 ftp_server_port,
+                 true)
+        @logger.an_event.debug "push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
+      rescue Exception => e
+        @logger.an_event.error "cannot push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
+        @logger.an_event.debug e
+        raise FlowException
+      end
+    else
+      # le flow a des volumes
+
+      if vol.nil?
+
+        # aucune vol n'est précisé donc on pousse tous les volumes en commancant du premier même si le flow courant n'est pas le premier,
+        #en précisant pour le dernier le lastvolume = true
+        count_volumes = volumes?
+
+        volumes.each { |volume|
+          begin
+            volume.push_vol(authentification_server_port,
+                            input_flows_server_ip,
+                            input_flows_server_port,
+                            ftp_server_port,
+                            count_volumes == volume.vol.to_i)
+            @logger.an_event.debug "push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
+          rescue Exception => e
+            @logger.an_event.error "cannot push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
+            @logger.an_event.debug e
+            raise FlowException
+          end
+        }
+
+      else
+
+        # on pousse le volume précisé
+        # si lastvolume n'est pas précisé alors = false
+        @vol = vol
+        raise FlowException, "volume <#{@vol}> of the flow <#{basename}> do not exist" unless exist? # on verifie que le volume passé existe
+        begin
+          push_vol(authentification_server_port,
+                   input_flows_server_ip,
+                   input_flows_server_port,
+                   ftp_server_port,
+                   last_volume)
+        rescue Exception => e
+          @logger.an_event.error "push vol <#{@vol}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} failed"
+          @logger.an_event.debug e
+          raise FlowException
+        end
+      end
+
+    end
+
+  end
+
+
+  def push_vol(authentification_server_port,
+      input_flows_server_ip,
+      input_flows_server_port,
+      ftp_server_port,
+      last_volume = false)
+
+    begin
+      authen = Authentification.get_one(authentification_server_port)
+      @logger.an_event.info "ask a new authentification"
+    rescue Exception => e
+      @logger.an_event.error "cannot ask a new authentification to localhost:#{authentification_server_port}"
+      @logger.an_event.debug e
+      raise FlowException
+    end
+
+    begin
+      put(input_flows_server_ip,
+          input_flows_server_port,
+          ftp_server_port,
+          authen.user,
+          authen.pwd,
+          last_volume)
+
+    rescue Exception => e
+
+      raise FlowException
+    end
+
+  end
+
+  def new_volume()
+    raise FlowException, "Flow <#{absolute_path}> has no first volume" if @vol.empty?
+    close
+    Flow.new(@dir, @type_flow, @label, @date, @vol.to_i + 1, @ext)
+  end
 
   def load_to_array(eofline, class_definition=nil)
-    # class_definition est une class
-    # si class_definition est nil alors on range la ligne dans le array
-    # si class_definition n'est pas nil alors on range une instance de la class construite à partir de la ligne, dans le array
-    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
-    raise FlowException, "eofline not define" if eofline.nil?
-    array = []
-    p = ProgressBar.create(:title => "Loading #{basename} file", :length => 180, :starting_at => 0, :total => total_lines(eofline), :format => '%t, %c/%C, %a|%w|')
-    volumes.each { |flow|
-      IO.foreach(flow.absolute_path, eofline, encoding: "BOM|UTF-8:-") { |line|
-        array << class_definition.new(line) unless class_definition.nil?
-        array << line if class_definition.nil?
-        p.increment
-      }
-    }
-    array
-  end
+     # class_definition est une class
+     # si class_definition est nil alors on range la ligne dans le array
+     # si class_definition n'est pas nil alors on range une instance de la class construite à partir de la ligne, dans le array
+     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+     raise FlowException, "eofline not define" if eofline.nil?
+     array = []
+     p = ProgressBar.create(:title => "Loading #{basename} file", :length => 180, :starting_at => 0, :total => total_lines(eofline), :format => '%t, %c/%C, %a|%w|')
+     volumes.each { |flow|
+       IO.foreach(flow.absolute_path, eofline, encoding: "BOM|UTF-8:-") { |line|
+         array << class_definition.new(line) unless class_definition.nil?
+         array << line if class_definition.nil?
+         p.increment
+       }
+     }
+     array
+   end
 end

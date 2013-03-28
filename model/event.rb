@@ -5,10 +5,12 @@ require 'json'
 require 'json/ext'
 require File.dirname(__FILE__) + '/../lib/logging'
 require File.dirname(__FILE__) + '/../lib/common'
-require 'logger'
+require File.dirname(__FILE__) + '/../model/communication'
+
 
 
 class Event
+  include Common
   EXECUTE_ALL = "execute_all"
   EXECUTE_ONE = "execute_one"
   SAVE = "save"
@@ -51,19 +53,22 @@ class Event
                 "cmd" => @cmd,
                 "label" => @key["label"],
                 "date_building"   =>  @key["building_date"] || Date.today,
-                "start_time" =>  (time + 2 * IceCube::ONE_HOUR)._dump.force_encoding("UTF-8"),
+                "start_time" =>  (time + 2 * IceCube::ONE_HOUR)._dump,
                 "data" => @business}
-
-      Common.send_data_to("localhost", load_server_port, data)
-      Common.information("send cmd #{@cmd} for #{@key["label"]} for #{data["date_building"]} at #{time} to load_server success")
+      p 1
+      p data
+      Information.new(data).send_to(load_server_port)
+      p 2
+      information("send cmd #{@cmd} for #{@key["label"]} for #{data["date_building"]} at #{time} to load_server success")
     rescue Exception => e
-      Common.alert("send cmd #{@cmd} for #{@key["label"]} for #{data["date_building"]} at #{time} to load_server failed",__LINE__)
+      alert("send cmd #{@cmd} for #{@key["label"]} for #{data["date_building"]} at #{time} to load_server(#{load_server_port}) failed : #{e.message}",__LINE__)
     end
   end
 end
 
 
 class Policy
+  #TODO prendre en compte les nouvelles données qui viennent de statupweb
   BUILDING_OBJECTIVES_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
   BUILDING_OBJECTIVES_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est 2h du matin
   attr :label,

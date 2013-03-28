@@ -175,6 +175,7 @@ module LoadServer
         label = data["label"]
         date_building = data["date_building"]
         business = data["data"]
+        p 1
         change_count_visits_percent = business["change_count_visits_percent"] unless business["change_count_visits_percent"].nil?
         Common.alert("Building_objectives is not start because change_count_visits_percent is not define", __LINE__) if business["change_count_visits_percent"].nil?
         change_bounce_visits_percent =business["change_bounce_visits_percent"] unless business["change_bounce_visits_percent"].nil?
@@ -191,7 +192,8 @@ module LoadServer
         Common.alert("Building_objectives is not start because policy_id is not define", __LINE__) if business["policy_id"].nil?
         account_ga = business["account_ga"] unless business["account_ga"].nil?
         Common.alert("Building_objectives is not start because account_ga is not define", __LINE__) if business["account_ga"].nil?
-
+        p 2
+        begin
         Building_objectives.Publishing(label, date_building,
                                        change_count_visits_percent.to_i,
                                        change_bounce_visits_percent.to_i,
@@ -208,6 +210,10 @@ module LoadServer
             !website_id.nil? and
             !policy_id.nil? and
             !account_ga.nil?
+        rescue Exception => e
+          p e.message
+          end
+        p 3
       when "exit"
         close_connection
         EventMachine.stop

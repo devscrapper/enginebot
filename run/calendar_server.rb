@@ -1,131 +1,78 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
-require 'rubygems' # if you use RubyGems
-require 'eventmachine'
-require 'json'
-require 'logger'
-require 'ice_cube'
 require 'yaml'
-require File.dirname(__FILE__) + '/../lib/logging'
-require File.dirname(__FILE__) + '/../lib/common'
-require File.dirname(__FILE__) + '/../model/event.rb'
-require File.dirname(__FILE__) + '/../model/events.rb'
-
-module CalendarServer
-  include Common
-  attr :events
+require 'rufus-scheduler'
+require_relative '../lib/logging'
+require_relative '../model/planning/calendar'
+require_relative '../model/planning/calendar_connection'
 
 
-  def receive_data param
-    debug("data receive : #{param}")
-    close_connection
-    begin
-      #TODO on reste en thread tant que pas effet de bord et pas d'explosion du nombre de thread car plus rapide
-      Thread.new { execute_task(YAML::load param) }
-    rescue Exception => e
-      Common.warning("data receive #{param} : #{e.message}")
-    end
-  end
-
-  def execute_task(data_receive)
-    @events = Events.new($load_server_port)
-    begin
-      object = data_receive["object"]
-      cmd = data_receive["cmd"]
-      data_event = data_receive["data"]
-      event = nil
-      information ("processing request : object : #{object}, cmd : #{cmd}")
-
-      case object
-        when Event.name
-          event = Event.new(data_event["key"],
-                            data_event["cmd"]) if !data_event["key"].nil? and !data_event["cmd"].nil?
-        when Policy.name
-          event = Policy.new(data_event).to_event
-        when Objective.name
-          event = Objective.new(data_event).to_event
-        else
-          alert("object #{object} is not knowned")
-      end
-      case cmd
-        when Event::EXECUTE_ALL
-          if !data_event["time"].nil?
-            time = Time._load(data_event["time"])
-            information("execute all jobs at time #{time}")
-            @events.execute_all_at_time(time)
-          else
-            alert("execute all jobs at time failed because no time was set")
-          end
-        when Event::EXECUTE_ONE
-          information("execute one event #{event}")
-          @events.execute_one(event) if @events.exist?(event)
-          information("event #{event} is not exist") unless @events.exist?(event)
-        when Event::SAVE
-          $sem.synchronize {
-            information("save  #{object}   #{event.to_s}")
-            if event.is_a?(Array)
-              event.each { |e|
-                @events.delete(e) if @events.exist?(e)
-                @events.add(e)
-              }
-            else
-              @events.delete(event) if @events.exist?(event)
-              @events.add(event)
-            end
-
-            @events.save
-          }
-        when Event::DELETE
-          #TODO etudier le problème de la suppression d'une policy et de son impact sur la planification construite apres execution du building_objectives
-          #TODO premier analyse : la répercution sur les objectives sera réalisée par la suppression de objective dans statupweb par declenchement par callback
-          $sem.synchronize {
-            information("delete  #{object}   #{event.to_s}")
-            @events.delete(event)
-            @events.save
-          }
-        else
-          alert("command #{cmd} is not known")
-      end
-    end
-  end
-end
-                   #--------------------------------------------------------------------------------------------------------------------
-                   # INIT
-                   #--------------------------------------------------------------------------------------------------------------------
-$sem = Mutex.new
-$log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
-$data_file = File.dirname(__FILE__) + "/../data/" + File.basename(__FILE__, ".rb") + ".json"
+#--------------------------------------------------------------------------------------------------------------------
+# INIT
+#--------------------------------------------------------------------------------------------------------------------
 PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
-listening_port = 9014
-$load_server_port = 9101
-$envir = "production"
-
+ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
+listening_port = 9154
+scrape_server_port = 9151
+periodicity = "0 0 * * * 1-7 Europe/Paris"
+$staging = "production"
+$debugging = false
 #--------------------------------------------------------------------------------------------------------------------
 # INPUT
 #--------------------------------------------------------------------------------------------------------------------
-ARGV.each { |arg|
-  $envir = arg.split("=")[1] if arg.split("=")[0] == "--envir"
-} if ARGV.size > 0
+begin
+  environment = YAML::load(File.open(ENVIRONMENT), "r:UTF-8")
+  $staging = environment["staging"] unless environment["staging"].nil?
+rescue Exception => e
+  STDERR << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"
+end
+
 begin
   params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
-  listening_port = params[$envir]["listening_port"] unless params[$envir]["listening_port"].nil?
-  $load_server_port = params[$envir]["load_server_port"] unless params[$envir]["load_server_port"].nil?
+  listening_port = params[$staging]["listening_port"] unless params[$staging]["listening_port"].nil?
+  scrape_server_port = params[$staging]["scrape_server_port"] unless params[$staging]["scrape_server_port"].nil?
+  periodicity = params[$staging]["periodicity"] unless params[$staging]["periodicity"].nil?
+  $debugging = params[$staging]["debugging"] unless params[$staging]["debugging"].nil?
 rescue Exception => e
-  Common.alert("parameters file #{PARAMETERS} is not found")
+  STDERR << "loading parameters file #{PARAMETERS} failed : #{e.message}"
 end
-Common.information("parameters of calendar server : ")
-Common.information("listening port : #{listening_port}")
-Common.information("scrape server port : #{$load_server_port}")
-Common.information("environement : #{$envir}")
+
+logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
+
+Logging::show_configuration
+logger.a_log.info "parameters of calendar server :"
+logger.a_log.info "listening port : #{listening_port}"
+logger.a_log.info "scraper server port : #{scrape_server_port}"
+logger.a_log.info "periodicity : #{periodicity}"
+logger.a_log.info "debugging : #{$debugging}"
+logger.a_log.info "staging : #{$staging}"
+
+include Planning
 #--------------------------------------------------------------------------------------------------------------------
 # MAIN
 #--------------------------------------------------------------------------------------------------------------------
 EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
-  Common.information("calendar server is starting")
-  EventMachine.start_server "localhost", listening_port, CalendarServer
+
+  calendar = Calendar.new(scrape_server_port)
+  scheduler = Rufus::Scheduler.start_new
+  scheduler.cron periodicity do
+    begin
+      now = Time.now #
+      start_date = Date.new(now.year, now.month, now.day)
+      hour = now.hour
+      calendar.execute_all_at(start_date, hour)
+    rescue Exception => e
+      logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour}"
+      logger.a_log.debug e
+    end
+  end
+  logger.a_log.info "planning is running"
+
+  logger.a_log.info "calendar server is running"
+  EventMachine.start_server "0.0.0.0", listening_port, CalendarConnection, logger, calendar
 }
-Common.information("calendar server stopped")
+logger.a_log.info "calendar server stopped"
 
 

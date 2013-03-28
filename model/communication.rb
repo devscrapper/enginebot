@@ -10,7 +10,9 @@ class Communication
   end
 
   def initialize(data_go)
+    p 1
     @data_go = YAML::dump data_go
+    p 2
   end
 
   def send_data_to(remote_ip="localhost", remote_port)
@@ -32,6 +34,7 @@ class Information < Communication
   end
 
   def initialize(data_go)
+    p data_go
     super(data_go)
   end
 

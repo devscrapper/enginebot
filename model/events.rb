@@ -43,9 +43,9 @@ class Events
     }
   end
 
-  def execute_one(event)
+  def execute_one(event, time = Time.now)
     @events.each { |evt|
-      evt.execute(@load_server_port) if evt.key == event.key and evt.cmd == event.cmd
+      evt.execute(@load_server_port, time) if evt.key == event.key and evt.cmd == event.cmd
     } unless @events.nil?
   end
 

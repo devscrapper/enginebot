@@ -119,6 +119,7 @@ class Objective
 
 
   def register_to_calendar(where_port)
+    #TODO BUG: statup web n'a pas accepter la creation de l'objectif
     begin
       data = {"cmd" => "save",
               "object" => self.class.name,
