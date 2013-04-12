@@ -1,4 +1,4 @@
-require_relative '../../model/building/input'
+require_relative '../../model/building/inputs'
 require_relative '../flow'
 
 module Flowing
@@ -6,7 +6,6 @@ module Flowing
     class FlowlistException < StandardError;
     end
     INPUT = File.dirname(__FILE__) + "/../../input/"
-    include Building
 
     attr :last_volume,
          :input_flow,
@@ -20,27 +19,27 @@ module Flowing
     end
 
     def website()
-      execute { Input.new.Building_matrix_and_pages(@input_flow) } if @last_volume
+      execute { Inputs.new.Building_matrix_and_pages(@input_flow) } if @last_volume
     end
 
     def scraping_traffic_source_landing_page()
-      execute { Input.new.Building_landing_pages(@input_flow) } if @last_volume
+      execute { Inputs.new.Building_landing_pages(@input_flow) } if @last_volume
     end
 
     def scraping_device_platform_plugin()
-      execute { Input.new.Building_device_platform(@input_flow.label, @input_flow.date) } if @last_volume
+      execute { Inputs.new.Building_device_platform(@input_flow.label, @input_flow.date) } if @last_volume
     end
 
     def scraping_device_platform_resolution()
-      execute { Input.new.Building_device_platform(@input_flow.label, @input_flow.date) } if @last_volume
+      execute { Inputs.new.Building_device_platform(@input_flow.label, @input_flow.date) } if @last_volume
     end
 
     def scraping_hourly_daily_distribution()
-      execute { Input.new.Building_hourly_daily_distribution(@input_flow) } if @last_volume
+      execute { Inputs.new.Building_hourly_daily_distribution(@input_flow) } if @last_volume
     end
 
     def scraping_behaviour()
-      execute { Input.new.Building_behaviour(@input_flow) } if @last_volume
+      execute { Inputs.new.Building_behaviour(@input_flow) } if @last_volume
     end
 
     private

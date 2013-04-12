@@ -128,6 +128,8 @@ module MyKeyboardHandler
     p "--------------------------------------------------------------------------------------------------------------"
     @events.display_policy
     p "--------------------------------------------------------------------------------------------------------------"
+    @events.display_objective
+    p "--------------------------------------------------------------------------------------------------------------"
     p "d [w|p] 1 2 ... -> delete many object[website|policy]"
     p "d a -> delete all objects"
     p "**************************************************************************************************************"
@@ -144,7 +146,7 @@ module MyKeyboardHandler
   end
 end
 
-calendar_server_port = 9154
+calendar_server_port = 9104
 $staging = "production"
 debugging = false
 PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"

@@ -119,7 +119,7 @@ $sem = Mutex.new
 PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
 ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
 
-listening_port = 9153
+listening_port = 9103
 $staging="production"
 
 #--------------------------------------------------------------------------------------------------------------------

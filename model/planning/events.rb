@@ -16,10 +16,10 @@ module Planning
       @events = Array.new
       begin
         JSON.parse(File.read(EVENTS_FILE)).each { |evt|
-          #TODO VALIDER que les events qui sont passés dans le referentiel des evenements sont supprimé
           @events << Event.new(evt["key"], evt["cmd"], evt["periodicity"], evt["business"]) unless IceCube::Schedule.from_yaml(evt["periodicity"]).next_occurrence.nil?
         }
-        @logger.an_event.info "repository events <#{EVENTS_FILE}> is loaded"
+        @logger.an_event.info "repository events is loaded"
+        @logger.an_event.debug EVENTS_FILE
       rescue Exception => e
         @logger.an_event.warn "repository events is initialize empty"
         @logger.an_event.debug e
@@ -75,19 +75,18 @@ module Planning
     def add(event)
       event.each { |evt| @events << evt } if event.is_a?(Array)
       @events << event unless event.is_a?(Array)
-      @logger.an_event.info "save event #{event.cmd} for #{event.business["label"]} to repository"
+      @logger.an_event.info "save event <#{event.cmd}> for <#{event.business["label"]}> to repository"
     end
 
     def delete(event)
       @events.each_index { |i|
         @events.delete_at(i) if @events[i].key == event.key and @events[i].cmd == event.cmd
       }
-      @logger.an_event.info "event #{event.cmd} for #{event.business["label"]} deleted from repository"
+      @logger.an_event.info "event <#{event.cmd}> for <#{event.business["label"]}> deleted from repository"
     end
 
 
     def execute_one(event, load_server_port)
-      #TODO reporter la modif vers engine bot
       @events.each { |evt|
         evt.execute(load_server_port) if evt.key == event.key and evt.cmd == event.cmd
       } unless @events.nil?
@@ -121,7 +120,7 @@ module Planning
     def display_cmd()
       i = 1
       @events.each { |evt|
-        p "#{i} -> website : #{evt.business["label"]}, cmd #{evt.cmd}"
+        p "#{i} -> website : #{evt.business["label"]}, cmd #{evt.cmd}, key : #{evt.key}"
         i +=1
       }
     end
@@ -139,5 +138,12 @@ module Planning
       @events.each { |evt| policies[evt.key["policy_id"]] = evt.business["label"] unless evt.key["policy_id"].nil? }
       policies.each_pair { |key, value| p "#{key} -> website : #{value}" }
     end
+
+    def display_objective()
+          p "objectives : "
+          objectives = {}
+          @events.each { |evt| objectives[evt.key["objective_id"]] = evt.business["label"] unless evt.key["objective_id"].nil? }
+          objectives.each_pair { |key, value| p "#{key} -> objective : #{value}" }
+        end
   end
 end

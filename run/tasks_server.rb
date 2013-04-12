@@ -2,7 +2,7 @@
 # encoding: UTF-8
 require 'yaml'
 require_relative '../lib/logging'
-require_relative '../model/flowing/flow_connection'
+require_relative '../model/tasking/task_connection'
 
 
 #--------------------------------------------------------------------------------------------------------------------
@@ -10,8 +10,15 @@ require_relative '../model/flowing/flow_connection'
 #--------------------------------------------------------------------------------------------------------------------
 PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
 ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
-listening_port = 9105 # port d'ecoute
-task_server_port = 9101
+listening_port = 9002 # port d'ecoute du load_server
+scraper_server_port = 9003 # port d'ecoute du scraper_server
+$authentification_server_port = 9001
+$statupbot_server_ip = "localhost"
+$statupbot_server_port = 9006
+$statupweb_server_ip="localhost"
+$statupweb_server_port=3000
+$calendar_server_port=9104
+$ftp_server_port = 9102
 $staging = "production"
 $debugging = false
 #--------------------------------------------------------------------------------------------------------------------
@@ -27,7 +34,13 @@ end
 begin
   params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
   listening_port = params[$staging]["listening_port"] unless params[$staging]["listening_port"].nil?
-  task_server_port = params[$staging]["task_server_port"] unless params[$staging]["task_server_port"].nil?
+  $authentification_server_port = params[$staging]["authentification_server_port"] unless params[$staging]["authentification_server_port"].nil?
+  $statupbot_server_ip = params[$staging]["statupbot_server_ip"] unless params[$staging]["statupbot_server_ip"].nil?
+  $statupbot_server_port = params[$staging]["statupbot_server_port"] unless params[$staging]["statupbot_server_port"].nil?
+  $statupweb_server_ip = params[$staging]["statupweb_server_ip"] unless params[$staging]["statupweb_server_ip"].nil?
+  $statupweb_server_port = params[$staging]["statupweb_server_port"] unless params[$staging]["statupweb_server_port"].nil?
+  $calendar_server_port = params[$staging]["calendar_server_port"] unless params[$staging]["calendar_server_port"].nil?
+  $ftp_server_port = params[$staging]["ftp_server_port"] unless params[$staging]["ftp_server_port"].nil?
   $debugging = params[$staging]["debugging"] unless params[$staging]["debugging"].nil?
 rescue Exception => e
   STDERR << "loading parameters file #{PARAMETERS} failed : #{e.message}"
@@ -36,13 +49,19 @@ end
 logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
 
 Logging::show_configuration
-logger.a_log.info "parameters of input flows server :"
+logger.a_log.info "parameters of tasks server :"
 logger.a_log.info "listening port : #{listening_port}"
-logger.a_log.info "task server port : #{task_server_port}"
+logger.a_log.info "authentification server port : #{$authentification_server_port}"
+logger.a_log.info "statupbot servers ip : #{$statupbot_server_ip}"
+logger.a_log.info "statupbot server port : #{$statupbot_server_port}"
+logger.a_log.info "statupweb server ip : #{$statupweb_server_ip}"
+logger.a_log.info "statupweb server port : #{$statupweb_server_port}"
+logger.a_log.info "calendar server port : #{$calendar_server_port}"
+logger.a_log.info "ftp server port : #{$ftp_server_port}"
 logger.a_log.info "debugging : #{$debugging}"
 logger.a_log.info "staging : #{$staging}"
 
-include Flowing
+include Tasking
 #--------------------------------------------------------------------------------------------------------------------
 # MAIN
 #--------------------------------------------------------------------------------------------------------------------
@@ -50,8 +69,8 @@ EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
 
-  logger.a_log.info "input flows server is starting"
-  EventMachine.start_server "localhost", listening_port, FlowConnection, logger
-}
-logger.a_log.info "input flows server stopped"
 
+  logger.a_log.info "tasks server is running"
+  EventMachine.start_server "localhost", listening_port, TaskConnection, logger
+}
+logger.a_log.info "tasks server stopped"

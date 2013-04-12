@@ -1,0 +1,8 @@
+
+development:
+    debugging: true
+
+test:
+  debugging: false
+
+production:

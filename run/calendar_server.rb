@@ -12,8 +12,8 @@ require_relative '../model/planning/calendar_connection'
 #--------------------------------------------------------------------------------------------------------------------
 PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
 ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
-listening_port = 9154
-scrape_server_port = 9151
+listening_port = 9104
+scrape_server_port = 9101
 periodicity = "0 0 * * * 1-7 Europe/Paris"
 $staging = "production"
 $debugging = false

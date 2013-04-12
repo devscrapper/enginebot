@@ -98,8 +98,10 @@ module Logging
     end
 
     def rollfile()
-      Logging::Appenders.rolling_file(File.join(DIR_LOG, "#{@id_file}.log"), {:age => :daily, :keep => 7, :roll_by => :date})
+      Logging::Appenders.rolling_file(File.join(DIR_LOG, "#{@id_file}.log"), {:age => :daily, :keep => 7, :roll_by => :date}) unless  @debugging
+      Logging::Appenders.rolling_file(File.join(DIR_LOG, "#{@id_file}.log"), {:truncate => true, :size => 5000000, :keep => 10, :roll_by => :number})   if @debugging
     end
+
 
     def stdout()
       Logging::color_scheme('bright',

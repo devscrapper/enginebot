@@ -1,12 +1,10 @@
-require 'rubygems'
-require "em-http-request"
-require 'uri'
-require 'net/http'
 require 'ice_cube'
-require File.dirname(__FILE__) + '/../lib/logging'
-require File.dirname(__FILE__) + '/../lib/common'
-class Objective
+require_relative '../../model/communication'
 
+class Objective
+  class ObjectiveException < StandardError
+  end
+  SEPARATOR4="|"
   attr :label,
        :date,
        :count_visits,
@@ -38,8 +36,7 @@ class Objective
       hourly_distribution=nil,
       policy_id=nil,
       website_id=nil,
-      account_ga=nil
-  )
+      account_ga=nil)
 
     @date = date
     @label = label
@@ -53,7 +50,13 @@ class Objective
     @direct_medium_percent=direct_medium_percent
     @referral_medium_percent=referral_medium_percent
     @organic_medium_percent=organic_medium_percent
-    @hourly_distribution=hourly_distribution
+    @hourly_distribution=translate_to_count_visits_target(hourly_distribution, count_visits)
+    sum = 0
+    @hourly_distribution.split("|").each { |count_visit_per_hour| sum += count_visit_per_hour.to_i }
+    p sum
+    p @date
+    p @hourly_distribution
+    p count_visits
     @policy_id = policy_id
     @website_id = website_id
     @account_ga = account_ga
@@ -102,36 +105,51 @@ class Objective
     }
   end
 
-  def save()
+  def send_to_db(where_ip, where_port)
+    #TODO send to DB à faire
     #TODO : gerer le WARNING: Can't verify CSRF token authenticity
     #TODO : etudier la necessite de faire du https et d'une authentification pour faire l'insertion
-    uri = URI("http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives")
-    http = EventMachine::HttpRequest.new(uri).post :body => self.to_db
-    http.callback {
-      Common.information("saving objective #{@date} for #{@label} in statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
-    }
-    http.errback {
-      Common.alert("saving objective #{@date} for #{@label} in statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : #{http.state}", __LINE__)
-    }
-  end
-
-  #private
+    #uri = URI("http://#{$statupweb_server_ip}:#{$statupweb_server_port}/websites/#{label}/objectives")
+    #http = EventMachine::HttpRequest.new(uri).post :body => self.to_db
+    #http.callback {
+    #  Common.information("saving objective #{@date} for #{@label} in statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} is success")
+    #}
+    #http.errback {
+    #  Common.alert("saving objective #{@date} for #{@label} in statupweb #{$statupweb_server_ip}:#{$statupweb_server_port} failed : #{http.state}", __LINE__)
+    #}
 
 
-  def register_to_calendar(where_port)
-    #TODO BUG: statup web n'a pas accepter la creation de l'objectif
     begin
-      data = {"cmd" => "save",
-              "object" => self.class.name,
-              "data" => self.to_json}
-
-      Common.send_data_to("localhost", where_port, data)
+      options = {"path" => "/objectives/create",
+                 "scheme" => "http"}
+      Information.new(self.to_db).send_to(where_ip, where_port, options)
     rescue Exception => e
-      Common.alert("objective of #{date} for #{label} is not registered in Calendar repository", __LINE__)
-      #TODO gérer les rebus quand le calendar server n'est pas joignable
-      Common.information("objective of #{date} for #{label} is registered to scrap file")
+      raise ObjectiveException, e.message
     end
   end
 
 
+  def send_to_calendar(where_port)
+    data = {"cmd" => "save",
+            "object" => self.class.name,
+            "data" => self.to_json}
+    begin
+      Information.new(data).send_to("localhost", where_port)
+    rescue Exception => e
+      raise ObjectiveException, e.message
+      #TODO gérer les rebus quand le calendar server n'est pas joignable
+    end
+  end
+
+
+  def translate_to_count_visits_target(distribution, count_visits_of_day_target)
+    count_visits_of_day_origin = 0
+    count_visits_of_day = distribution.split(SEPARATOR4)
+    count_visits_of_day.each { |count_visit_per_hour| count_visits_of_day_origin += count_visit_per_hour.to_i }
+    count_visits_of_day.map! { |count_visit_per_hour| count_visit_per_hour.to_i * count_visits_of_day_target / count_visits_of_day_origin }
+    count_visits_of_day_inter = 0
+    count_visits_of_day.each { |count_visit_per_hour| count_visits_of_day_inter += count_visit_per_hour.to_i }
+    (count_visits_of_day_target - count_visits_of_day_inter).times { count_visits_of_day[rand(count_visits_of_day.size-1)] += 1 }
+    count_visits_of_day.join(SEPARATOR4)
+  end
 end
