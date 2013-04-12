@@ -1,7 +1,7 @@
 require 'net/ftp'
 require_relative 'communication'
 require_relative '../lib/logging'
-
+require_relative 'authentification'
 class Flow
   class FlowException < StandardError;
   end
@@ -289,7 +289,7 @@ class Flow
 
         # on pousse le volume précisé
         # si lastvolume n'est pas précisé alors = false
-        @vol = vol
+        @vol = vol.to_s
         raise FlowException, "volume <#{@vol}> of the flow <#{basename}> do not exist" unless exist? # on verifie que le volume passé existe
         begin
           push_vol(authentification_server_port,
