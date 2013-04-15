@@ -13,7 +13,7 @@ set :user, "eric"
 set :password, "Brembo01"
 default_run_options[:pty] = true
 set :use_sudo, false
-set :server_list, ["authentification", "calendar", "ftpd" , "input_flows", "tasks_server"]
+set :server_list, ["authentification", "calendar", "ftpd" , "input_flows", "tasks"]
 role :app, server_name
 
 require "rvm/capistrano"
