@@ -19,7 +19,7 @@ module Planning
 
     def initialize(data)
       @label = data["label"]
-      @monday_start = data["monday_start"]
+      @monday_start = Time.local(data["monday_start"].year, data["monday_start"].month, data["monday_start"].day) unless data["monday_start"].nil? # iceCube a besoin d'un Time et pas d'un Date
       @count_weeks = data["count_weeks"]
       @change_count_visits_percent = data["change_count_visits_percent"]
       @change_bounce_visits_percent = data["change_bounce_visits_percent"]

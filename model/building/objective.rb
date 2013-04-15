@@ -51,12 +51,6 @@ class Objective
     @referral_medium_percent=referral_medium_percent
     @organic_medium_percent=organic_medium_percent
     @hourly_distribution=translate_to_count_visits_target(hourly_distribution, count_visits)
-    sum = 0
-    @hourly_distribution.split("|").each { |count_visit_per_hour| sum += count_visit_per_hour.to_i }
-    p sum
-    p @date
-    p @hourly_distribution
-    p count_visits
     @policy_id = policy_id
     @website_id = website_id
     @account_ga = account_ga
