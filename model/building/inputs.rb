@@ -172,7 +172,12 @@ module Flowing
         input_website.volumes.each { |volume|
           @logger.an_event.info "Loading vol <#{volume.vol}> of website input file"
           pob = ProgressBar.create(:length => 180, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
-          if leaves.empty?
+          # on ne prend pas en compte le fichier des feuilles car :
+          # si on supprime une page qui est une feuille alors toutes les pages qui pointent sur elle et qui n'ont quelle
+          # comme lien alors on crée une nouvelle feuille. cela risque d'augmenter le nombre de feuille plutot que de le reduire
+          # pour corriger cela il faudra rechercher à nouveau les feuilles et les supprimer jusqu'à ce qu'il ny en ait plus => couteux pour quel benefice
+          # et risqué, car en fonction de la topologie du site (exemple : un arbre sans cycle) il pourrait ne plus y avoir de page de conserver
+          #if leaves.empty?
             volume.foreach(EOFLINE) { |p|
               # si il n'y a pas de feuille
               begin
@@ -187,27 +192,27 @@ module Flowing
                 @logger.an_event.debug e
               end
             }
-          else
-            volume.foreach(EOFLINE) { |p|
-              # si il y a au moins une feuille on les supprime
-              begin
-                page = Page.new(p)
-                # sauvegarde de la page dans matrix et page ssi ce n'est pas une feuille
-                unless leaves.include?(page.id_uri)
-                  @logger.an_event.debug page.links
-                  page.links = page.links - leaves #on enleve les feuilles des links de la page
-                  matrix_file.write(page.to_matrix)
-                  pages_file.write(page.to_page)
-                end
-                pob.increment
-              rescue Exception => e
-                @logger.an_event.debug p
-                @logger.an_event.debug page
-                @logger.an_event.debug e
-                @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
-              end
-            }
-          end
+          #else
+          #  volume.foreach(EOFLINE) { |p|
+          #    # si il y a au moins une feuille on les supprime
+          #    begin
+          #      page = Page.new(p)
+          #      # sauvegarde de la page dans matrix et page ssi ce n'est pas une feuille
+          #      unless leaves.include?(page.id_uri)
+          #        @logger.an_event.debug page.links
+          #        page.links = page.links - leaves #on enleve les feuilles des links de la page
+          #        matrix_file.write(page.to_matrix)
+          #        pages_file.write(page.to_page)
+          #      end
+          #      pob.increment
+          #    rescue Exception => e
+          #      @logger.an_event.debug p
+          #      @logger.an_event.debug page
+          #      @logger.an_event.debug e
+          #      @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
+          #    end
+          #  }
+          #end
           volume.archive
         }
                                                                                        # on archive le volume 0 de input flow website

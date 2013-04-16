@@ -334,7 +334,7 @@ module Building
       stack << start unless stack.nil?
       stack = [start] if stack.nil?
 
-      if !leaf?(start) and # on continue d'explorer si il y a un enfant, sinon tant pis la visite n'aura pas la bonnne longeur
+      if !leaf?(start) and # on continue d'explorer si il y a un enfant, sinon tant pis la visite n'aura pas la bonnne longueur
           count_visit > 1
         children = children(start)
         children.each { |child|

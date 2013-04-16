@@ -43,6 +43,7 @@ class Flow
     label = basename_splitted[1]
     date = basename_splitted[2]
     vol = basename_splitted[3]
+
     Flow.new(dir, type_flow, label, date, vol, ext)
   end
 
@@ -161,6 +162,11 @@ class Flow
     @descriptor
   end
 
+  def empty
+    write("")
+    close
+  end
+
   def exist?
     File.exist?(absolute_path)
   end
@@ -263,13 +269,10 @@ class Flow
       end
     else
       # le flow a des volumes
-
-      if vol.nil?
-
-        # aucune vol n'est précisé donc on pousse tous les volumes en commancant du premier même si le flow courant n'est pas le premier,
+        if vol.nil?
+         # aucune vol n'est précisé donc on pousse tous les volumes en commancant du premier même si le flow courant n'est pas le premier,
         #en précisant pour le dernier le lastvolume = true
         count_volumes = volumes?
-
         volumes.each { |volume|
           begin
             volume.push_vol(authentification_server_port,
@@ -284,10 +287,8 @@ class Flow
             raise FlowException
           end
         }
-
-      else
-
-        # on pousse le volume précisé
+       else
+         # on pousse le volume précisé
         # si lastvolume n'est pas précisé alors = false
         @vol = vol.to_s
         raise FlowException, "volume <#{@vol}> of the flow <#{basename}> do not exist" unless exist? # on verifie que le volume passé existe
@@ -303,10 +304,8 @@ class Flow
           raise FlowException
         end
       end
-
-    end
-
-  end
+       end
+     end
 
   def push_vol(authentification_server_port,
       input_flows_server_ip,
@@ -395,7 +394,6 @@ class Flow
     volumes.each { |flow| total_lines += flow.count_lines(eofline) }
     total_lines
   end
-
 
   def volumes
     #renvoi un array contenant les flow de tous les volumes
