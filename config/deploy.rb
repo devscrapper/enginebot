@@ -13,7 +13,7 @@ set :user, "eric"
 set :password, "Brembo01"
 default_run_options[:pty] = true
 set :use_sudo, false
-set :server_list, ["authentification", "calendar", "ftpd" , "input_flows", "tasks"]
+set :server_list, ["authentification_enginebot", "calendar_enginebot", "ftpd_enginebot" , "input_flows_enginebot", "tasks_enginebot"]
 role :app, server_name
 
 require "rvm/capistrano"
@@ -63,12 +63,13 @@ namespace :customize do
   task :setup do
     run "mkdir -p #{File.join(deploy_to, "shared", "data")}"
     run "mkdir -p #{File.join(deploy_to, "shared", "output")}"
+    run "mkdir -p #{File.join(deploy_to, "shared", "input")}"
     end
   task :update do
     server_list.each{|server|  run "#{sudo} rm --interactive=never -f /etc/init/#{server}.conf && #{sudo} cp #{File.join(current_path, "control", "#{server}.conf")} /etc/init"}
     run "echo 'staging: test' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
     run "ln -s #{File.join(deploy_to, "shared", "data")} #{File.join(current_path, "data")}"
-    run "ln -s #{File.join(deploy_to, "shared", "output")} #{File.join(current_path, "output")}"
+    run "ln -s #{File.join(deploy_to, "shared", "input")} #{File.join(current_path, "input")}"
   end
   task :bundle do
 
