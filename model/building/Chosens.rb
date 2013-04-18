@@ -1,6 +1,7 @@
 module Building
 
   EOFLINE ="\n"
+
   class Chosen_device_platform
     attr_accessor :count_visits
     attr :browser,
@@ -12,6 +13,7 @@ module Building
          :screen_colors,
          :screen_resolution
     SEPARATOR1=";"
+
     def initialize(device)
       splitted_device = device.strip.split(SEPARATOR1)
       @browser = splitted_device[0]
@@ -29,6 +31,7 @@ module Building
       "#{@browser}#{SEPARATOR1}#{@browser_version}#{SEPARATOR1}#{@os}#{SEPARATOR1}#{@os_version}#{SEPARATOR1}#{@flash_version}#{SEPARATOR1}#{@java_enabled}#{SEPARATOR1}#{@screen_colors}#{SEPARATOR1}#{@screen_resolution}"
     end
   end
+
 
   class Chosens
 
