@@ -106,7 +106,6 @@ module Building
   class Final_visit < Planed_visit
 
     def initialize(visit, account_ga, return_visitor, pages_file, device_platform)
-      @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       splitted_visit = visit.split(SEPARATOR2)
 
       @id_visit = splitted_visit[0].strip
@@ -118,16 +117,11 @@ module Building
       @medium = splitted_visit[4].strip
       @keyword = splitted_visit[5].strip
       @pages = []
-      #TODO corriger le bug ????????????????
-      @logger.an_event.debug splitted_visit
       splitted_visit[6].strip.split(SEPARATOR3).each { |page|
         p = Page.new(page)
-        @logger.an_event.debug p
         p.set_properties(pages_file)
-        @logger.an_event.debug p
         @pages << p
       }
-      @logger.an_event.debug device_platform
       splitted_device_platform = device_platform.strip.split(SEPARATOR2)
       @browser = splitted_device_platform[0]
       @browser_version = splitted_device_platform[1]

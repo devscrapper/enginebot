@@ -48,7 +48,7 @@ end
 
 logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
 
-Logging::show_configuration
+
 logger.a_log.info "parameters of tasks server :"
 logger.a_log.info "listening port : #{listening_port}"
 logger.a_log.info "authentification server port : #{$authentification_server_port}"
@@ -74,3 +74,7 @@ EventMachine.run {
   EventMachine.start_server "localhost", listening_port, TaskConnection, logger
 }
 logger.a_log.info "tasks server stopped"
+
+
+
+

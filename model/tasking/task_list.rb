@@ -107,8 +107,6 @@ module Tasking
     def Publishing_visits()
       label = @data["label"]
       date_building = @data["date_building"]
-      business = @data["data"]
-
       execute { Visits.new(label, date_building).Publishing_visits_by_hour(Time.now.hour) }
     end
 

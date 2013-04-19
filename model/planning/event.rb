@@ -50,14 +50,14 @@ module Planning
 
     def execute(toto)
       begin
-      data = {
-          "label" => @business["label"],
-          "date_building" => @key["building_date"] || Date.today,
-          "data" => @business}
-     Task.new(@cmd, data).execute
+        data = {
+            "label" => @business["label"],
+            "date_building" => @key["building_date"] || Date.today,
+            "data" => @business}
+        Task.new(@cmd, data).execute
       rescue Exception => e
         raise EventException, "cannot execute event <#{@cmd}> for <#{@business["label"]}> because #{e}"
-        end
+      end
     end
   end
 

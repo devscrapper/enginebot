@@ -56,7 +56,7 @@ module Planning
           "label" => @label,
           "count_visits" => @count_visits
       }
-      #TODO : creer un class Choosing_device_platform qui herite de event
+
       start_time = date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR
       periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR)
@@ -75,7 +75,7 @@ module Planning
 
       }
 
-      #TODO : creer un class Choosing_landing_pages qui herite de event
+
       start_time = date_objective + CHOOSING_LANDING_PAGES_DAY + CHOOSING_LANDING_PAGES_HOUR
       periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + CHOOSING_LANDING_PAGES_DAY + CHOOSING_LANDING_PAGES_HOUR)
@@ -97,7 +97,7 @@ module Planning
           "return_visitor_rate" => @return_visitor_rate,
           "account_ga" => @account_ga
       }
-      #TODO : creer un class Building_visits qui herite de event
+
       start_time = date_objective + BUILDING_VISITS_DAY + BUILDING_VISITS_HOUR
       periodicity = IceCube::Schedule.new(start_time, :end_time => start_time)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(date_objective + BUILDING_VISITS_DAY + BUILDING_VISITS_HOUR)
@@ -109,7 +109,7 @@ module Planning
       business = {
           "label" => @label}
 
-      #TODO : creer un class Publishing_visits qui herite de event
+
       periodicity = IceCube::Schedule.new(date_objective + START_PUBLISHING_VISITS_DAY + START_PUBLISHING_VISITS_HOUR,
                                           :end_time => date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR)
       periodicity.add_recurrence_rule IceCube::Rule.hourly.until(date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR)

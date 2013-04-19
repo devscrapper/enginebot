@@ -4,7 +4,7 @@ module Tasking
 
   class Task
     class TaskException < StandardError
-      end
+    end
 
     attr :tasks_server_port,
          :cmd,

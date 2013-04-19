@@ -13,11 +13,6 @@ require 'ruby-progressbar'
 module Building
   class Visits
     class VisitsException < StandardError
-
-    end
-
-    def initialize()
-      @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     end
 
     include Tasking
@@ -65,7 +60,7 @@ module Building
         avg_time_on_site,
         min_durations,
         min_pages)
-      @logger.an_event.info ("Building visits for #{@label} for #{@date_building} is starting")
+      @logger.an_event.info("Building visits for #{@label} for #{@date_building} is starting")
       begin
 
         @logger.an_event.debug("count_visit #{count_visit}")
@@ -75,7 +70,7 @@ module Building
         @logger.an_event.debug("min_durations #{min_durations}")
         @logger.an_event.debug("min_pages #{min_pages}")
 
-        @matrix_file = Flow.new(TMP, "matrix", @label, @date_building).last   #input utilisé par building_not_bounce_visit
+        @matrix_file = Flow.new(TMP, "matrix", @label, @date_building).last #input utilisé par building_not_bounce_visit
         raise IOError, "input matrix file for #{@label} is missing" if @matrix_file.nil?
         chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", @label, @date_building) #input
         raise IOError, "tmp flow <#{chosen_landing_pages_file.basename}> is missing" unless chosen_landing_pages_file.exist?
@@ -95,7 +90,7 @@ module Building
 
         building_not_bounce_visit(visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
 
-        @visits_file = Flow.new(TMP, "visits", @label, @date_building)  #output
+        @visits_file = Flow.new(TMP, "visits", @label, @date_building) #output
         p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE}"); p.increment }
         @visits_file.close
@@ -105,7 +100,7 @@ module Building
         @logger.an_event.error "cannot build visits for #{@label} for #{@date_building}"
         @logger.an_event.debug e
       end
-      @logger.an_event.info ("Building visits for #{@label} is over")
+      @logger.an_event.info("Building visits for #{@label} is over")
     end
 
 #--------------------------------------------------------------------------------------------------------------
@@ -114,7 +109,7 @@ module Building
 #
 # --------------------------------------------------------------------------------------------------------------
     def Building_planification(hourly_distribution, count_visits)
-      @logger.an_event.info ("Building planification of visit for #{@label}  for #{@date_building} is starting")
+      @logger.an_event.info("Building planification of visit for #{@label}  for #{@date_building} is starting")
       begin
         visits_tmp = Flow.new(TMP, "visits", @label, @date_building)
         raise IOError, "tmp flow <#{visits_tmp.basename}> is missing" unless visits_tmp.exist?
@@ -137,9 +132,9 @@ module Building
         @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
         @logger.an_event.debug "@count_visits_by_hour.size #{@count_visits_by_hour.size}"
         @logger.an_event.debug "total visit of @count_visits_by_hour #{count_visits_of_day_origin}"
-        @count_visits_by_hour.size.times { |hour|
-          @planed_visits_by_hour_file[hour] = Flow.new(TMP, "planed-visits", @label, @date_building, hour + 1)
-          @logger.an_event.debug @planed_visits_by_hour_file[hour].basename
+        @count_visits_by_hour.size.times { |anhour|
+          @planed_visits_by_hour_file[anhour] = Flow.new(TMP, "planed-visits", @label, @date_building, anhour + 1)
+          @logger.an_event.debug @planed_visits_by_hour_file[anhour].basename
         }
 
         p = ProgressBar.create(:title => "Saving planed visits", :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
@@ -154,14 +149,14 @@ module Building
           p.increment
         }
 
-        @count_visits_by_hour.size.times { |hour| @planed_visits_by_hour_file[hour].close }
+        @count_visits_by_hour.size.times { |anhour| @planed_visits_by_hour_file[anhour].close }
 
         Task.new("Extending_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.debug e
         @logger.an_event.error "cannot plan visits"
       end
-      @logger.an_event.info ("Building planification of visit for #{@label} is over")
+      @logger.an_event.info("Building planification of visit for #{@label} is over")
     end
 
 #--------------------------------------------------------------------------------------------------------------
@@ -170,14 +165,14 @@ module Building
 #
 # --------------------------------------------------------------------------------------------------------------
     def Extending_visits(count_visit, account_ga, return_visitor_rate)
-      @logger.an_event.info ("Extending visits for #{@label}  for #{@date_building} is starting")
+      @logger.an_event.info("Extending visits for #{@label}  for #{@date_building} is starting")
       begin
         device_platform_file = Flow.new(TMP, "chosen-device-platform", @label, @date_building)
         raise IOError, "tmp flow <#{device_platform_file.basename}>  is missing" unless device_platform_file.exist?
         count_device_platform = device_platform_file.count_lines(EOFLINE)
         raise ArgumentError, "not enough count device platform <#{count_device_platform}> for <#{count_visit}> visits" if count_device_platform < count_visit
         @logger.an_event.warn "too much count device platform <#{count_device_platform}> for <#{count_visit}>  visits" if count_device_platform > count_visit
-        pages_file = Flow.new(TMP, "pages", @label, @date_building).last   #input
+        pages_file = Flow.new(TMP, "pages", @label, @date_building).last #input
         raise IOError, "tmp flow pages for <#{@label}> for <#{@date_building}> is missing" if  pages_file.nil?
 
         device_platforms = device_platform_file.readlines(EOFLINE).shuffle
@@ -197,6 +192,7 @@ module Building
               final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE}")
             rescue Exception => e
               @logger.an_event.debug visit
+              @logger.an_event.debug e
               raise VisitsException, "cannot create or save final visit"
             end
             p.increment
@@ -207,9 +203,9 @@ module Building
         pages_file.close
       rescue Exception => e
         @logger.an_event.debug e
-        @logger.an_event.error ("cannot extend visits for #{@label}")
+        @logger.an_event.error("cannot extend visits for #{@label}")
       end
-      @logger.an_event.info ("Extending visits for #{@label} is over")
+      @logger.an_event.info("Extending visits for #{@label} is over")
     end
 
 #--------------------------------------------------------------------------------------------------------------
@@ -218,7 +214,7 @@ module Building
 #
 # --------------------------------------------------------------------------------------------------------------
     def Publishing_visits_by_hour(hour)
-      @logger.an_event.info ("Publishing visits for #{@label} for #{@date_building} at #{hour} hour is starting")
+      @logger.an_event.info("Publishing visits for #{@label} for #{@date_building} at #{hour} hour is starting")
       begin
 
         published_visits_to_json_file = Flow.new(OUTPUT, "published-visits", @label, @date_building, hour, ".json")
@@ -234,7 +230,6 @@ module Building
         }
         p.increment
         published_visits_to_json_file.close
-        #TODO pousser le fichier vers statupbot
         published_visits_to_json_file.push($authentification_server_port,
                                            $statupbot_server_ip,
                                            $statupbot_server_port,
@@ -246,14 +241,14 @@ module Building
         @logger.an_event.debug e
         @logger.an_event.error "cannot publish visits  at #{hour} hour for #{@label}"
       end
-      @logger.an_event.info ("Publishing visits at #{hour} hour for #{@label} is over")
+      @logger.an_event.info("Publishing visits at #{hour} hour for #{@label} is over")
     end
 
 #--------------------------------------------------------------------------------------------------------------
 # private
 #--------------------------------------------------------------------------------------------------------------
     def building_not_bounce_visit(visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
-      @logger.an_event.info ("Building not bounce visit for #{@label} is starting")
+      @logger.an_event.info("Building not bounce visit for #{@label} is starting")
       begin
         count_bounce_visit = (visit_bounce_rate * count_visit/100).to_i
         count_not_bounce_visit = count_visit - count_bounce_visit
@@ -283,7 +278,7 @@ module Building
         @logger.an_event.debug e
         raise "cannot build not bounce visit"
       end
-      @logger.an_event.info ("Building not bounce visit for #{@label} is starting")
+      @logger.an_event.info("Building not bounce visit for #{@label} is starting")
     end
 
 
@@ -343,7 +338,7 @@ module Building
           end
         }
         child = children.shuffle![0]
-        @logger.an_event.info ("start #{start}") if child == ""
+        @logger.an_event.info("start #{start}") if child == ""
         visit.add_page(child, @duration_pages.pop)
         explore_visit_from(visit,
                            child,
@@ -363,7 +358,7 @@ module Building
     def distributing(into, values, min_values_per_into)
       #p into
       #p values
-      @logger.an_event.info ("distribution is starting for #{@label} for #{@date_building}")
+      @logger.an_event.info("distribution is starting for #{@label} for #{@date_building}")
       values_per_into = (values/into).to_i
       max_values_per_into = 2 * values_per_into - min_values_per_into
       res = Array.new(into, values_per_into)
@@ -392,7 +387,7 @@ module Building
 
         }
       end
-      @logger.an_event.info ("distribution for #{@label} for #{@date_building} is over")
+      @logger.an_event.info("distribution for #{@label} for #{@date_building} is over")
       res
     end
 

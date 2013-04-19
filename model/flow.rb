@@ -21,6 +21,29 @@ class Flow
   #----------------------------------------------------------------------------------------------------------------
   # class methods
   #----------------------------------------------------------------------------------------------------------------
+
+  #----------------------------------------------------------------------------------------------------------------
+  # self.list(dir, opts)
+  #----------------------------------------------------------------------------------------------------------------
+  # fournit la liste des flow présent dans le <dir> et qui satisfont les options
+  #----------------------------------------------------------------------------------------------------------------
+  # input :
+  # un répertoire, ne doit pas être nil
+  # :typeflow : un type de flow : si est absent alors n'intervient pas dans la recherche
+  # :label : un label : si est absent alors n'intervient pas dans la recherche
+  # :date : une date : si est absent alors n'intervient pas dans la recherche
+  # :ext : une extension de fichier : si est absent alors n'intervient pas dans la recherche
+  #----------------------------------------------------------------------------------------------------------------
+  def self.list(dir, opts={})
+    dir += "/" unless dir.end_with?("/")
+    type_flow = opts.getopt(:type_flow, "*")
+    label = opts.getopt(:label, "*")
+    date = opts.getopt(:date, "*")
+    date = date.strftime("%Y-%m-%d") if date.is_a?(Date)
+    ext = opts.getopt(:ext, ".*")
+    Dir.glob("#{dir}#{type_flow}#{SEPARATOR}#{label}#{SEPARATOR}#{date}*#{ext}").map { |file| Flow.from_absolute_path(file) }
+  end
+
   #----------------------------------------------------------------------------------------------------------------
   # self.from_basename(dir, basename)
   #----------------------------------------------------------------------------------------------------------------
@@ -81,7 +104,7 @@ class Flow
     @date = date unless date.is_a?(Date)
     @vol = vol.to_s unless vol.nil?
     @ext = ext
-   # @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
+                                                     # @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     @logger = Logging::Log.new(self, :staging => $staging, :debugging => false)
     if  !(@dir && @type_flow && @label && @date && @ext) and $debugging
       @logger.an_event.debug "dir <#{dir}>"
@@ -95,6 +118,14 @@ class Flow
     raise FlowException, "Flow not initialize" unless @dir && @type_flow && @label && @date && @ext
   end
 
+  def == (flow)
+    #les volumes et leur nombre ne sont pas pris en compte, car c'est une egalité fonctionnelle et pas technique
+    @dir == flow.dir &&
+        @type_flow == flow.type_flow &&
+        @label == flow.label &&
+        @date == flow.date &&
+        @ext == flow.ext
+  end
 
   def absolute_path
     File.join(@dir, basename)
@@ -102,7 +133,7 @@ class Flow
 
   def append(data)
     open("a:UTF-8") if @descriptor.nil?
-    @descriptor.write(data); @logger.an_event.debug "write data <#{data}> to flow <#{basename}>"   if $debugging
+    @descriptor.write(data); @logger.an_event.debug "write data <#{data}> to flow <#{basename}>" if $debugging
   end
 
   def archive()
@@ -110,17 +141,25 @@ class Flow
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     FileUtils.mv(absolute_path, ARCHIVE, :force => true)
     @logger.an_event.info "archiving <#{basename}>"
-    @logger.an_event.debug "archiving <#{basename}> to #{ARCHIVE}"   if $debugging
+    @logger.an_event.debug "archiving <#{basename}> to #{ARCHIVE}" if $debugging
   end
 
   def archive_previous
-    #TODO développer archive_previous
+    #TODO valider archive_previous
     # N'ARCHIVE PAS L'INSTANCE COURANTE
     # archive le flow ou les flows qui sont antérieurs à l'instance courante
+    # en prenant en compte le multivolume
     # l'objectif est de faire le ménage dans le répertoire qui contient l'instance courante
     # le ou les flow sont déplacés dans ARCHIVE
+    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    Flow.list(@dir, {:type_flow => @type_flow, :label => @label, :ext => @ext}).each { |flow|
+      @logger.an_event.debug self
+      @logger.an_event.debug flow
+      @logger.an_event.debug flow == self
+
+      flow.archive unless flow == self
+    }
     @logger.an_event.info "archive previous <#{basename}>"
-    @logger.an_event.debug "archive previous <#{basename}> to #{ARCHIVE}"  if $debugging
   end
 
   def basename
@@ -133,14 +172,14 @@ class Flow
   def close
     @descriptor.close unless @descriptor.nil?
     @descriptor = nil
-    @logger.an_event.debug "close flow <#{absolute_path}>"  if $debugging
+    @logger.an_event.debug "close flow <#{absolute_path}>" if $debugging
   end
 
   def cp(to_path)
     raise FlowException, "target <#{to_path}> is not valid" unless File.exists?(to_path) && File.directory?(to_path)
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     FileUtils.cp(absolute_path, to_path)
-    @logger.an_event.debug "copy flow <#{absolute_path}> to <#{to_path}>"   if $debugging
+    @logger.an_event.debug "copy flow <#{absolute_path}> to <#{to_path}>" if $debugging
   end
 
   def count_lines(eofline)
@@ -191,10 +230,10 @@ class Flow
       ftp.gettextfile(basename, absolute_path)
       ftp.delete(basename)
       ftp.close
-      @logger.an_event.debug "get flow <#{basename}> from #{ip_from}:#{port_from}"  if $debugging
+      @logger.an_event.debug "get flow <#{basename}> from #{ip_from}:#{port_from}" if $debugging
     rescue Exception => e
       @logger.an_event.error "cannnot get flow <#{basename}> from #{ip_from}:#{port_from}"
-      @logger.an_event.debug e   if $debugging
+      @logger.an_event.debug e if $debugging
       raise FlowException, e.message
     end
   end
@@ -261,16 +300,16 @@ class Flow
                  input_flows_server_port,
                  ftp_server_port,
                  true)
-        @logger.an_event.debug "push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"   if $debugging
+        @logger.an_event.debug "push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}" if $debugging
       rescue Exception => e
         @logger.an_event.error "cannot push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
-        @logger.an_event.debug e   if $debugging
+        @logger.an_event.debug e if $debugging
         raise FlowException
       end
     else
       # le flow a des volumes
-        if vol.nil?
-         # aucune vol n'est précisé donc on pousse tous les volumes en commancant du premier même si le flow courant n'est pas le premier,
+      if vol.nil?
+        # aucune vol n'est précisé donc on pousse tous les volumes en commancant du premier même si le flow courant n'est pas le premier,
         #en précisant pour le dernier le lastvolume = true
         count_volumes = volumes?
         volumes.each { |volume|
@@ -280,15 +319,15 @@ class Flow
                             input_flows_server_port,
                             ftp_server_port,
                             count_volumes == volume.vol.to_i)
-            @logger.an_event.debug "push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"  if $debugging
+            @logger.an_event.debug "push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}" if $debugging
           rescue Exception => e
             @logger.an_event.error "cannot push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
-            @logger.an_event.debug e   if $debugging
+            @logger.an_event.debug e if $debugging
             raise FlowException
           end
         }
-       else
-         # on pousse le volume précisé
+      else
+        # on pousse le volume précisé
         # si lastvolume n'est pas précisé alors = false
         @vol = vol.to_s
         raise FlowException, "volume <#{@vol}> of the flow <#{basename}> do not exist" unless exist? # on verifie que le volume passé existe
@@ -304,8 +343,8 @@ class Flow
           raise FlowException
         end
       end
-       end
-     end
+    end
+  end
 
   def push_vol(authentification_server_port,
       input_flows_server_ip,
@@ -345,10 +384,10 @@ class Flow
     }
     begin
       Information.new(data).send_to(ip_to, port_to)
-      @logger.an_event.debug "send properties flow <#{basename}> to #{ip_to}:#{port_to}"    if $debugging
+      @logger.an_event.debug "send properties flow <#{basename}> to #{ip_to}:#{port_to}" if $debugging
     rescue Exception => e
       @logger.an_event.error "cannot send properties flow <#{basename}> to #{ip_to}:#{port_to}"
-      @logger.an_event.debug e  if $debugging
+      @logger.an_event.debug e if $debugging
       raise FlowException, e.message
     end
   end
@@ -379,7 +418,7 @@ class Flow
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     open("r:UTF-8") if @descriptor.nil?
     @descriptor.rewind
-    @logger.an_event.debug "rewind flow <#{basename}>"  if $debugging
+    @logger.an_event.debug "rewind flow <#{basename}>" if $debugging
   end
 
   def size
@@ -434,20 +473,20 @@ class Flow
   end
 
   def volume_exist?(vol)
-  # verifie l'existence d'un volume du flow sur le disque
+    # verifie l'existence d'un volume du flow sur le disque
     Flow.new(@dir, @type_flow, @label, @date, vol, @ext).exist?
   end
 
   def volumes_exist?
-  # verifie que tous les volumes (>=1) du flow existent sur le disque
+    # verifie que tous les volumes (>=1) du flow existent sur le disque
     exist = true
-    volumes.each{|vol| exist = exist && vol.exist? }
+    volumes.each { |vol| exist = exist && vol.exist? }
     exist
   end
 
   def write(data)
     open("w:UTF-8") if @descriptor.nil?
-    @descriptor.write(data); @logger.an_event.debug "write data <#{data}> to flow <#{basename}>"  if $debugging
+    @descriptor.write(data); @logger.an_event.debug "write data <#{data}> to flow <#{basename}>" if $debugging
   end
 
   def zero?

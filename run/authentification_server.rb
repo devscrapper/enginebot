@@ -17,7 +17,7 @@ module AuthentificationServer
   end
 
   def receive_data param
-    @logger.an_event.debug ("data receive : #{param}")
+    @logger.an_event.debug("data receive : #{param}")
 
     begin
       Thread.new { execute_task(YAML::load param) }
@@ -33,32 +33,32 @@ module AuthentificationServer
         authentification = Authentification.new(new_user, new_pwd)
         new_token(authentification)
         send_data (YAML::dump authentification)
-        @logger.an_event.info ("push new authentification")
+        @logger.an_event.info("push new authentification")
         close_connection_after_writing
       when "check"
         authentification = data["authentification"]
         send_data (YAML::dump check_token(authentification))
-        @logger.an_event.info ("check authentification")
+        @logger.an_event.info("check authentification")
         close_connection_after_writing
       when "delete"
         authentification = data["authentification"]
         delete_token(authentification)
-        @logger.an_event.info ("delete authentification")
+        @logger.an_event.info("delete authentification")
         close_connection
       when "delete_all"
         delete_all()
-        @logger.an_event.info ("delete all authentifications")
+        @logger.an_event.info("delete all authentifications")
         close_connection
       when "list"
         send_data ($tokens)
         close_connection_after_writing
-        @logger.an_event.info ("push all tokens")
+        @logger.an_event.info("push all tokens")
       when "exit"
         close_connection
         EventMachine.stop
       else
         port, ip = Socket.unpack_sockaddr_in(get_peername)
-        @logger.an_event.warn ("unknown action : #{data["cmd"]} from  #{ip}:#{port}")
+        @logger.an_event.warn("unknown action : #{data["cmd"]} from  #{ip}:#{port}")
     end
   end
 

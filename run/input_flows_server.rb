@@ -51,7 +51,7 @@ EventMachine.run {
   Signal.trap("TERM") { EventMachine.stop }
 
   logger.a_log.info "input flows server is starting"
-  EventMachine.start_server "localhost", listening_port, FlowConnection, logger
+  EventMachine.start_server "0.0.0.0", listening_port, FlowConnection, logger
 }
 logger.a_log.info "input flows server stopped"
 

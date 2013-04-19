@@ -140,10 +140,10 @@ module Planning
     end
 
     def display_objective()
-          p "objectives : "
-          objectives = {}
-          @events.each { |evt| objectives[evt.key["objective_id"]] = evt.business["label"] unless evt.key["objective_id"].nil? }
-          objectives.each_pair { |key, value| p "#{key} -> objective : #{value}" }
-        end
+      p "objectives : "
+      objectives = {}
+      @events.each { |evt| objectives[evt.key["objective_id"]] = evt.business["label"] unless evt.key["objective_id"].nil? }
+      objectives.each_pair { |key, value| p "#{key} -> objective : #{value}" }
+    end
   end
 end

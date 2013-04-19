@@ -54,7 +54,6 @@ module Flowing
 
 
     def initialize(page)
-      #TODO remplacement de SEPARATOR par SEPARATOR2 à valider
       splitted_page = page.split(SEPARATOR2)
       @id_uri = ""
       @hostname = splitted_page[0]
@@ -159,7 +158,7 @@ module Flowing
     end
 
     def Building_matrix_and_pages(input_website)
-      @logger.an_event.info ("Building matrix and page for <#{input_website.label}> for <#{input_website.date}> is starting")
+      @logger.an_event.info("Building matrix and page for <#{input_website.label}> for <#{input_website.date}> is starting")
       begin
         matrix_file = Flow.new(TMP, "matrix", input_website.label, input_website.date) #output
         pages_file = Flow.new(TMP, "pages", input_website.label, input_website.date) #output
@@ -226,7 +225,7 @@ module Flowing
         @logger.an_event.debug e
         @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
       end
-      @logger.an_event.info ("Building matrix and page for <#{input_website.label}> is over")
+      @logger.an_event.info("Building matrix and page for <#{input_website.label}> is over")
     end
 
     def Building_landing_pages(traffic_source_file)
@@ -276,14 +275,14 @@ module Flowing
         @logger.an_event.debug e
         @logger.an_event.error "cannot build landing pages for <#{traffic_source_file.label}>"
       end
-      @logger.an_event.info ("Building landing pages for <#{traffic_source_file.label}> is over")
+      @logger.an_event.info("Building landing pages for <#{traffic_source_file.label}> is over")
     end
 
     def Building_device_platform(label, date)
       #TODO Attention : le building_device_platforme, ne gère pas le multi-volume alors que la requete GA ne fixe pas de limite en nombre de resultats.
       #TODO en conséquence : seul le dernier volume émis par la requete GA sera utilisé par cette fonction => ce n'est pas bloquant, cela limite un peut le nombre de device
       #TODO il faut égaelement noté que pour le moment les resultats sur le site d'epilation sont inferieurs à 50ko pour le plugin et 1ko pour le resolution
-      @logger.an_event.info ("Building device platform for <#{label}> for <#{date}> is starting")
+      @logger.an_event.info("Building device platform for <#{label}> for <#{date}> is starting")
       begin
         device_plugin = Flow.new(INPUT, "scraping-device-platform-plugin", label, date, 1) #input
         raise IOError, "input flow <#{device_plugin.basename}> is missing" unless device_plugin.exist?
@@ -332,12 +331,12 @@ module Flowing
         @logger.an_event.debug e
         @logger.an_event.error("cannot build device platform for <#{label}>")
       end
-      @logger.an_event.info ("Building device platform for <#{label}> is over")
+      @logger.an_event.info("Building device platform for <#{label}> is over")
     end
 
     def Building_hourly_daily_distribution(input_distribution)
       #pas de gestion du multi-volume nécessaire car la requete vers ga limite le nombre de resultat
-      @logger.an_event.info ("Building hourly daily distribution for #{input_distribution.label} for #{input_distribution.date} is starting")
+      @logger.an_event.info("Building hourly daily distribution for #{input_distribution.label} for #{input_distribution.date} is starting")
 
       begin
         raise IOError, "input flow <#{input_distribution.basename}> is missing" unless input_distribution.exist? #input
@@ -353,8 +352,6 @@ module Flowing
           #30;00;20121130;21
           splitted_line = line.strip.split(SEPARATOR2)
           day = splitted_line[0]
-          hour = splitted_line[1]
-          date = splitted_line[2]
           count_visits = splitted_line[3]
           case day_save
             when ""
@@ -379,12 +376,12 @@ module Flowing
         @logger.an_event.debug e
         @logger.an_event.error("cannot build hourly daily distribution for <#{input_distribution.label}>")
       end
-      @logger.an_event.info ("Building hourly daily distribution for <#{input_distribution.label}> is over")
+      @logger.an_event.info("Building hourly daily distribution for <#{input_distribution.label}> is over")
     end
 
     def Building_behaviour(input_behaviour)
       #pas de prise en compte du multi-volume car la requete ga limite le nombre de resultats
-      @logger.an_event.info ("Building behaviour for #{input_behaviour.label} for #{input_behaviour.date} is starting")
+      @logger.an_event.info("Building behaviour for #{input_behaviour.label} for #{input_behaviour.date} is starting")
       begin
         raise IOError, "input flow <#{input_behaviour.basename}> is missing" unless input_behaviour.exist?
 
@@ -410,9 +407,11 @@ module Flowing
         @logger.an_event.debug e
         @logger.an_event.error("cannot build behaviour for <#{input_behaviour.label}>")
       end
-      @logger.an_event.info ("Building behaviour for <#{input_behaviour.label}> is over")
+      @logger.an_event.info("Building behaviour for <#{input_behaviour.label}> is over")
     end
 
   end
 
 end
+
+
