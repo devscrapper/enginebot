@@ -152,10 +152,6 @@ class Flow
     # le ou les flow sont déplacés dans ARCHIVE
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     Flow.list(@dir, {:type_flow => @type_flow, :label => @label, :ext => @ext}).each { |flow|
-      @logger.an_event.debug self.inspect
-      @logger.an_event.debug flow.inspect
-      @logger.an_event.debug self == flow
-
       flow.archive unless self == flow
     }
     @logger.an_event.info "archive previous <#{basename}>"
