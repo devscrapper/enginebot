@@ -42,7 +42,7 @@ module Flowing
   class Traffic_source
     class Traffic_sourceException < StandardError
     end
-    TMP = File.dirname(__FILE__) + "/../../tmp/"
+    TMP = File.dirname(__FILE__) + "/../../tmp"
     NOT_FOUND = 0
     attr :id_uri,
          :hostname,
@@ -149,8 +149,8 @@ module Flowing
 #------------------------------------------------------------------------------------------
 # Globals variables
 #------------------------------------------------------------------------------------------
-    INPUT = File.dirname(__FILE__) + "/../../input/"
-    TMP = File.dirname(__FILE__) + "/../../tmp/"
+    INPUT = File.dirname(__FILE__) + "/../../input"
+    TMP = File.dirname(__FILE__) + "/../../tmp"
 
 
     def initialize()

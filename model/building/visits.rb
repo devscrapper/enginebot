@@ -19,8 +19,8 @@ module Building
 #------------------------------------------------------------------------------------------
 # Globals variables
 #------------------------------------------------------------------------------------------
-    OUTPUT = File.dirname(__FILE__) + "/../../output/"
-    TMP = File.dirname(__FILE__) + "/../../tmp/"
+    OUTPUT = File.dirname(__FILE__) + "/../../output"
+    TMP = File.dirname(__FILE__) + "/../../tmp"
     SEPARATOR1=";"
     SEPARATOR2="|"
     SEPARATOR3=","

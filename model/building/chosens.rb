@@ -81,6 +81,7 @@ module Building
           total_visits += count_device
           count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE}"); pob.increment }
         }
+        p chosen_device_platform_file.inspect
         chosen_device_platform_file.archive_previous
       rescue Exception => e
         @logger.an_event.debug e

@@ -5,7 +5,7 @@ module Flowing
   class Flowlist
     class FlowlistException < StandardError;
     end
-    INPUT = File.dirname(__FILE__) + "/../../input/"
+    INPUT = File.dirname(__FILE__) + "/../../input"
 
     attr :last_volume,
          :input_flow,
