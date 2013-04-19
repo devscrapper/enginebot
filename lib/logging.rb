@@ -102,6 +102,7 @@ module Logging
     end
 
     def syslog()
+      #TODO mettre en oeuvre sur le serveur de test logAnalyzer
       Logging::Appenders.syslog(@class_name)
     end
 

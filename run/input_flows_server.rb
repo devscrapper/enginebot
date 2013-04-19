@@ -35,7 +35,7 @@ end
 
 logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
 
-Logging::show_configuration
+
 logger.a_log.info "parameters of input flows server :"
 logger.a_log.info "listening port : #{listening_port}"
 logger.a_log.info "task server port : #{task_server_port}"
