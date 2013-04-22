@@ -13,6 +13,7 @@ module Planning
     START_PUBLISHING_VISITS_HOUR = 22 * IceCube::ONE_HOUR #heure de démarrage est 10h du soir
     END_PUBLISHING_VISITS_DAY = 0 * IceCube::ONE_DAY #on decale d'un  jour j-1
     END_PUBLISHING_VISITS_HOUR = 21 * IceCube::ONE_HOUR #heure d'arret est 9h du soir du lendemain
+    # si le décalage du publishnig change, il faut penser à corriger en conséquence le décalage dans la méthode model/building/visits.rb/Publishing_visits_by_hour()
     attr :count_visits,
          :label,
          :building_date,

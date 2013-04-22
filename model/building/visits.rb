@@ -213,13 +213,33 @@ module Building
 #--------------------------------------------------------------------------------------------------------------
 #
 # --------------------------------------------------------------------------------------------------------------
-    def Publishing_visits_by_hour(hour)
-      @logger.an_event.info("Publishing visits for #{@label} for #{@date_building} at #{hour} hour is starting")
+    def Publishing_visits_by_hour
+      # le déclenchement de la publication est réalisée 2 heures avant l'heure d'exécution proprement dite des visits
+      # de 22:00 à j-1 pour j à 00:00
+      # à 
+      # de 21:00 à j pour j à 23:00
+      # ce parametrage est réalisé lors de la transformation des objectives en events dans le fichier model/planning/object2event/objective.rb
+      # cela entraine qu'il faut ajouter 2 heures pour le nom du output flow
+      #
+      # autre point : 
+      # les flow final_visit sont suffixés par l'heure déclenchement des visits de 1 à 24 hour.
+      # cela entraine qu'il faut ajouter 1 heure à l'heure courante pour récupérer le bon volume du flow final_visit.
+      # de 22:00 à j-1 pour j à 00:00 => final_visits_J-1_1.txt & publishing_visits_J-1_1.json
+      # à 
+      # de 21:00 à j pour j à 23:00   => final_visits_J-1_24.txt & publishing_visits_J-1_24.json
+      current_time = Time.now
+      hour = current_time.hour + 2 + 1
+      @logger.an_event.debug "current time <#{current_time}>, current hour <#{current_time.hour}>, selected hour <#{hour}>"
+      
+      @logger.an_event.info("Publishing at #{current_time} visits for #{@label} for #{@date_building}:#{hour}:00 is starting")
       begin
-
-        published_visits_to_json_file = Flow.new(OUTPUT, "published-visits", @label, @date_building, hour, ".json")
+        
+        
         final_visits_file = Flow.new(TMP, "final-visits", @label, @date_building, hour) #input
+        @logger.an_event.debug final_visits_file
         raise IOError, "tmp flow <#{final_visits_file.basename}> is missing" unless final_visits_file.exist?
+        published_visits_to_json_file = Flow.new(OUTPUT, "published-visits", @label, @date_building, hour, ".json") #output
+        @logger.an_event.debug published_visits_to_json_file
 
         p = ProgressBar.create(:title => "publish #{final_visits_file.basename}", :length => 180, :starting_at => 0, :total => final_visits_file.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
         final_visits_file.foreach(EOFLINE) { |visit|
@@ -241,7 +261,7 @@ module Building
         @logger.an_event.debug e
         @logger.an_event.error "cannot publish visits  at #{hour} hour for #{@label}"
       end
-      @logger.an_event.info("Publishing visits at #{hour} hour for #{@label} is over")
+      @logger.an_event.info("Publishing  at #{current_time} visits for #{@label} for #{@date_building}:#{hour}:00 is over")
     end
 
 #--------------------------------------------------------------------------------------------------------------
