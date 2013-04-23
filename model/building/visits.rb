@@ -228,13 +228,14 @@ module Building
       # à 
       # de 21:00 à j pour j à 23:00   => final_visits_J-1_24.txt & publishing_visits_J-1_24.json
       current_time = Time.now
-      hour = current_time.hour + 2 + 1
+      an_hour = 60 * 60
+      hour = current_time + (an_hour * (2 + 1))
       @logger.an_event.debug "current time <#{current_time}>, current hour <#{current_time.hour}>, selected hour <#{hour}>"
-      
+
       @logger.an_event.info("Publishing at #{current_time} visits for #{@label} for #{@date_building}:#{hour}:00 is starting")
       begin
-        
-        
+
+
         final_visits_file = Flow.new(TMP, "final-visits", @label, @date_building, hour) #input
         @logger.an_event.debug final_visits_file
         raise IOError, "tmp flow <#{final_visits_file.basename}> is missing" unless final_visits_file.exist?
