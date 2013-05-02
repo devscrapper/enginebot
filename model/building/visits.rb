@@ -224,18 +224,19 @@ module Building
       # autre point : 
       # les flow final_visit sont suffixés par l'heure déclenchement des visits de 1 à 24 hour.
       # cela entraine qu'il faut ajouter 1 heure à l'heure courante pour récupérer le bon volume du flow final_visit.
-      # de 22:00 à j-1 pour j à 00:00 => final_visits_J-1_1.txt & publishing_visits_J-1_1.json
+      # de 22:00 à j-1 pour j à 00:00 => final_visits_J_1.txt & publishing_visits_J_1.json
+      # de 23:00 à j-1 pour j à 01:00 => final_visits_J_2.txt & publishing_visits_J_2.json
+      # de 0:00 à j pour j à 02:00 => final_visits_J_3.txt & publishing_visits_J_3.json
+      # de 1:00 à j pour j à 03:00 => final_visits_J_4.txt & publishing_visits_J_4.json
       # à 
-      # de 21:00 à j pour j à 23:00   => final_visits_J-1_24.txt & publishing_visits_J-1_24.json
+      # de 21:00 à j pour j à 23:00   => final_visits_J_24.txt & publishing_visits_J_24.json
       current_time = Time.now
       an_hour = 60 * 60
-      hour = current_time + (an_hour * (2 + 1))
-      @logger.an_event.debug "current time <#{current_time}>, current hour <#{current_time.hour}>, selected hour <#{hour}>"
-
+      selected_time = current_time + (2 * an_hour)
+      hour = selected_time.hour + 1 #hour est seulement utilisé pour construire le nom du flow.
+      @logger.an_event.debug "current time <#{current_time}>, selected day <#{@date_building}>, selected hour <#{hour}>"
       @logger.an_event.info("Publishing at #{current_time} visits for #{@label} for #{@date_building}:#{hour}:00 is starting")
       begin
-
-
         final_visits_file = Flow.new(TMP, "final-visits", @label, @date_building, hour) #input
         @logger.an_event.debug final_visits_file
         raise IOError, "tmp flow <#{final_visits_file.basename}> is missing" unless final_visits_file.exist?
