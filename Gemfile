@@ -6,7 +6,7 @@ source "http://gems.github.com"
 
 gem 'capistrano'
 gem 'rvm-capistrano'
-gem "eventmachine"
+gem "eventmachine", '~> 1.0.0'
 gem "bundler"
 gem 'certified'
 gem "em-http-request"
@@ -17,6 +17,7 @@ gem 'rufus-scheduler'
 gem 'ice_cube'
 gem 'logging'
 gem 'rest-client'
+gem 'uuid'
 # fin new gem
 
 #group :development

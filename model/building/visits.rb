@@ -11,6 +11,11 @@ require 'ruby-progressbar'
 
 
 module Building
+  #TODO calculer visit[:referrer][:durations] pour organic en fonction des parametres fournis par statupweb
+  #TODO calculer visit[:referrer][:duration] pour referral en fonction des parametres fournis par statupweb
+  #TODO calculer visit[:advertising][:advertser][durations] et [around] en fonction des parametres fournis par statupweb
+  #TODO calculer visit[:landing][duration]
+  #TODO calculer visit[:durations]
   class Visits
     class VisitsException < StandardError
     end
@@ -80,6 +85,17 @@ module Building
         count_pages = (count_visit * page_views_per_visit).to_i
         count_durations = (count_visit * avg_time_on_site).to_i
         @duration_pages = distributing(count_pages, count_durations, min_durations)
+                                                                            #TODO : valider que la distribution de duration pour les pages de la visite, positionne comme première valeur, la valeur minimale afin que la landing page soit déclencher en premier
+                                                                            #TODO : controler commen cela est fait  : les durée associé aux page sont elle
+                                                                            # TODO en delta par rapport à la précédent => il n'est pas nécessaire que les durées soit croissante
+                                                                            # TODO par rapport à la visit : il faut que les durée soit croissante pour la llstye depage de la visit
+        min_duration_idx = @duration_pages.index(@duration_pages.min)
+        if min_duration_idx > 0
+          min_duration = @duration_pages[min_duration_idx]
+          @duration_pages.delete_at(min_duration_idx)
+          @duration_pages = [min_duration] + @duration_pages
+        end
+
         @visits = []
         p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         chosen_landing_pages_file.foreach(EOFLINE) { |page|
@@ -128,6 +144,8 @@ module Building
         @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
         hour = 0
         count_visits_of_day_origin = 0
+        #TODO initialiser les fichier à empty car il se peut que pou rune une heure il n y ait pas de visit, il faut qd meêm crer un fichier vide pour eviter que cema plante lors de l'extending et ne pas avoir de trou dans la numerotation pour evityer de se poser des questions
+
         @count_visits_by_hour.each { |count_visit_per_hour| count_visits_of_day_origin += count_visit_per_hour[1].to_i }
         @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
         @logger.an_event.debug "@count_visits_by_hour.size #{@count_visits_by_hour.size}"
@@ -213,7 +231,7 @@ module Building
 #--------------------------------------------------------------------------------------------------------------
 #
 # --------------------------------------------------------------------------------------------------------------
-    def Publishing_visits_by_hour
+    def Publishing_visits_by_hour(day=nil)
       # le déclenchement de la publication est réalisée 2 heures avant l'heure d'exécution proprement dite des visits
       # de 22:00 à j-1 pour j à 00:00
       # à 
@@ -230,6 +248,9 @@ module Building
       # de 1:00 à j pour j à 03:00 => final_visits_J_4.txt & publishing_visits_J_4.json
       # à 
       # de 21:00 à j pour j à 23:00   => final_visits_J_24.txt & publishing_visits_J_24.json
+      #---------------------------
+      # si day <> de nil alors on force le jour de planification pour faciliter les tests.
+
       current_time = Time.now
       an_hour = 60 * 60
       selected_time = current_time + (2 * an_hour)
@@ -240,25 +261,22 @@ module Building
         final_visits_file = Flow.new(TMP, "final-visits", @label, @date_building, hour) #input
         @logger.an_event.debug final_visits_file
         raise IOError, "tmp flow <#{final_visits_file.basename}> is missing" unless final_visits_file.exist?
-        published_visits_to_json_file = Flow.new(OUTPUT, "published-visits", @label, @date_building, hour, ".json") #output
-        @logger.an_event.debug published_visits_to_json_file
 
         p = ProgressBar.create(:title => "publish #{final_visits_file.basename}", :length => 180, :starting_at => 0, :total => final_visits_file.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
         final_visits_file.foreach(EOFLINE) { |visit|
           v = Published_visit.new(visit)
-          published_visits_to_json_file.write("#{JSON.generate(v)}#{EOFLINE}")
-          #TODO developper publish to db statupweb
-          #Thread.new { v.publish_to_db(@label, @date_building, hour) }
+          if day.nil?
+            start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
+          else
+            start_date_time = Time.new(day.year, day.month, day.day, v.start_date_time.hour,v.start_date_time.min,v.start_date_time.sec).strftime("%Y-%m-%d-%H-%M-%S")
+          end
+          published_visits_to_yaml_file = Flow.new(TMP, "#{v.operating_system}-#{v.operating_system_version}", @label, start_date_time, v.id_visit, ".yml")
+          published_visits_to_yaml_file.write(v.generate_output(@label).to_yaml)
+          published_visits_to_yaml_file.close
+          p.increment
         }
-        p.increment
-        published_visits_to_json_file.close
-        published_visits_to_json_file.push($authentification_server_port,
-                                           $statupbot_server_ip,
-                                           $statupbot_server_port,
-                                           $ftp_server_port,
-                                           hour,
-                                           true)
 
+          #TODO coder les archives qui manquent => voir les repertoire tmp /input pour savoir ce qui manque
       rescue Exception => e
         @logger.an_event.debug e
         @logger.an_event.error "cannot publish visits  at #{hour} hour for #{@label}"

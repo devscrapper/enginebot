@@ -1,6 +1,7 @@
 require 'net/ftp'
 require_relative 'communication'
 require_relative '../lib/logging'
+require 'pathname'
 require_relative 'authentification'
 class Flow
   class FlowException < StandardError;
@@ -8,7 +9,7 @@ class Flow
 
   MAX_SIZE = 1000000 # taille max d'un volume
   SEPARATOR = "_" # separateur entre elemet composant (type_flow, label, date, vol) le nom du volume (basename)
-  ARCHIVE = File.dirname(__FILE__) + "/../archive" #localisation du repertoire d'archive
+  ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__),'..', 'archive')).realpath #localisation du repertoire d'archive
   FORBIDDEN_CHAR = /[_ ]/ # liste des caractères interdits dans le typeflow et label d'un volume
   attr :descriptor,
        :dir,
@@ -39,8 +40,9 @@ class Flow
     label = opts.getopt(:label, "*")
     date = opts.getopt(:date, "*")
     date = date.strftime("%Y-%m-%d") if date.is_a?(Date)
+    date = "#{date.year}-#{date.month}-#{date.day}-#{date.hour}-#{date.min}-#{date.sec}" if date.is_a?(Time)
     ext = opts.getopt(:ext, ".*")
-    Dir.glob(File.join(dir,"#{type_flow}#{SEPARATOR}#{label}#{SEPARATOR}#{date}*#{ext}")).map { |file| Flow.from_absolute_path(file) }
+    Dir.glob(File.join(dir, "#{type_flow}#{SEPARATOR}#{label}#{SEPARATOR}#{date}#{ext}")).map { |file| Flow.from_absolute_path(file) }
   end
 
   #----------------------------------------------------------------------------------------------------------------
@@ -99,19 +101,20 @@ class Flow
     @dir = dir
     @type_flow = type_flow.gsub(FORBIDDEN_CHAR, "-") #le label ne doit pas contenir les caractères interdits
     @label = label.gsub(FORBIDDEN_CHAR, "-") #le label ne doit pas contenir les caractères interdits
+    @date = date
     @date = date.strftime("%Y-%m-%d") if date.is_a?(Date)
-    @date = date unless date.is_a?(Date)
+    @date = "#{date.year}-#{date.month}-#{date.day}-#{date.hour}-#{date.min}-#{date.sec}" if date.is_a?(Time)
     @vol = vol.to_s unless vol.nil?
     @ext = ext
                                                      # @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     @logger = Logging::Log.new(self, :staging => $staging, :debugging => false)
     if  !(@dir && @type_flow && @label && @date && @ext) and $debugging
-      @logger.an_event.debug "dir <#{dir}>"
-      @logger.an_event.debug "type_flow <#{type_flow}>"
-      @logger.an_event.debug "label <#{label}>"
-      @logger.an_event.debug "date <#{date}>"
-      @logger.an_event.debug "vol <#{vol}>"
-      @logger.an_event.debug "ext <#{ext}>"
+      @logger.an_event.debug "dir <#{@dir}>"
+      @logger.an_event.debug "type_flow <#{@type_flow}>"
+      @logger.an_event.debug "label <#{@label}>"
+      @logger.an_event.debug "date <#{@date}>"
+      @logger.an_event.debug "vol <#{@vol}>"
+      @logger.an_event.debug "ext <#{@ext}>"
       @logger.an_event.debug "details flow <#{self.to_s}>"
     end
     raise FlowException, "Flow not initialize" unless @dir && @type_flow && @label && @date && @ext
@@ -174,6 +177,7 @@ class Flow
     raise FlowException, "target <#{to_path}> is not valid" unless File.exists?(to_path) && File.directory?(to_path)
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     FileUtils.cp(absolute_path, to_path)
+    @dir = to_path
     @logger.an_event.debug "copy flow <#{absolute_path}> to <#{to_path}>" if $debugging
   end
 
@@ -240,7 +244,7 @@ class Flow
     volum = "" if @vol.nil?
     max_time = Time.new(2001, 01, 01)
     chosen_file = nil
-    Dir.glob(File.join(@dir,"#{@type_flow}#{SEPARATOR}#{@label}#{SEPARATOR}*#{volum}#{@ext}")).each { |file|
+    Dir.glob(File.join(@dir, "#{@type_flow}#{SEPARATOR}#{@label}#{SEPARATOR}*#{volum}#{@ext}")).each { |file|
       if File.ctime(file) > max_time
         max_time = File.ctime(file)
         chosen_file = file
@@ -266,6 +270,16 @@ class Flow
       }
     }
     array
+  end
+
+  def move(to_path)
+    raise FlowException, "target <#{to_path}> is not valid" unless File.exists?(to_path) && File.directory?(to_path)
+    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    FileUtils.cp(absolute_path, to_path)
+    @logger.an_event.debug "copy flow <#{absolute_path}> to <#{to_path}>" if $debugging
+    File.delete(absolute_path) if exist?
+    @logger.an_event.debug "delete flow <#{absolute_path}>" if exist?
+    @dir = to_path
   end
 
   def new_volume()

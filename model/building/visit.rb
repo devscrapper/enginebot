@@ -22,11 +22,12 @@ module Building
          :java_enabled,
          :screens_colors,
          :screen_resolution,
-         :pages
+         :pages,
+         :advert
 
     def initialize(first_page, duration)
       @@count_visit += 1
-      @id_visit = @@count_visit
+      @id_visit = @@count_visit #TODO remplacer la valeur de id_visit par un uuid pour avoir une clé unique car dans statupbot on perd l'association au website
       splitted_page = first_page.split(SEPARATOR2)
       @referral_path = splitted_page[1].strip
       @source = splitted_page[2].strip
@@ -136,10 +137,23 @@ module Building
   end
 
   class Published_visit < Visit
+
+    #TODO meo ces données dans statupweb
+    MIN_COUNT_PAGE_ADVERTISER = 10 # nombre de page min consultées chez l'advertiser : fourni par statupweb
+    MAX_COUNT_PAGE_ADVERTISER = 15 # nombre de page max consultées chez l'advertiser : fourni par statupweb
+    MIN_DURATION_PAGE_ADVERTISER = 60 # durée de lecture min d'une page max consultées chez l'advertiser : fourni par statupweb
+    MAX_DURATION_PAGE_ADVERTISER = 120 # durée de lecture max d'une page max consultées chez l'advertiser : fourni par statupweb
+    PERCENT_LOCAL_PAGE_ADVERTISER = 80 # pourcentage de page consultées localement à l'advertiser fournit par statupweb
+    DURATION_REFERRAL = 20 # durée de lecture du referral : fourni par statupweb
+    MIN_COUNT_PAGE_ORGANIC = 4 #nombre min de page de resultat du moteur de recherche consultées : fourni par statupweb
+    MAX_COUNT_PAGE_ORGANIC = 6 #nombre min de page de resultat du moteur de recherche consultées : fourni par statupweb
+    MIN_DURATION_PAGE_ORGANIC = 10 #durée de lecture min d'une page de resultat fourni par le moteur de recherche : fourni par statupweb
+    MAX_DURATION_PAGE_ORGANIC = 30 #durée de lecture max d'une page de resultat fourni par le moteur de recherche : fourni par statupweb
+
     def initialize(visit)
       splitted_visit = visit.strip.split(SEPARATOR2)
       @id_visit = splitted_visit[0]
-      @start_date_time = splitted_visit[1]
+      @start_date_time = Time.parse(splitted_visit[1])
       @account_ga = splitted_visit[2]
       @return_visitor = splitted_visit[3]
       @browser = splitted_visit[4]
@@ -164,7 +178,8 @@ module Building
         p.title=splitted_page[4]
         @pages << p
       }
-
+      #TODO à reviser qd on mettra en place le click sur la pub
+      @advert = nil
     end
 
 
@@ -189,5 +204,59 @@ module Building
       }.to_json(*a)
     end
 
+    # prend en entree un flux json qui décrit la visit
+    # retour un flux yaml qui définit la visit au format attendu par visitor_bot
+    def generate_output(label)
+      require 'uuid'
+        advertiser_durations_size = Random.rand(MIN_COUNT_PAGE_ADVERTISER..MAX_COUNT_PAGE_ADVERTISER) # calculé par engine_bot
+        organic_durations_size = Random.rand(MIN_COUNT_PAGE_ORGANIC..MAX_COUNT_PAGE_ORGANIC) # calculé par engine_bot
+        visit = {:id_visit => @id_visit,
+                 :start_date_time => @start_date_time,
+                 :durations => @pages.map { |page| page.generate_output} ,
+                 :website => {:label => label,
+                              #TODO revisier l'initialisation de many_hostname & many_account
+                              :many_hostname => :true,
+                              :many_account_ga => :no},
+                 :visitor => {:return_visitor => @return_visitor == "yes" ? :true : :false,
+                              :id => UUID.generate,
+                              :browser => {:name => @browser,
+                                           :version => @browser_version,
+                                           :operating_system => @operating_system,
+                                           :operating_system_version => @operating_system_version,
+                                           :flash_version => @flash_version,
+                                           :java_enabled => @java_enabled,
+                                           :screens_colors => @screens_colors,
+                                           :screen_resolution => @screen_resolution
+                              }
+                 },
+                 :referrer => {:referral_path => @referral_path,
+                               :source => @source,
+                               :medium => @medium,
+                               :keyword => generate_keywords(@medium, @keyword, @pages[0].title) #genere un tableau de mot clé pour pallier à l'échec des recherches et mieux simuler le comportement
+                 },
+                 :landing => {:fqdn => @pages[0].hostname,
+                              :page_path => @pages[0].page_path
+                 },
+                 :advert => @advert.nil? ? {:advertising => :none} : {:advertising => @advert.to_sym,
+                                                                      :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ADVERTISER..MAX_DURATION_PAGE_ADVERTISER) }, #calculé par engine_bot
+                                                                                      :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * PERCENT_LOCAL_PAGE_ADVERTISER/100).round(0))} #calculé par engine_bot
+                 }
+        }
+
+        case visit[:referrer][:medium]
+          when "(none)"
+          when "referral"
+            visit[:referrer][:duration] = DURATION_REFERRAL
+          when "organic"
+            visit[:referrer][:durations] = Array.new(organic_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ORGANIC..MAX_DURATION_PAGE_ORGANIC) }
+        end
+       visit
+    end
+
+    def generate_keywords(medium, keywords, title)
+      #TODO le comportement est basic, il devra etre enrichi pour mieux simuler un comportement naturel et mettre en dernier ressort les mots du title
+      #TODO penser egalement à produire des search qui n'aboutissent jamais dans le engine bot en fonction dun poourcentage determiner par statupweb
+      [keywords, title] if keywords != "(not set)" and medium == "organic"
+    end
   end
 end
