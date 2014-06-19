@@ -2,6 +2,7 @@ require 'net/ftp'
 require_relative 'communication'
 require_relative '../lib/logging'
 require 'pathname'
+require 'ruby-progressbar'
 require_relative 'authentification'
 class Flow
   class FlowException < StandardError;
@@ -9,7 +10,7 @@ class Flow
 
   MAX_SIZE = 1000000 # taille max d'un volume
   SEPARATOR = "_" # separateur entre elemet composant (type_flow, label, date, vol) le nom du volume (basename)
-  ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__),'..', 'archive')).realpath #localisation du repertoire d'archive
+  ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive')).realpath #localisation du repertoire d'archive
   FORBIDDEN_CHAR = /[_ ]/ # liste des caractères interdits dans le typeflow et label d'un volume
   attr :descriptor,
        :dir,
@@ -237,9 +238,9 @@ class Flow
     end
   end
 
-  def last()
+  def last
     #retourn nil si pas de flow ancien, sinon le plus recent, sinon le flox lui-même
-    return self if exist?
+
     volum = "#{SEPARATOR}#{@vol}" unless @vol.nil?
     volum = "" if @vol.nil?
     max_time = Time.new(2001, 01, 01)
@@ -434,6 +435,31 @@ class Flow
     #retourne la taille du fichier
     open("r:BOM|UTF-8:-") if @descriptor.nil?
     @descriptor.size
+  end
+
+  # est utilisé pour trier le fichier contenant le details des pages html : EXCLUSIVEMENT
+  # car la clé de tri n'est pas paramètrable
+  #def sort(separator)
+  #  raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+  #  close unless @descriptor.nil?
+  #  data = Kernel.open(absolute_path)
+  #  output_lines = data.lines.sort_by { |line| [line.split(separator)[1], line.split(separator)[2]] }
+  #  Kernel.open(absolute_path,"w") { |f| f.write(output_lines.join) }
+  #  @logger.an_event.info "sorting <#{basename}>"
+  #end
+
+
+  def sort (&bloc)
+    # est utilisé les lignes d'un fichier
+    # le tri est realisé par un bloc qui doit être passé à sort
+    # exemple : un_flow.sort { |line| [line.split(";")[1], line.split(";")[2]] }
+
+    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    close unless @descriptor.nil?
+    data = Kernel.open(absolute_path)
+    output_lines = data.lines.sort_by { |line| yield(line) }
+    Kernel.open(absolute_path,"w") { |f| f.write(output_lines.join) }
+    @logger.an_event.info "sorting <#{basename}>"
   end
 
   def total_lines(eofline)

@@ -68,7 +68,23 @@ module Flowing
       "#{@id_uri}#{SEPARATOR2}#{@referral_path}#{SEPARATOR2}#{@source}#{SEPARATOR2}#{@medium}#{SEPARATOR2}#{@keyword}#{EOFLINE}"
     end
 
-    def set_id_uri(label, date, pages_file)
+    def set_id_uri_mem(label, date, pages_array)
+      @id_uri = NOT_FOUND
+      max = pages_array.size
+      min = 1
+      id = nil
+      value = @hostname + @landing_page_path
+      found = false
+      while max - min > 1 and not(found)
+        i = ((max - min) / 2).round(0) + min
+        crt = pages_array[i].split(";")
+        @id_uri = crt[0].to_i if found =(crt[1] + crt[2] == value)
+        max = i if crt[1] + crt[2] > value
+        min = i  if crt[1] + crt[2] < value
+      end
+    end
+
+    def set_id_uri_disk(label, date, pages_file)
       @id_uri = NOT_FOUND
       raise IOError, "tmp flow <#{pages_file.basename}> is missing" unless pages_file.exist?
       pages_file.foreach(EOFLINE) { |page|
@@ -84,8 +100,9 @@ module Flowing
       !(@id_uri == NOT_FOUND)
     end
 
-    def is_in_pages(label, date, pages_file)
-      set_id_uri(label, date, pages_file)
+    def is_in_pages(label, date, pages)
+      set_id_uri_disk(label, date, pages) if pages.is_a?(Flow)
+      set_id_uri_mem(label, date, pages) if pages.is_a?(Array)
       !(@id_uri == NOT_FOUND)
     end
   end
@@ -151,7 +168,7 @@ module Flowing
 #------------------------------------------------------------------------------------------
     INPUT = File.dirname(__FILE__) + "/../../input"
     TMP = File.dirname(__FILE__) + "/../../tmp"
-
+    SEPARATOR2=";"
 
     def initialize()
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
@@ -163,34 +180,39 @@ module Flowing
         matrix_file = Flow.new(TMP, "matrix", input_website.label, input_website.date) #output
         pages_file = Flow.new(TMP, "pages", input_website.label, input_website.date) #output
 
-        raise IOError, "a volume of input flow <#{input_website.basename}> is missing" unless (input_website.volumes_exist? and
-            input_website.volume_exist?(0))
-        leaves = Flow.new(input_website.dir, input_website.type_flow, input_website.label, input_website.date, 0, input_website.ext).readlines(EOFLINE).map { |leaf| leaf.strip.to_i } #input
-        @logger.an_event.debug leaves
+        raise IOError, "a volume of input flow <#{input_website.basename}> is missing" unless input_website.volumes_exist?
+        #raise IOError, "a volume of input flow <#{input_website.basename}> is missing" unless (input_website.volumes_exist? and
+        #    input_website.volume_exist?(0))
+        #leaves = Flow.new(input_website.dir, input_website.type_flow, input_website.label, input_website.date, 0, input_website.ext).readlines(EOFLINE).map { |leaf| leaf.strip.to_i } #input
+        #@logger.an_event.debug leaves
 
         input_website.volumes.each { |volume|
           @logger.an_event.info "Loading vol <#{volume.vol}> of website input file"
           pob = ProgressBar.create(:length => 180, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
+          #--------------------------------------------------------------------------------------------------------------
+          # IMPORTANT
+          #--------------------------------------------------------------------------------------------------------------
           # on ne prend pas en compte le fichier des feuilles car :
           # si on supprime une page qui est une feuille alors toutes les pages qui pointent sur elle et qui n'ont quelle
           # comme lien alors on crée une nouvelle feuille. cela risque d'augmenter le nombre de feuille plutot que de le reduire
           # pour corriger cela il faudra rechercher à nouveau les feuilles et les supprimer jusqu'à ce qu'il ny en ait plus => couteux pour quel benefice
           # et risqué, car en fonction de la topologie du site (exemple : un arbre sans cycle) il pourrait ne plus y avoir de page de conserver
+          #--------------------------------------------------------------------------------------------------------------
           #if leaves.empty?
-            volume.foreach(EOFLINE) { |p|
-              # si il n'y a pas de feuille
-              begin
-                page = Page.new(p)
-                matrix_file.write(page.to_matrix)
-                pages_file.write(page.to_page)
-                pob.increment
-              rescue Exception => e
-                @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
-                @logger.an_event.debug p
-                @logger.an_event.debug page
-                @logger.an_event.debug e
-              end
-            }
+          volume.foreach(EOFLINE) { |p|
+            # si il n'y a pas de feuille
+            begin
+              page = Page.new(p)
+              matrix_file.write(page.to_matrix)
+              pages_file.write(page.to_page)
+              pob.increment
+            rescue Exception => e
+              @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
+              @logger.an_event.debug p
+              @logger.an_event.debug page
+              @logger.an_event.debug e
+            end
+          }
           #else
           #  volume.foreach(EOFLINE) { |p|
           #    # si il y a au moins une feuille on les supprime
@@ -214,13 +236,14 @@ module Flowing
           #end
           volume.archive
         }
-                                                                                       # on archive le volume 0 de input flow website
-        input_website.vol = 0
-        input_website.archive
+        # on archive le volume 0 de input flow website
+        #input_website.vol = 0
+        #input_website.archive
         matrix_file.close
         pages_file.close
         matrix_file.archive_previous
         pages_file.archive_previous
+
       rescue Exception => e
         @logger.an_event.debug e
         @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
@@ -228,7 +251,7 @@ module Flowing
       @logger.an_event.info("Building matrix and page for <#{input_website.label}> is over")
     end
 
-    def Building_landing_pages(traffic_source_file)
+    def Building_landing_pages(traffic_source_file, pages_in_mem)
       @logger.an_event.info "Building landing pages for <#{traffic_source_file.label}> for <#{traffic_source_file.date}> is starting"
       begin
         pages_file = Flow.new(TMP, "pages", traffic_source_file.label, traffic_source_file.date).last
@@ -240,6 +263,11 @@ module Flowing
         landing_pages_direct_file = Flow.new(TMP, "landing-pages-direct", traffic_source_file.label, traffic_source_file.date) #output
         landing_pages_referral_file = Flow.new(TMP, "landing-pages-referral", traffic_source_file.label, traffic_source_file.date) #output
         landing_pages_organic_file = Flow.new(TMP, "landing-pages-organic", traffic_source_file.label, traffic_source_file.date) #output
+
+        #on tri le fichier de page sur le hostname et le landing_page_path pour accelerer la recherche de page qui s'appuie sur une dichotomie
+        pages_file.sort{ |line| [line.split(SEPARATOR2)[1], line.split(SEPARATOR2)[2]]}
+        pages = pages_file.load_to_array(EOFLINE) if pages_in_mem
+        pages = pages_file unless pages_in_mem
 
         traffic_source_file.volumes.each { |volume|
           @logger.an_event.info "Loading vol <#{volume.vol}> of scraping-traffic-source-landing input file"
@@ -258,7 +286,7 @@ module Flowing
               else
                 @logger.an_event.warn "medium unknown"
                 @logger.an_event.debug "medium <#{source_page.medium}>"
-            end if source_page.is_in_pages(label, date, pages_file)
+            end if source_page.is_in_pages(label, date, pages)
             #end
             pob.increment
           }

@@ -193,6 +193,12 @@ module Building
         pages_file = Flow.new(TMP, "pages", @label, @date_building).last #input
         raise IOError, "tmp flow pages for <#{@label}> for <#{@date_building}> is missing" if  pages_file.nil?
 
+        #on tri le fichier de page sur le id pour accelerer la recherche de page qui s'appuie sur une dichotomie
+        pages_file.sort{ |line| [line.split(SEPARATOR1)[0]]}
+        #on charge en memoire le fichier
+        pages = pages_file.load_to_array(EOFLINE)
+
+
         device_platforms = device_platform_file.readlines(EOFLINE).shuffle
         @logger.an_event.debug device_platforms
         return_visitors = Array.new(count_visit, false)
@@ -206,7 +212,7 @@ module Building
           planed_visits_file.foreach(EOFLINE) { |visit|
             return_visitor = return_visitors.shift
             begin
-              v = Final_visit.new(visit, account_ga, return_visitor, pages_file, device_platforms.shift)
+              v = Final_visit.new(visit, account_ga, return_visitor, pages, device_platforms.shift)
               final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE}")
             rescue Exception => e
               @logger.an_event.debug visit

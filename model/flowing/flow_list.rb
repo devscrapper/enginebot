@@ -9,10 +9,12 @@ module Flowing
 
     attr :last_volume,
          :input_flow,
+         :pages_in_mem,
          :logger
 
-    def initialize(data)
+    def initialize(data, pages_in_mem)
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
+      @pages_in_mem = pages_in_mem
       @last_volume = data["last_volume"]
       @input_flow = Flow.from_basename(INPUT, data["basename"])
       @input_flow.get(data["ip_ftp_server"], data["port_ftp_server"], data["user"], data["pwd"])
@@ -23,7 +25,7 @@ module Flowing
     end
 
     def scraping_traffic_source_landing_page()
-      execute { Inputs.new.Building_landing_pages(@input_flow) } if @last_volume
+      execute { Inputs.new.Building_landing_pages(@input_flow, @pages_in_mem) } if @last_volume
     end
 
     def scraping_device_platform_plugin()

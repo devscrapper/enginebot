@@ -2,10 +2,12 @@
 development:
   listening_port: 9105
   task_server_port: 9101
+  pages_in_mem: true
   debugging:  true
 test:
   listening_port: 9105
   task_server_port: 9101
+  pages_in_mem: true
   debugging:  false
 
 production:

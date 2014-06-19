@@ -2,7 +2,7 @@
 development:
   :authentification_server_port: 9103
   :ftp_server_port: 9102
-  :delay_periodic_scan: 60
+  :delay_periodic_scan: 5
   :inputflow_factories:
     :windows:
       :vista:
@@ -20,17 +20,11 @@ development:
           :server1:
             :ip: 127.0.0.1
             :port: 9201
-          :server2:
-            :ip: 127.0.0.1
-            :port: 9201
       :xp:
         :pattern: "Windows-XP"
         :servers:
           :server1:
-            :ip: 127.0.0.1
-            :port: 9201
-          :server2:
-            :ip: 127.0.0.1
+            :ip: 192.168.1.54
             :port: 9201
   :debugging: true
 test:

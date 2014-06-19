@@ -106,7 +106,7 @@ module Building
 
   class Final_visit < Planed_visit
 
-    def initialize(visit, account_ga, return_visitor, pages_file, device_platform)
+    def initialize(visit, account_ga, return_visitor, pages, device_platform)
       splitted_visit = visit.split(SEPARATOR2)
 
       @id_visit = splitted_visit[0].strip
@@ -120,7 +120,7 @@ module Building
       @pages = []
       splitted_visit[6].strip.split(SEPARATOR3).each { |page|
         p = Page.new(page)
-        p.set_properties(pages_file)
+        p.set_properties(pages)
         @pages << p
       }
       splitted_device_platform = device_platform.strip.split(SEPARATOR2)
@@ -208,55 +208,64 @@ module Building
     # retour un flux yaml qui définit la visit au format attendu par visitor_bot
     def generate_output(label)
       require 'uuid'
-        advertiser_durations_size = Random.rand(MIN_COUNT_PAGE_ADVERTISER..MAX_COUNT_PAGE_ADVERTISER) # calculé par engine_bot
-        organic_durations_size = Random.rand(MIN_COUNT_PAGE_ORGANIC..MAX_COUNT_PAGE_ORGANIC) # calculé par engine_bot
-        visit = {:id_visit => @id_visit,
-                 :start_date_time => @start_date_time,
-                 :durations => @pages.map { |page| page.generate_output} ,
-                 :website => {:label => label,
-                              #TODO revisier l'initialisation de many_hostname & many_account
-                              :many_hostname => :true,
-                              :many_account_ga => :no},
-                 :visitor => {:return_visitor => @return_visitor == "yes" ? :true : :false,
-                              :id => UUID.generate,
-                              :browser => {:name => @browser,
-                                           :version => @browser_version,
-                                           :operating_system => @operating_system,
-                                           :operating_system_version => @operating_system_version,
-                                           :flash_version => @flash_version,
-                                           :java_enabled => @java_enabled,
-                                           :screens_colors => @screens_colors,
-                                           :screen_resolution => @screen_resolution
-                              }
-                 },
-                 :referrer => {:referral_path => @referral_path,
-                               :source => @source,
-                               :medium => @medium,
-                               :keyword => generate_keywords(@medium, @keyword, @pages[0].title) #genere un tableau de mot clé pour pallier à l'échec des recherches et mieux simuler le comportement
-                 },
-                 :landing => {:fqdn => @pages[0].hostname,
-                              :page_path => @pages[0].page_path
-                 },
-                 :advert => @advert.nil? ? {:advertising => :none} : {:advertising => @advert.to_sym,
-                                                                      :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ADVERTISER..MAX_DURATION_PAGE_ADVERTISER) }, #calculé par engine_bot
-                                                                                      :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * PERCENT_LOCAL_PAGE_ADVERTISER/100).round(0))} #calculé par engine_bot
-                 }
-        }
+      advertiser_durations_size = Random.rand(MIN_COUNT_PAGE_ADVERTISER..MAX_COUNT_PAGE_ADVERTISER) # calculé par engine_bot
+      organic_durations_size = Random.rand(MIN_COUNT_PAGE_ORGANIC..MAX_COUNT_PAGE_ORGANIC) # calculé par engine_bot
+      visit = {:id_visit => @id_visit,
+               :start_date_time => @start_date_time,
+               :durations => @pages.map { |page| page.generate_output },
+               :website => {:label => label,
+                            #TODO revisier l'initialisation de many_hostname & many_account
+                            :many_hostname => :true,
+                            :many_account_ga => :no},
+               :visitor => {:return_visitor => @return_visitor == "yes" ? :true : :false,
+                            :id => UUID.generate,
+                            :browser => {:name => @browser,
+                                         :version => @browser_version,
+                                         :operating_system => @operating_system,
+                                         :operating_system_version => @operating_system_version,
+                                         :flash_version => @flash_version,
+                                         :java_enabled => @java_enabled,
+                                         :screens_colors => @screens_colors,
+                                         :screen_resolution => @screen_resolution
+                            }
+               },
+               :referrer => {:referral_path => @referral_path,
+                             :source => @source,
+                             :medium => @medium,
+                             :keyword => @keyword
+               },
+               :landing => {:fqdn => @pages[0].hostname,
+                            :page_path => @pages[0].page_path
+               },
+               :advert => @advert.nil? ? {:advertising => :none} : {:advertising => @advert.to_sym,
+                                                                    :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ADVERTISER..MAX_DURATION_PAGE_ADVERTISER) }, #calculé par engine_bot
+                                                                                    :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * PERCENT_LOCAL_PAGE_ADVERTISER/100).round(0))} #calculé par engine_bot
+               }
+      }
 
-        case visit[:referrer][:medium]
-          when "(none)"
-          when "referral"
-            visit[:referrer][:duration] = DURATION_REFERRAL
-          when "organic"
-            visit[:referrer][:durations] = Array.new(organic_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ORGANIC..MAX_DURATION_PAGE_ORGANIC) }
-        end
-       visit
+      case visit[:referrer][:medium]
+        when "(none)"
+        when "referral"
+          visit[:referrer][:duration] = DURATION_REFERRAL
+        when "organic"
+          visit[:referrer][:durations] = Array.new(organic_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ORGANIC..MAX_DURATION_PAGE_ORGANIC) }
+          #genere un tableau de mot clé pour pallier à l'échec des recherches et mieux simuler le comportement
+          #TODO le comportement est basic, il devra etre enrichi pour mieux simuler un comportement naturel et mettre en dernier ressort les mots du title
+          #TODO penser egalement à produire des search qui n'aboutissent jamais dans le engine bot en fonction dun poourcentage determiner par statupweb
+          #supprimer les not provide retourner par google
+          #TODO filtrer les not provide lors du scraping google.
+          if visit[:referrer][:keyword] != "(not set)" and
+              visit[:referrer][:keyword] != "" and
+              visit[:referrer][:keyword] != "(not provided)"
+            visit[:referrer][:keyword] = [visit[:referrer][:keyword], @pages[0].title]
+          else
+            visit[:referrer][:keyword] = [@pages[0].title]
+          end
+
+      end
+      visit
     end
 
-    def generate_keywords(medium, keywords, title)
-      #TODO le comportement est basic, il devra etre enrichi pour mieux simuler un comportement naturel et mettre en dernier ressort les mots du title
-      #TODO penser egalement à produire des search qui n'aboutissent jamais dans le engine bot en fonction dun poourcentage determiner par statupweb
-      [keywords, title] if keywords != "(not set)" and medium == "organic"
-    end
+
   end
 end

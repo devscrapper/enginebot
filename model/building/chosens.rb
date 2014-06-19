@@ -34,7 +34,7 @@ module Building
 
 
   class Chosens
-
+    TMP = File.dirname(__FILE__) + "/../../tmp"
 
     def initialize()
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
@@ -54,7 +54,7 @@ module Building
       @logger.an_event.debug "count referral medium #{medium_count}"
       Choosing_landing_medium(label, date, "referral", medium_count, chosen_landing_pages_file)
 
-      medium_count = count_visit - ((organic_medium_percent * count_visit / 100).to_i + (referral_medium_percent * count_visit / 100).to_i)
+      medium_count = count_visit - ((direct_medium_percent * count_visit / 100).to_i + (referral_medium_percent * count_visit / 100).to_i)
       @logger.an_event.debug "count organic medium #{medium_count}"
       Choosing_landing_medium(label, date, "organic", medium_count, chosen_landing_pages_file)
 

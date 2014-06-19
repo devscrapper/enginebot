@@ -15,23 +15,27 @@ set :password, "Brembo01"
 #set :copy_compression, :zip
 default_run_options[:pty] = true
 set :use_sudo, false
-set :server_list, ["authentification_enginebot", "calendar_enginebot", "ftpd_enginebot" , "input_flows_enginebot", "tasks_enginebot"]
+set :server_list, ["authentification_enginebot",
+                   "calendar_enginebot",
+                   "ftpd_enginebot" ,
+                   "input_flows_enginebot",
+                   "tasks_enginebot",
+                   "scheduler_enginebot"]
 role :app, server_name
 
 require "rvm/capistrano"
 
+depend :remote, :gem, "bundler", ">=1.3.5"
 depend :remote, :gem, "eventmachine", ">=1.0.0"
-depend :remote, :gem, "certified", ">=0.1.1"
-depend :remote, :gem, "em-http-request", ">=1.0.3"
-depend :remote, :gem, "domainatrix", ">=0.0.10"
-depend :remote, :gem, "nokogiri", ">=1.5.5"
+#depend :remote, :gem, "certified", ">=0.1.1"
+#depend :remote, :gem, "em-http-request", ">=1.0.3"
 depend :remote, :gem, "json", ">=1.7.5"
 depend :remote, :gem, "em-ftpd", ">=0.0.1"
-depend :remote, :gem, "google-api-client", ">=0.4.6"
+depend :remote, :gem, "ruby-progressbar", ">=1.0.2"
 depend :remote, :gem, "rufus-scheduler", ">=2.0.17"
 depend :remote, :gem, "ice_cube", ">=0.9.3"
 depend :remote, :gem, "logging", ">=1.8.1"
-depend :remote, :gem, "rest-client", ">=1.6.7"
+depend :remote, :gem, "uuid", ">=2.3.7"
 
 
 after "deploy:update", "customize:update"
@@ -66,12 +70,17 @@ namespace :customize do
     run "mkdir -p #{File.join(deploy_to, "shared", "data")}"
     run "mkdir -p #{File.join(deploy_to, "shared", "output")}"
     run "mkdir -p #{File.join(deploy_to, "shared", "input")}"
+    run "mkdir -p #{File.join(deploy_to, "shared", "tmp")}"
+    run "mkdir -p #{File.join(deploy_to, "shared", "archive")}"
     end
   task :update do
     server_list.each{|server|  run "#{sudo} rm --interactive=never -f /etc/init/#{server}.conf && #{sudo} cp #{File.join(current_path, "control", "#{server}.conf")} /etc/init"}
     run "echo 'staging: test' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
     run "ln -s #{File.join(deploy_to, "shared", "data")} #{File.join(current_path, "data")}"
     run "ln -s #{File.join(deploy_to, "shared", "input")} #{File.join(current_path, "input")}"
+    run "ln -s #{File.join(deploy_to, "shared", "tmp")} #{File.join(current_path, "tmp")}"
+    run "ln -s #{File.join(deploy_to, "shared", "archive")} #{File.join(current_path, "archive")}"
+    run "ln -s #{File.join(deploy_to, "shared", "output")} #{File.join(current_path, "output")}"
   end
   task :bundle do
 

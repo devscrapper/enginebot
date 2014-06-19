@@ -2,9 +2,10 @@
 require_relative '../lib/logging'
 require_relative '../model/authentification'
 require 'yaml'
-
+require 'pathname'
 class FTPDriver
   OUTPUT = File.dirname(__FILE__) + "/../output"
+  ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive')).realpath #localisation du repertoire d'archive
   @@log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
   PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
   ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
@@ -23,24 +24,30 @@ class FTPDriver
     begin
       authen = Authentification.new(user, pass)
       check = authen.check(@authentification_server_port)
-      @logger.an_event.info "check authentification #{user}, #{pass} =>  #{check == true}"
+      @logger.an_event.debug "check authentification #{user}, #{pass} =>  #{check == true}"
+      STDOUT << "check authentification #{user}, #{pass} =>  #{check == true}" << "\n"
       yield check == true
     rescue Exception => e
-      @logger.an_event.error "FTPServer cannot check authentification <#{user}>"
-      @logger.an_event.debug e
+      @logger.an_event.error "FTPServer cannot check authentification <#{user}> : #{e.message}"
+      STDERR << "FTPServer cannot check authentification <#{user}> : #{e.message}"  << "\n"
+      yield false
     end
 
   end
 
   def get_file(path, &block)
     begin
+      raise "file not found : #{OUTPUT + path}" unless File.exist?(OUTPUT + path)
       file = File.open(OUTPUT + path)
+
       Authentification.new(@user, @pwd).delete(@authentification_server_port)
-     @logger.an_event.info "push file <#{path}>"
+      @logger.an_event.debug "push file <#{path}>"
+      STDOUT << "push file <#{path}>"  << "\n"
       yield file
     rescue Exception => e
-     @logger.an_event.error "FTPServer cannot push file <#{path}>"
-      @logger.an_event.debug e
+      @logger.an_event.error "FTPServer cannot push file <#{path}> : #{e.message}"
+      STDERR << "FTPServer cannot push file <#{path}> : #{e.message}" << "\n"
+      yield false
     end
   end
 
@@ -62,12 +69,15 @@ class FTPDriver
 
   def delete_file(path, &block)
     begin
-      File.delete(OUTPUT + path)
-      @logger.an_event.info "delete file <#{path}>"
-     @logger.an_event.debug "FTPServer delete file <#{path}>"
+      raise "file not found : #{OUTPUT + path}" unless File.exist?(OUTPUT + path)
+      FileUtils.mv(OUTPUT + path, ARCHIVE)
+
+      @logger.an_event.debug "move file <#{path}> to archive"
+       STDOUT << "move file <#{path}> to archive"   << "\n"
       yield true
     rescue Exception => e
-      @logger.an_event.error "FTPServer cannot delete file <#{path}>"
+      @logger.an_event.error "FTPServer cannot delete file <#{path}> : #{e.message}"
+      STDERR << "FTPServer cannot move file <#{path}> : #{e.message}"  << "\n"
       yield false
     end
   end
@@ -111,7 +121,6 @@ class FTPDriver
       STDERR << "loading parameters file #{PARAMETERS} failed : #{e.message}"
     end
     @logger = Logging::Log.new(self, :staging => @envir, :debugging => @debugging)
-    Logging::show_configuration
     @logger.an_event.info "parameters of ftp server :"
     @logger.an_event.info "authentification server port : #{@authentification_server_port}"
     @logger.an_event.info "debugging : #{@debugging}"

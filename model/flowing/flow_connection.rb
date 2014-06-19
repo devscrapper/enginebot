@@ -5,11 +5,12 @@ require_relative 'flow_list'
 
 module Flowing
   class FlowConnection < EventMachine::Connection
-    attr :logger
+    attr :logger, :pages_in_mem
 
 
-    def initialize(logger)
+    def initialize(logger, pages_in_mem)
       @logger = logger
+      @pages_in_mem = pages_in_mem
     end
 
     def receive_data param
@@ -29,7 +30,7 @@ module Flowing
             @logger.an_event.debug "type_flow <#{type_flow}>"
             @logger.an_event.debug "data type_flow <#{data_type_flow}>"
             @logger.an_event.debug "context <#{context}>"
-            Flowlist.new(data_type_flow).method(type_flow.gsub("-", "_")).call()
+            Flowlist.new(data_type_flow, @pages_in_mem).method(type_flow.gsub("-", "_")).call()
           rescue Exception => e
             @logger.an_event.error "cannot manage flow <#{type_flow.gsub("-", "_")}>"
             @logger.an_event.debug e

@@ -7,9 +7,10 @@ module Building
     SEPARATOR2=";"
     attr :id_uri,
          :delay_from_start
-    attr_writer :hostname,
-                :page_path,
-                :title
+
+
+    attr_accessor :hostname,
+                  :page_path, :title
 
 
     def initialize(page)
@@ -28,7 +29,24 @@ module Building
     end
 
 
-    def set_properties(pages_file)
+    def set_properties(pages_array)
+      max = pages_array.size
+      min = 1
+      found = false
+      while max - min > 1 and not (found)
+        i = ((max - min) / 2).round(0) + min
+        crt = pages_array[i].split(SEPARATOR2)
+        if found =(crt[0] == @id_uri)
+          @hostname = crt[1].strip
+          @page_path = crt[2].strip
+          @title = crt[3].strip
+        end
+        max = i if crt[0] > @id_uri
+        min = i if crt[0] < @id_uri
+      end
+    end
+
+    def set_properties_old(pages_file)
       pages_file.rewind
       begin
         begin
@@ -39,7 +57,7 @@ module Building
         @title = splitted_page[3].strip
       rescue Exception => e
         p "ERROR : #{e.message}=> id uri #{@id_uri} not found in pages_file"
-        raise "errer"
+        raise "error"
       end
     end
 
@@ -51,6 +69,10 @@ module Building
           "page_path" => @page_path,
           "title" => @title
       }.to_json(*a)
+    end
+
+    def generate_output
+      @delay_from_start.to_i
     end
   end
 
