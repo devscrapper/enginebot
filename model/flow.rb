@@ -526,7 +526,9 @@ class Flow
 
   def zero?
     #retoune vrai si le fichier existe et a une taille de zero
-    File.zero?(absolute_path)
+    zero = File.zero?(absolute_path)
+    @logger.an_event.debug "flow <#{basename}> is empty #{zero}" if $debugging
+    zero
   end
 
 #---------------------------------------------------------------------------------------------

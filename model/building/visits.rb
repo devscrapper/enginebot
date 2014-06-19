@@ -221,6 +221,7 @@ module Building
             end
             p.increment
           } unless planed_visits_file.zero?
+          planed_visits_file.close
           final_visits_by_hour_file.close
         }
         device_platform_file.close
