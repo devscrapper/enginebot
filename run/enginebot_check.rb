@@ -1,7 +1,7 @@
-require_relative '../../model/building/inputs'
-require_relative '../../model/building/chosens'
-require_relative '../../model/building/visits'
-require_relative '../../model/flow'
+require_relative '../model/building/inputs'
+require_relative '../model/building/chosens'
+require_relative '../model/building/visits'
+require_relative '../model/flow'
 require 'rufus-scheduler'
 require 'pathname'
 
@@ -15,7 +15,7 @@ INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input')).realpath
 TMP = Pathname.new(File.join(File.dirname(__FILE__), '..', 'tmp')).realpath
 OUTPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'output')).realpath
 ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive')).realpath
-
+CRON = "0 0 * * 1-7"
 #------------------------------------------------------------------------------------------------------------------
 #creation du scheduler
 #------------------------------------------------------------------------------------------------------------------
@@ -26,13 +26,13 @@ scheduler = Rufus::Scheduler.start_new
 def cleaning
   FileUtils.rm Dir.glob(File.join(LOG, "#{File.basename(__FILE__, ".rb")}.*"))
   logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
-  FileUtils.remove_dir(INPUT)
+  FileUtils.remove_dir(INPUT) if File.exist?(INPUT)
   FileUtils.mkdir(INPUT)
-  FileUtils.remove_dir(TMP)
+  FileUtils.remove_dir(TMP) if File.exist?(TMP)
   FileUtils.mkdir(TMP)
-  FileUtils.remove_dir(OUTPUT)
+  FileUtils.remove_dir(OUTPUT) if File.exist?(OUTPUT)
   FileUtils.mkdir(OUTPUT)
-  FileUtils.remove_dir(ARCHIVE)
+  FileUtils.remove_dir(ARCHIVE) if File.exist?(ARCHIVE)
   FileUtils.mkdir(ARCHIVE)
 end
 
@@ -116,12 +116,12 @@ end
 # le premier cronifie la construction des visits
 # le deuxieme diffuse regulierement les visits vers les statupbot
 #------------------------------------------------------------------------------------------------------------------
-scheduler.cron "00 00 12 * * 1-7 Europe/Paris" do
-  cleaning
-  deploying
-  building_inputs
-  choosing
-  building_visits
+scheduler.cron CRON do
+cleaning
+deploying
+building_inputs
+choosing
+building_visits
 end
 p "cronification de la construction des visit is on"
 scheduler.every 3600 do
