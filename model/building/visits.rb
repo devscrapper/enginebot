@@ -144,16 +144,22 @@ module Building
         @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
         hour = 0
         count_visits_of_day_origin = 0
-        #TODO initialiser les fichier à empty car il se peut que pou rune une heure il n y ait pas de visit, il faut qd meêm crer un fichier vide pour eviter que cema plante lors de l'extending et ne pas avoir de trou dans la numerotation pour evityer de se poser des questions
+        #initialisation des fichier à empty car il se peut que pour une une heure il n y ait pas de visit,
+        # il faut qd même crer un fichier vide pour eviter que l'extending échoue et
+        # cela eviter de se poser des questions sur l'absence de fichier
+        24.times { |anhour| @planed_visits_by_hour_file[anhour].empty}
 
         @count_visits_by_hour.each { |count_visit_per_hour| count_visits_of_day_origin += count_visit_per_hour[1].to_i }
         @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
         @logger.an_event.debug "@count_visits_by_hour.size #{@count_visits_by_hour.size}"
         @logger.an_event.debug "total visit of @count_visits_by_hour #{count_visits_of_day_origin}"
+
+
         @count_visits_by_hour.size.times { |anhour|
           @planed_visits_by_hour_file[anhour] = Flow.new(TMP, "planed-visits", @label, @date_building, anhour + 1)
           @logger.an_event.debug @planed_visits_by_hour_file[anhour].basename
         }
+
 
         p = ProgressBar.create(:title => "Saving planed visits", :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
 
@@ -167,7 +173,7 @@ module Building
           p.increment
         }
 
-        @count_visits_by_hour.size.times { |anhour| @planed_visits_by_hour_file[anhour].close }
+        24.times { |anhour| @planed_visits_by_hour_file[anhour].close}
 
         Task.new("Extending_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e

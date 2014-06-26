@@ -139,7 +139,7 @@ class Flow
     @descriptor.write(data); @logger.an_event.debug "write data <#{data}> to flow <#{basename}>" if $debugging
   end
 
-  def archive()
+  def archive
     # archive le flow courant : deplace le fichier dans le repertoire ARCHIVE
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     FileUtils.mv(absolute_path, ARCHIVE, :force => true)
@@ -423,7 +423,7 @@ class Flow
     @descriptor.readlines(eofline)
   end
 
-  def rewind()
+  def rewind
     #retourn au debut du fichier
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     open("r:UTF-8") if @descriptor.nil?
