@@ -3,6 +3,41 @@ development:
   :authentification_server_port: 9103
   :ftp_server_port: 9102
   :delay_periodic_scan: 5
+  :debugging: true
+  :inputflow_factories:
+    :windows:
+      :seven:
+        :pattern: "Windows-7"
+        :servers:
+          :server1:
+            :ip: 127.0.0.1
+            :port: 9201
+
+test:
+  :authentification_server_port: 9103
+  :ftp_server_port: 9102
+  :delay_periodic_scan: 5
+  :debugging: false
+  :inputflow_factories:
+    :windows:
+      :vista:
+        :pattern: "Windows-Vista"
+        :servers:
+          :server1:
+            :ip: 127.0.0.1
+            :port: 9201,
+      :seven:
+        :pattern: "Windows-7"
+        :servers:
+          :server1:
+            :ip: 192.168.1.99
+            :port: 9201
+
+production:
+  :authentification_server_port: 9103
+  :ftp_server_port: 9102
+  :delay_periodic_scan: 5
+  :debugging: false
   :inputflow_factories:
     :windows:
       :vista:
@@ -26,12 +61,4 @@ development:
           :server1:
             :ip: 192.168.1.54
             :port: 9201
-  :debugging: true
-test:
-  :visitor_factories:
-    :delay_periodic_scan: 5
-  :debugging: false
-production:
-  :visitor_factories:
-    :delay_periodic_scan: 5
-  :debugging: false
+

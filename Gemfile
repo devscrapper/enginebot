@@ -18,6 +18,9 @@ gem 'ice_cube', '~> 0.9.1'
 gem 'logging', '~> 1.8.1'
 gem 'rest-client', '~> 1.6.7'
 gem 'uuid', '~> 2.3.7'
+gem 'tzinfo', '~> 1.0.0'
+gem 'tzinfo-data', '~>1.2014.5'
+
 # fin new gem
 
 #group :development

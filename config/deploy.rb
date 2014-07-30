@@ -1,105 +1,212 @@
-ENV["path"] += ";d:\\\portableGit\\bin" # acces au git local à la machine qui execute ce script
-set :branch, "master" # version à déployer
+#---------------------------------------------------------------------------------------------------------------------
+# deploy.rb
+# il est utilisé pour :
+# installé rvm
+# installé ruby
+# installé les gem de l'application dans un gemset
+# déployé l'application
+# arrter uo démarrer l'application
+# redemarrer la machine
+# ---------------------------------------------------------------------------------------------------------------------
+# liste de taches de déploiement
+# cap machine:setup : installe les pre requis dans l'environement hebergeur  (rvm, ruby installed)
+# cap deploy:setup : realise les adaptations sur l'environnement  (shared dir, creation gemset, install gem)
+# cap deploy:update : déploie l'application dans une nouvelle release en mettant à jour les liens symbolic,  paramtrage de fichier de conf, ...
+# cap deploy:start/stop/restart : démarrer stop ou redemmarre tous les serveurs de l'application
+# cap machine:reboot : redemarre le serveur physique
+#----------------------------------------------------------------------------------------------------------------------
+# ordre de lancement des commandes deploy : first deploy
+# 1 cap machine:setup
+# 2 cap deploy:setup
+# 3 cap deploy:update
+# 4 cap machine:reboot
+#----------------------------------------------------------------------------------------------------------------------
+# ordre de lancement des commandes deploy : next deploy
+# 1 cap deploy:setup
+# 2 cap deploy:update    # deploie les sources
+# 3 cap deploy:restart     # demarre les serveurs
+#----------------------------------------------------------------------------------------------------------------------
+#on n'utilise pas bundle pour déployer les gem=> on utilise les gem installés sous ruby : les gems system dans un gemset
+#----------------------------------------------------------------------------------------------------------------------
+
+require 'pathname'
+
+#----------------------------------------------------------------------------------------------------------------------
+# proprietes de l'application
+#----------------------------------------------------------------------------------------------------------------------
+
 set :application, "enginebot" # nom application (github)
-set :keep_releases, 3 # nombre de version conservées
-set :server_name, "192.168.1.53" # adresse du server de destination
-set :repository, "https://github.com/devscrapper/#{application}.git" # adresse du referentiel de la l'application sous github
-#set :repository, "d:///referentiel/dev/#{application}/.git"
-set :deploy_to, "/home/eric/www/#{application}" # repertoire de deploiement de l'application
+set :ftp_server_port, 9102 # port d"ecoute du serveur ftp"
+set :shared_dir, ["archive",
+                  "data",
+                  "input",
+                  "output",
+                  "tmp"] # répertoire partagé entre chaque release
+set :server_list, ["authentification_#{application}",
+                   "calendar_#{application}",
+                   "ftpd_#{application}",
+                   "input_flows_#{application}",
+                   "tasks_#{application}",
+                   "scheduler_#{application}"]
+
+#----------------------------------------------------------------------------------------------------------------------
+# param rvm
+#----------------------------------------------------------------------------------------------------------------------
+
+require "rvm/capistrano" #  permet aussi d'installer rvm et ruby
+require "rvm/capistrano/alias_and_wrapp"
+require "rvm/capistrano/gem_install_uninstall"
+set :rvm_ruby_string, '1.9.3' # defini la version de ruby a installer
+set :rvm_type, :system #RVM installed in /usr/local, multiuser installation
+set :rvm_autolibs_flag, "read-only" # more info: rvm help autolibs
+set :bundle_dir, '' # on n'utilise pas bundle pour instaler les gem
+set :bundle_flags, '--system --quiet' # on n'utilise pas bundle pour instaler les gem
+set :rvm_install_with_sudo, true
+
+before 'machine:setup', 'rvm:install_rvm' # install/update RVM
+before 'machine:setup', 'rvm:install_ruby' # install Ruby
+
+#----------------------------------------------------------------------------------------------------------------------
+# param extraction git
+#----------------------------------------------------------------------------------------------------------------------
+
+ENV["path"] += ";d:\\\portableGit\\bin" # acces au git local à la machine qui execute ce script
+set :repository, "file:///../referentiel/src/#{application}/.git"
 set :scm, "git"
-set :deploy_via, :copy
-set :rvm_type, :user
-set :rvm_ruby_string, :release_path
+set :copy_dir, "d:\\temp" # reperoitr temporaire de d'extracion des fichiers du git pour les zipper
+set :branch, "master" # version à déployer
+
+#----------------------------------------------------------------------------------------------------------------------
+# param déploiement vers server cible
+#----------------------------------------------------------------------------------------------------------------------
+
+set :keep_releases, 3 # nombre de version conservées
+set :server_name, "192.168.1.85" # adresse du server de destination
+set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
+set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
 set :password, "Brembo01"
-#set :copy_compression, :zip
 default_run_options[:pty] = true
 set :use_sudo, false
-set :server_list, ["authentification_enginebot",
-                   "calendar_enginebot",
-                   "ftpd_enginebot" ,
-                   "input_flows_enginebot",
-                   "tasks_enginebot",
-                   "scheduler_enginebot"]
+set :stage, "test"
 role :app, server_name
 
-require "rvm/capistrano"
-
-depend :remote, :gem, "bundler", ">=1.3.5"
-depend :remote, :gem, "eventmachine", ">=1.0.0"
-#depend :remote, :gem, "certified", ">=0.1.1"
-#depend :remote, :gem, "em-http-request", ">=1.0.3"
-depend :remote, :gem, "json", ">=1.7.5"
-depend :remote, :gem, "em-ftpd", ">=0.0.1"
-depend :remote, :gem, "ruby-progressbar", ">=1.0.2"
-depend :remote, :gem, "rufus-scheduler", ">=2.0.17"
-depend :remote, :gem, "ice_cube", ">=0.9.3"
-depend :remote, :gem, "logging", ">=1.8.1"
-depend :remote, :gem, "uuid", ">=2.3.7"
-
-
+before 'deploy', 'rvm:create_alias'
+before 'deploy', 'rvm:create_wrappers'
 after "deploy:update", "customize:update"
-after "deploy:bundle", "customize:bundle"
 after "deploy:setup", "customize:setup"
-set :envir, "test"
+after 'deploy:setup', 'rvm:create_gemset'
 
+#----------------------------------------------------------------------------------------------------------------------
+# task list : machine
+#----------------------------------------------------------------------------------------------------------------------
 namespace :machine do
   task :reboot, :roles => :app do
     run "#{sudo} reboot"
   end
+  task :setup, :roles => :app do
+    run "rvm alias create default #{rvm_ruby_string}"
+  end
 end
+
+#----------------------------------------------------------------------------------------------------------------------
+# task list : deploy
+#----------------------------------------------------------------------------------------------------------------------
 namespace :deploy do
-  task :bundle, :roles => :app do
-    run "cd #{deploy_to}/current && bundle install --without development --deployment"
-  end
   task :start, :roles => :app, :except => {:no_release => true} do
-    server_list.each{|server| run "#{sudo} initctl start #{server}"}
+    server_list.each { |server| run "#{sudo} initctl start #{server}" }
 
   end
+
   task :stop, :roles => :app, :except => {:no_release => true} do
-    server_list.each{|server| run "#{sudo} initctl stop #{server}"}
+    server_list.each { |server| run "#{sudo} initctl stop #{server}" }
   end
+
   task :restart, :roles => :app, :except => {:no_release => true} do
-    server_list.each{|server| run "#{sudo} initctl stop #{server}"}
-    server_list.each{|server| run "#{sudo} initctl start #{server}"}
+    server_list.each { |server| run "#{sudo} initctl stop #{server}" }
+    server_list.each { |server| run "#{sudo} initctl start #{server}" }
   end
 end
 
+#----------------------------------------------------------------------------------------------------------------------
+# task list : customize :
+# setup = creation des repertoires partagés entre releases (data, output, tmp)
+# setup = installation des gem dans le gesmset
+# update = déploiement de fichier de controle upstart
+# update = definition du stage dans lequel s'execute l'application
+# update = parametrage du serveur ftp
+#----------------------------------------------------------------------------------------------------------------------
 namespace :customize do
   task :setup do
-    run "mkdir -p #{File.join(deploy_to, "shared", "data")}"
-    run "mkdir -p #{File.join(deploy_to, "shared", "output")}"
-    run "mkdir -p #{File.join(deploy_to, "shared", "input")}"
-    run "mkdir -p #{File.join(deploy_to, "shared", "tmp")}"
-    run "mkdir -p #{File.join(deploy_to, "shared", "archive")}"
-    end
-  task :update do
-    server_list.each{|server|  run "#{sudo} rm --interactive=never -f /etc/init/#{server}.conf && #{sudo} cp #{File.join(current_path, "control", "#{server}.conf")} /etc/init"}
-    run "echo 'staging: test' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
-    run "ln -s #{File.join(deploy_to, "shared", "data")} #{File.join(current_path, "data")}"
-    run "ln -s #{File.join(deploy_to, "shared", "input")} #{File.join(current_path, "input")}"
-    run "ln -s #{File.join(deploy_to, "shared", "tmp")} #{File.join(current_path, "tmp")}"
-    run "ln -s #{File.join(deploy_to, "shared", "archive")} #{File.join(current_path, "archive")}"
-    run "ln -s #{File.join(deploy_to, "shared", "output")} #{File.join(current_path, "output")}"
-  end
-  task :bundle do
 
+    # creation des repertoires partagés
+    shared_dir.each { |dir|
+      run "mkdir -p #{File.join(deploy_to, "shared", dir)}"
+    }
+
+    # installation des gem dans le gesmset
+    gemlist(Pathname.new(File.join(File.dirname(__FILE__), '..', 'Gemfile')).realpath).each { |parse|
+      run_rvm("gem install #{parse[:name].strip} -v #{parse[:version].strip} -N",
+              :with_ruby => rvm_ruby_string_evaluated,
+              :subject_class => :gemsets)
+    }
+  end
+
+  task :update do
+    # suppression des fichier de controle pour upstart
+    server_list.each { |server|
+      run "#{sudo} rm --interactive=never -f /etc/init/#{server}.conf"
+    }
+    # déploiement des fichier de controle pour upstart
+    run "#{sudo} cp #{File.join(current_path, 'control', '*')} /etc/init"
+    shared_dir.each { |dir|
+      run "ln -s #{File.join(deploy_to, "shared", dir)} #{File.join(current_path, dir)}"
+    }
+
+    # definition du type d'environement
+    run "echo 'staging: #{stage}' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
+
+    # parametrage du server FTP
+    run "rm #{File.join(current_path, 'config', 'config.rb')}"
+    config = "require '" + File.join(current_path, 'run', 'driver_em_ftpd.rb') + "'\n"
+    config += "driver     FTPDriver\n"
+    config += "port #{ftp_server_port}"
+    put config, File.join(current_path, 'config', 'config.rb')
   end
 end
-# ordre de lancement des commandes deploy :
-# first deploy
-# 1 deploy:check     # controle que l'environement hebergeur est ok
-# 2 deploy:setup     # realise les adaptations sur l'environnement
-# 3 deploy:update    # deploie les sources
-# 4 deploy:bundle     # deploie les gem pre requis
-# 5 deploy:start     # demarre les serveurs
 
+#----------------------------------------------------------------------------------------------------------------------
+# put_sudo
+#----------------------------------------------------------------------------------------------------------------------
+# permet d'uploader un fichier dans un repertoire pour lequel il faut des droits administrateur ; exemple /etc/init
+#----------------------------------------------------------------------------------------------------------------------
+def put_sudo(data, to)
+  filename = File.basename(to)
+  to_directory = File.dirname(to)
+  put data, "/tmp/#{filename}"
+  run "#{sudo} mv /tmp/#{filename} #{to_directory}"
+end
 
-# next deploy
-# 1 deploy:stop     # stoppe les serveurs
-# 2 deploy:check     # controle que l'environement hebergeur est ok
-# 3 deploy:setup     # realise les adaptations sur l'environnement
-# 4 deploy:update    # deploie les sources
-# 5 deploy:bundle    # deploie les gem pre requis
-# 6 deploy:start     # demarre les serveurs
-
+#----------------------------------------------------------------------------------------------------------------------
+# gemlist
+#----------------------------------------------------------------------------------------------------------------------
+# permet de recuperer la liste des gem à partir du Gemfile à installer.
+#----------------------------------------------------------------------------------------------------------------------
+def gemlist(file)
+  gemlist = []
+  gemfile = File.open(file)
+  catch_gem = true
+  gemfile.readlines.each { |line|
+    case line
+      when /gem (.*)/
+        if catch_gem
+          gemlist << /gem '(?<name>.*)', '~>(?<version> \d+\.\d+\.\d+)'/.match(line)
+        end
+      when /.*:development.*/
+        catch_gem = false
+      when /;*:production.*/
+        catch_gem = true
+    end
+  }
+  gemlist
+end

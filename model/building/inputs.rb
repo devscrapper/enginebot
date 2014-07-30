@@ -9,7 +9,7 @@ module Flowing
   SEPARATOR3="|"
   SEPARATOR4=","
   EOFLINE ="\n"
-
+  PROGRESS_BAR_SIZE = 180
   class Page
     class PageException < StandardError
     end
@@ -188,7 +188,7 @@ module Flowing
 
         input_website.volumes.each { |volume|
           @logger.an_event.info "Loading vol <#{volume.vol}> of website input file"
-          pob = ProgressBar.create(:length => 180, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
+          pob = ProgressBar.create(:length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
           #--------------------------------------------------------------------------------------------------------------
           # IMPORTANT
           #--------------------------------------------------------------------------------------------------------------
@@ -271,7 +271,7 @@ module Flowing
 
         traffic_source_file.volumes.each { |volume|
           @logger.an_event.info "Loading vol <#{volume.vol}> of scraping-traffic-source-landing input file"
-          pob = ProgressBar.create(:length => 180, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
+          pob = ProgressBar.create(:length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
           volume.foreach(EOFLINE) { |p|
             source_page = Traffic_source.new(p)
             #source_page.set_id_uri(label, date)
@@ -321,7 +321,7 @@ module Flowing
         device_plugins = device_plugin.load_to_array(EOFLINE, Device_plugin).sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
         device_resolutions = device_resolution.load_to_array(EOFLINE, Device_resolution).sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
 
-        p = ProgressBar.create(:title => "Consolidation plugin & resolution files", :length => 180, :starting_at => 0, :total => device_plugins.size, :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Consolidation plugin & resolution files", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => device_plugins.size, :format => '%t, %c/%C, %a|%w|')
         device_platforms = []
         count_visits = 0
         device_plugins.each { |plugin|
@@ -375,7 +375,7 @@ module Flowing
         i = 1
         day_save = ""
 
-        p = ProgressBar.create(:title => "Building hourly daily distribution", :length => 180, :starting_at => 0, :total => input_distribution.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Building hourly daily distribution", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => input_distribution.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
         IO.foreach(input_distribution.absolute_path, EOFLINE, encoding: "BOM|UTF-8:-") { |line|
           #30;00;20121130;21
           splitted_line = line.strip.split(SEPARATOR2)
@@ -414,7 +414,7 @@ module Flowing
         raise IOError, "input flow <#{input_behaviour.basename}> is missing" unless input_behaviour.exist?
 
         tmp_behaviour = Flow.new(TMP, "behaviour", input_behaviour.label, input_behaviour.date) #output
-        p = ProgressBar.create(:title => "Building behaviour", :length => 180, :starting_at => 0, :total => input_behaviour.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Building behaviour", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => input_behaviour.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
         i = 1
         input_behaviour.foreach(EOFLINE) { |line|
           splitted_line = line.strip.split(SEPARATOR2)

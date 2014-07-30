@@ -16,6 +16,7 @@ module Building
   #TODO calculer visit[:advertising][:advertser][durations] et [around] en fonction des parametres fournis par statupweb
   #TODO calculer visit[:landing][duration]
   #TODO calculer visit[:durations]
+  PROGRESS_BAR_SIZE = 180
   class Visits
     class VisitsException < StandardError
     end
@@ -97,7 +98,7 @@ module Building
         end
 
         @visits = []
-        p = ProgressBar.create(:title => "Loading chosen landing pages", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Loading chosen landing pages", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         chosen_landing_pages_file.foreach(EOFLINE) { |page|
           @logger.an_event.debug("page  #{page}")
           @visits << Visit.new(page.chop, @duration_pages.pop)
@@ -107,7 +108,7 @@ module Building
         building_not_bounce_visit(visit_bounce_rate, count_visit, page_views_per_visit, min_pages)
 
         @visits_file = Flow.new(TMP, "visits", @label, @date_building) #output
-        p = ProgressBar.create(:title => "Saving visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Saving visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE}"); p.increment }
         @visits_file.close
         @matrix_file.close
@@ -147,7 +148,7 @@ module Building
         #initialisation des fichier à empty car il se peut que pour une une heure il n y ait pas de visit,
         # il faut qd même crer un fichier vide pour eviter que l'extending échoue et
         # cela eviter de se poser des questions sur l'absence de fichier
-        24.times { |anhour| @planed_visits_by_hour_file[anhour].empty}
+        24.times { |anhour| Flow.new(TMP, "planed-visits", @label, @date_building, anhour + 1).empty}
 
         @count_visits_by_hour.each { |count_visit_per_hour| count_visits_of_day_origin += count_visit_per_hour[1].to_i }
         @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
@@ -161,7 +162,7 @@ module Building
         }
 
 
-        p = ProgressBar.create(:title => "Saving planed visits", :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Saving planed visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
 
         visits_tmp.foreach(EOFLINE) { |visit|
           @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
@@ -209,7 +210,7 @@ module Building
         @logger.an_event.debug device_platforms
         return_visitors = Array.new(count_visit, false)
         return_visitors.fill(true, 0..(count_visit * return_visitor_rate / 100).to_i).shuffle!
-        p = ProgressBar.create(:title => "Saving Final visits", :length => 180, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Saving Final visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
 
         24.times { |hour|
           final_visits_by_hour_file = Flow.new(TMP, "final-visits", @label, @date_building, hour + 1) #output
@@ -275,7 +276,7 @@ module Building
         @logger.an_event.debug final_visits_file
         raise IOError, "tmp flow <#{final_visits_file.basename}> is missing" unless final_visits_file.exist?
 
-        p = ProgressBar.create(:title => "publish #{final_visits_file.basename}", :length => 180, :starting_at => 0, :total => final_visits_file.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "publish #{final_visits_file.basename}", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => final_visits_file.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
         final_visits_file.foreach(EOFLINE) { |visit|
           v = Published_visit.new(visit)
           if day.nil?
@@ -314,7 +315,7 @@ module Building
         @logger.an_event.debug("count_pages_per_visits #{count_pages_per_visits}")
 
 
-        p = ProgressBar.create(:title => "Building not bounce visits", :length => 180, :starting_at => 0, :total => count_not_bounce_visit, :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "Building not bounce visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_not_bounce_visit, :format => '%t, %c/%C, %a|%w|')
         count_not_bounce_visit.times { |visit|
           begin
             v = @visits.shuffle![0]

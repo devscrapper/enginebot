@@ -11,7 +11,7 @@ module Planning
     EVENTS_FILE = File.dirname(__FILE__) + "/../../data/" + File.basename(__FILE__, ".rb") + ".json"
     attr :events, :logger
 
-    def initialize()
+    def initialize
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       @events = Array.new
       begin

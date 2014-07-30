@@ -12,6 +12,7 @@ class Flow
   SEPARATOR = "_" # separateur entre elemet composant (type_flow, label, date, vol) le nom du volume (basename)
   ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive')).realpath #localisation du repertoire d'archive
   FORBIDDEN_CHAR = /[_ ]/ # liste des caractères interdits dans le typeflow et label d'un volume
+  PROGRESS_BAR_SIZE = 180
   attr :descriptor,
        :dir,
        :type_flow,
@@ -262,7 +263,7 @@ class Flow
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     raise FlowException, "eofline not define" if eofline.nil?
     array = []
-    p = ProgressBar.create(:title => "Loading #{basename} file", :length => 180, :starting_at => 0, :total => total_lines(eofline), :format => '%t, %c/%C, %a|%w|')
+    p = ProgressBar.create(:title => "Loading #{basename} file", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => total_lines(eofline), :format => '%t, %c/%C, %a|%w|')
     volumes.each { |flow|
       IO.foreach(flow.absolute_path, eofline, encoding: "BOM|UTF-8:-") { |line|
         array << class_definition.new(line) unless class_definition.nil?

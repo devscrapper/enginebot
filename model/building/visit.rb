@@ -1,3 +1,5 @@
+require 'uuid'
+
 module Building
   class Visit
 
@@ -28,6 +30,7 @@ module Building
     def initialize(first_page, duration)
       @@count_visit += 1
       @id_visit = @@count_visit #TODO remplacer la valeur de id_visit par un uuid pour avoir une clé unique car dans statupbot on perd l'association au website
+      @id_visit = UUID.generate
       splitted_page = first_page.split(SEPARATOR2)
       @referral_path = splitted_page[1].strip
       @source = splitted_page[2].strip
@@ -253,7 +256,6 @@ module Building
           #TODO le comportement est basic, il devra etre enrichi pour mieux simuler un comportement naturel et mettre en dernier ressort les mots du title
           #TODO penser egalement à produire des search qui n'aboutissent jamais dans le engine bot en fonction dun poourcentage determiner par statupweb
           #supprimer les not provide retourner par google
-          #TODO filtrer les not provide lors du scraping google.
           if visit[:referrer][:keyword] != "(not set)" and
               visit[:referrer][:keyword] != "" and
               visit[:referrer][:keyword] != "(not provided)"
