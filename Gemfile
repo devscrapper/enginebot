@@ -24,8 +24,8 @@ gem 'tzinfo', '~> 1.0.0'
 
 #group :development
 group :development do
-  gem 'capistrano', '~> 2.9.0'
-  gem 'rvm-capistrano', '~> 1.2.7'
+  gem 'capistrano', '~> 2.15.5'
+  gem 'rvm-capistrano', '~> 1.5.3'
   gem 'tzinfo-data', '~>1.2014.5'
 end
 
