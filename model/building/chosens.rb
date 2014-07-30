@@ -1,6 +1,7 @@
 module Building
 
   EOFLINE ="\n"
+  PROGRESS_BAR_SIZE = 180
 
   class Chosen_device_platform
     attr_accessor :count_visits
@@ -72,7 +73,7 @@ module Building
 
         chosen_device_platform_file = Flow.new(TMP, "chosen-device-platform", label, date) #output
         total_visits = 0
-        pob = ProgressBar.create(:title => device_platform.basename, :length => 180, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
+        pob = ProgressBar.create(:title => device_platform.basename, :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
 
         device_platform.foreach(EOFLINE) { |device|
           chosen_device = Chosen_device_platform.new(device)
@@ -81,7 +82,7 @@ module Building
           total_visits += count_device
           count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE}"); pob.increment }
         }
-        p chosen_device_platform_file.inspect
+
         chosen_device_platform_file.archive_previous
       rescue Exception => e
         @logger.an_event.debug e
@@ -99,7 +100,7 @@ module Building
         raise IOError, "tmp flow landing-pages-#{medium_type} for <#{label}> for <#{date}> is missing" if landing_pages_file.nil?
 
         landing_pages_file_lines = landing_pages_file.count_lines(EOFLINE)
-        p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => 180, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
+        p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
         while medium_count > 0 and landing_pages_file_lines > 0
           chose = rand(landing_pages_file_lines - 1) + 1
           landing_pages_file.rewind

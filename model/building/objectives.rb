@@ -14,7 +14,7 @@ module Building
   TMP = File.dirname(__FILE__) + "/../../tmp"
   SEPARATOR2 =";"
   EOFLINE2 ="\n"
-
+  PROGRESS_BAR_SIZE = 180
   class Objectives
     class ObjectivesArgumentError < ArgumentError
     end
@@ -61,7 +61,7 @@ module Building
       hourly_daily_distribution = hourly_daily_distribution_file.load_to_array(EOFLINE2)
       behaviour = behaviour_file.load_to_array(EOFLINE2)
 
-      p = ProgressBar.create(:title => "Building objectives", :length => 180, :starting_at => 0, :total => behaviour_file_size, :format => '%t, %c/%C, %a|%w|')
+      p = ProgressBar.create(:title => "Building objectives", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => behaviour_file_size, :format => '%t, %c/%C, %a|%w|')
       day = next_monday(date)
 
       behaviour_file_size.times { |line|
