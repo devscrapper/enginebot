@@ -2,13 +2,7 @@
 source "http://rubygems.org"
 source "http://gems.github.com"
 
-
-
-
-gem "eventmachine", '~> 1.0.0'
-gem "bundler", '~> 1.3.5'
-#gem 'certified', '~> 0.1.1'
-#gem "em-http-request", '~> 1.0.3'
+gem 'eventmachine', '~> 1.0.0'
 gem 'json', '~> 1.7.5'
 gem 'em-ftpd', '~> 0.0.1'
 gem 'ruby-progressbar', '~> 1.0.2'
@@ -27,6 +21,7 @@ group :development do
   gem 'capistrano', '~> 2.15.5'
   gem 'rvm-capistrano', '~> 1.5.3'
   gem 'tzinfo-data', '~>1.2014.5'
+  gem "bundler", '~> 1.3.5'
 end
 
 group :production      do

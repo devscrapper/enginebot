@@ -146,6 +146,7 @@ namespace :customize do
 
     # installation des gem dans le gesmset
     gemlist(Pathname.new(File.join(File.dirname(__FILE__), '..', 'Gemfile')).realpath).each { |parse|
+    p parse
       run_rvm("gem install #{parse[:name].strip} -v #{parse[:version].strip} -N",
               :with_ruby => rvm_ruby_string_evaluated,
               :subject_class => :gemsets)
@@ -208,5 +209,6 @@ def gemlist(file)
         catch_gem = true
     end
   }
+  p gemlist
   gemlist
 end
