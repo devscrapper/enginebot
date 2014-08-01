@@ -37,11 +37,12 @@ require 'pathname'
 
 set :application, "enginebot" # nom application (github)
 set :ftp_server_port, 9102 # port d"ecoute du serveur ftp"
-set :shared_dir, ["archive",
+set :shared_children, ["archive",
                   "data",
+                  "log",
+                  "tmp",
                   "input",
-                  "output",
-                  "tmp"] # répertoire partagé entre chaque release
+                  "output"] # répertoire partagé entre chaque release
 set :server_list, ["authentification_#{application}",
                    "calendar_#{application}",
                    "ftpd_#{application}",
@@ -140,13 +141,12 @@ namespace :customize do
   task :setup do
 
     # creation des repertoires partagés
-    shared_dir.each { |dir|
-      run "mkdir -p #{File.join(deploy_to, "shared", dir)}"
-    }
+    #dirs = shared_dir_list.map { |d| File.join(shared_path, d)}.join(' ')
+    #run "#{try_sudo} mkdir -p #{dirs}"
+    #run "#{try_sudo} chmod g+w #{dirs}" if fetch(:group_writable, true)
 
     # installation des gem dans le gesmset
     gemlist(Pathname.new(File.join(File.dirname(__FILE__), '..', 'Gemfile')).realpath).each { |parse|
-    p parse
       run_rvm("gem install #{parse[:name].strip} -v #{parse[:version].strip} -N",
               :with_ruby => rvm_ruby_string_evaluated,
               :subject_class => :gemsets)
@@ -160,8 +160,8 @@ namespace :customize do
     }
     # déploiement des fichier de controle pour upstart
     run "#{sudo} cp #{File.join(current_path, 'control', '*')} /etc/init"
-    shared_dir.each { |dir|
-      run "ln -s #{File.join(deploy_to, "shared", dir)} #{File.join(current_path, dir)}"
+    shared_children.each { |dir|
+      run "ln -s #{File.join(deploy_to, shared_dir, dir)} #{File.join(current_path, dir)}"
     }
 
     # definition du type d'environement
