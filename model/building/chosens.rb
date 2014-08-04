@@ -49,15 +49,19 @@ module Building
 
       medium_count = (direct_medium_percent * count_visit / 100).to_i
       @logger.an_event.debug "count direct medium #{medium_count}"
-      Choosing_landing_medium(label, date, "direct", medium_count, chosen_landing_pages_file)
+
+      #Choosing_landing_medium_with_file(label, date, "direct", medium_count, chosen_landing_pages_file)
+      Choosing_landing_medium_in_mem(label, date, "direct", medium_count, chosen_landing_pages_file)
 
       medium_count = (referral_medium_percent * count_visit / 100).to_i
       @logger.an_event.debug "count referral medium #{medium_count}"
-      Choosing_landing_medium(label, date, "referral", medium_count, chosen_landing_pages_file)
+      #Choosing_landing_medium_with_file(label, date, "referral", medium_count, chosen_landing_pages_file)
+      Choosing_landing_medium_in_mem(label, date, "referral", medium_count, chosen_landing_pages_file)
 
       medium_count = count_visit - ((direct_medium_percent * count_visit / 100).to_i + (referral_medium_percent * count_visit / 100).to_i)
       @logger.an_event.debug "count organic medium #{medium_count}"
-      Choosing_landing_medium(label, date, "organic", medium_count, chosen_landing_pages_file)
+      #Choosing_landing_medium_with_file(label, date, "organic", medium_count, chosen_landing_pages_file)
+      Choosing_landing_medium_in_mem(label, date, "organic", medium_count, chosen_landing_pages_file)
 
       chosen_landing_pages_file.close
       chosen_landing_pages_file.archive_previous
@@ -93,7 +97,31 @@ module Building
     end
 
     private
-    def Choosing_landing_medium(label, date, medium_type, medium_count, chosen_landing_pages_file)
+    def Choosing_landing_medium_in_mem(label, date, medium_type, medium_count, chosen_landing_pages_file)
+         # ouverture du dernier fichier créé
+         begin
+           landing_pages_file = Flow.new(TMP, "landing-pages-#{medium_type}", label, date).last
+           raise IOError, "tmp flow landing-pages-#{medium_type} for <#{label}> for <#{date}> is missing" if landing_pages_file.nil?
+
+           landing_pages_array = landing_pages_file.load_to_array(EOFLINE)
+           landing_pages_file_lines = landing_pages_array.size
+           p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
+           while medium_count > 0 and landing_pages_file_lines > 0
+             chose = rand(landing_pages_file_lines)
+             page = landing_pages_array[chose]
+             chosen_landing_pages_file.append(page)
+             medium_count -= 1
+             p.increment
+           end
+
+         rescue Exception => e
+           @logger.an_event.error "cannot chose landing page of medium <#{medium_type}> for #{label}"
+           @logger.an_event.debug e
+         end
+         landing_pages_file.close
+    end
+
+    def Choosing_landing_medium_with_file(label, date, medium_type, medium_count, chosen_landing_pages_file)
       # ouverture du dernier fichier créé
       begin
         landing_pages_file = Flow.new(TMP, "landing-pages-#{medium_type}", label, date).last
