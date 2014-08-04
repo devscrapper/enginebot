@@ -49,6 +49,11 @@ set :server_list, ["authentification_#{application}",
                    "input_flows_#{application}",
                    "tasks_#{application}",
                    "scheduler_#{application}"]
+set :log_list, ["authentification_server.deb",
+                "calendar_server.deb",
+                "input_flows_server.deb",
+                "tasks_server.deb",
+                "scheduler_server.deb"]
 
 #----------------------------------------------------------------------------------------------------------------------
 # param rvm
@@ -99,6 +104,37 @@ after "deploy:setup", "customize:setup"
 after 'deploy:setup', 'rvm:create_gemset'
 
 #----------------------------------------------------------------------------------------------------------------------
+# task list : stage
+#----------------------------------------------------------------------------------------------------------------------
+namespace :stage do
+  task :dev, :roles => :app do
+    run "echo 'staging: development' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
+  end
+  task :testing, :roles => :app do
+    run "echo 'staging: test' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
+  end
+  task :prod, :roles => :app do
+    run "echo 'staging: production' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
+  end
+end
+
+#----------------------------------------------------------------------------------------------------------------------
+# task list : log
+#----------------------------------------------------------------------------------------------------------------------
+namespace :log do
+  task :down, :roles => :app do
+   capture("ls #{File.join(current_path, 'log', '*.*')}").split(/\r\n/).each{|log_file|
+     get log_file, File.join(File.dirname(__FILE__), '..', 'log', File.basename(log_file))
+   }
+  end
+
+  task :delete, :roles => :app do
+    run "rm #{File.join(current_path, 'log', '*')}"
+  end
+
+end
+
+#----------------------------------------------------------------------------------------------------------------------
 # task list : machine
 #----------------------------------------------------------------------------------------------------------------------
 namespace :machine do
@@ -116,7 +152,6 @@ end
 namespace :deploy do
   task :start, :roles => :app, :except => {:no_release => true} do
     server_list.each { |server| run "#{sudo} initctl start #{server}" }
-
   end
 
   task :stop, :roles => :app, :except => {:no_release => true} do
@@ -139,12 +174,6 @@ end
 #----------------------------------------------------------------------------------------------------------------------
 namespace :customize do
   task :setup do
-
-    # creation des repertoires partagés
-    #dirs = shared_dir_list.map { |d| File.join(shared_path, d)}.join(' ')
-    #run "#{try_sudo} mkdir -p #{dirs}"
-    #run "#{try_sudo} chmod g+w #{dirs}" if fetch(:group_writable, true)
-
     # installation des gem dans le gesmset
     gemlist(Pathname.new(File.join(File.dirname(__FILE__), '..', 'Gemfile')).realpath).each { |parse|
       run_rvm("gem install #{parse[:name].strip} -v #{parse[:version].strip} -N",
@@ -160,8 +189,10 @@ namespace :customize do
     }
     # déploiement des fichier de controle pour upstart
     run "#{sudo} cp #{File.join(current_path, 'control', '*')} /etc/init"
+
+    #creation des lien vers les repertoire partagés
     shared_children.each { |dir|
-      run "ln -s #{File.join(deploy_to, shared_dir, dir)} #{File.join(current_path, dir)}"
+      run "ln -f -s #{File.join(deploy_to, "shared", dir)} #{File.join(current_path, dir)}"
     }
 
     # definition du type d'environement
