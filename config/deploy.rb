@@ -93,8 +93,8 @@ set :deploy_via, :copy # using a local scm repository which cannot be accessed f
 set :user, "eric"
 set :password, "Brembo01"
 default_run_options[:pty] = true
-set :use_sudo, false
-set :stage, "test"
+set :use_sudo, true
+set :staging, "test"
 role :app, server_name
 
 before 'deploy', 'rvm:create_alias'
@@ -176,9 +176,7 @@ namespace :customize do
   task :setup do
     # installation des gem dans le gesmset
     gemlist(Pathname.new(File.join(File.dirname(__FILE__), '..', 'Gemfile')).realpath).each { |parse|
-      run_rvm("gem install #{parse[:name].strip} -v #{parse[:version].strip} -N",
-              :with_ruby => rvm_ruby_string_evaluated,
-              :subject_class => :gemsets)
+      run_without_rvm("#{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem query -I #{parse[:name].strip} -v #{parse[:version].strip} ; if [  $? -eq 0 ] ; then #{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem install #{parse[:name].strip} -v #{parse[:version].strip} -N ; else echo \"gem #{parse[:name].strip} #{parse[:version].strip} already installed\" ; fi")
     }
   end
 
@@ -196,7 +194,7 @@ namespace :customize do
     }
 
     # definition du type d'environement
-    run "echo 'staging: #{stage}' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
+    run "echo 'staging: #{staging}' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
 
     # parametrage du server FTP
     run "rm #{File.join(current_path, 'config', 'config.rb')}"
