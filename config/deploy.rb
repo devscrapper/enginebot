@@ -1,6 +1,8 @@
 #---------------------------------------------------------------------------------------------------------------------
 # deploy.rb
 # il est utilisé pour :
+# maj les paquets system ubuntu
+# installé les outils de compilation (build_essential, libtool, libyaml)
 # installé rvm
 # installé ruby
 # installé les gem de l'application dans un gemset
@@ -9,25 +11,43 @@
 # redemarrer la machine
 # ---------------------------------------------------------------------------------------------------------------------
 # liste de taches de déploiement
-# cap machine:setup : installe les pre requis dans l'environement hebergeur  (rvm, ruby installed)
-# cap deploy:setup : realise les adaptations sur l'environnement  (shared dir, creation gemset, install gem)
-# cap deploy:update : déploie l'application dans une nouvelle release en mettant à jour les liens symbolic,  paramtrage de fichier de conf, ...
+# cap rvm:install_rvm :
+#     before : maj les paquets du system ubuntu
+#     installe rvm
+# cap rvm:install_ruby :
+#     install ruby avec autolibs=:enable (3) ce qui permet d'installer automatiquement les composants (build_essential, libtool, libyaml) pour ruby
+#      remarque : correction du fichier D:\Ruby193\lib\ruby\gems\1.9.1\gems\rvm-capistrano-1.5.3\lib\rvm\capistrano\install_ruby.rb pour prendre en compte
+#     le flag :enable
+#     remplacement de   : autolibs_flag = "1" unless autolibs_flag_no_requirements
+#                   par : autolibs_flag = "1" if autolibs_flag_no_requirements
+#     after : create alias default ruby
+# cap deploy:setup :
+#     before : creation gemset,
+#     before : install gem  à partir du Gemfile local
+#     creation des repertoire partagé (shared_children)
+# cap deploy:update :
+#     déploie l'application dans une nouvelle release
+#     after : en mettant à jour les liens symbolic,
+#     after : paramtrage de fichier de environement.yml
+#     after : parametrage du serveur ftp
 # cap deploy:start/stop/restart : démarrer stop ou redemmarre tous les serveurs de l'application
 # cap machine:reboot : redemarre le serveur physique
 #----------------------------------------------------------------------------------------------------------------------
 # ordre de lancement des commandes deploy : first deploy
-# 1 cap machine:setup
+# 1 cap rvm:install_rvm
+# 2 cap rvm:install_ruby
 # 2 cap deploy:setup
 # 3 cap deploy:update
 # 4 cap machine:reboot
 #----------------------------------------------------------------------------------------------------------------------
 # ordre de lancement des commandes deploy : next deploy
-# 1 cap deploy:setup
+# 1 cap deploy:gem       #installe les nouveaux gem si besoin
 # 2 cap deploy:update    # deploie les sources
 # 3 cap deploy:restart     # demarre les serveurs
 #----------------------------------------------------------------------------------------------------------------------
 #on n'utilise pas bundle pour déployer les gem=> on utilise les gem installés sous ruby : les gems system dans un gemset
 #----------------------------------------------------------------------------------------------------------------------
+
 
 require 'pathname'
 
@@ -64,13 +84,11 @@ require "rvm/capistrano/alias_and_wrapp"
 require "rvm/capistrano/gem_install_uninstall"
 set :rvm_ruby_string, '1.9.3' # defini la version de ruby a installer
 set :rvm_type, :system #RVM installed in /usr/local, multiuser installation
-set :rvm_autolibs_flag, "read-only" # more info: rvm help autolibs
+set :rvm_autolibs_flag, :enable #permet d'installer automatiquement les composants (build_essential, libtool, libyaml) pour ruby
 set :bundle_dir, '' # on n'utilise pas bundle pour instaler les gem
 set :bundle_flags, '--system --quiet' # on n'utilise pas bundle pour instaler les gem
 set :rvm_install_with_sudo, true
 
-before 'machine:setup', 'rvm:install_rvm' # install/update RVM
-before 'machine:setup', 'rvm:install_ruby' # install Ruby
 
 #----------------------------------------------------------------------------------------------------------------------
 # param extraction git
@@ -97,11 +115,11 @@ set :use_sudo, true
 set :staging, "test"
 role :app, server_name
 
-before 'deploy', 'rvm:create_alias'
-before 'deploy', 'rvm:create_wrappers'
-after "deploy:update", "customize:update"
-after "deploy:setup", "customize:setup"
-after 'deploy:setup', 'rvm:create_gemset'
+before 'rvm:install_rvm', 'avant:install_rvm'
+before 'rvm:install_ruby', 'rvm:create_gemset' #, 'avant:install_ruby'
+after 'rvm:install_ruby', 'apres:install_ruby'
+before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
+after "deploy:update", "apres:update"
 
 #----------------------------------------------------------------------------------------------------------------------
 # task list : stage
@@ -141,9 +159,6 @@ namespace :machine do
   task :reboot, :roles => :app do
     run "#{sudo} reboot"
   end
-  task :setup, :roles => :app do
-    run "rvm alias create default #{rvm_ruby_string}"
-  end
 end
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -162,22 +177,38 @@ namespace :deploy do
     server_list.each { |server| run "#{sudo} initctl stop #{server}" }
     server_list.each { |server| run "#{sudo} initctl start #{server}" }
   end
-end
 
-#----------------------------------------------------------------------------------------------------------------------
-# task list : customize :
-# setup = creation des repertoires partagés entre releases (data, output, tmp)
-# setup = installation des gem dans le gesmset
-# update = déploiement de fichier de controle upstart
-# update = definition du stage dans lequel s'execute l'application
-# update = parametrage du serveur ftp
-#----------------------------------------------------------------------------------------------------------------------
-namespace :customize do
-  task :setup do
-    # installation des gem dans le gesmset
+  task :first, :roles => :app do
+    rvm.install_rvm
+    rvm.install_ruby
+    deploy.setup
+    deploy.update
+    machine.reboot
+  end
+
+  task :gem_list, :roles => :app do
+    #installation des gem dans le gesmset
     gemlist(Pathname.new(File.join(File.dirname(__FILE__), '..', 'Gemfile')).realpath).each { |parse|
       run_without_rvm("#{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem query -I #{parse[:name].strip} -v #{parse[:version].strip} ; if [  $? -eq 0 ] ; then #{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem install #{parse[:name].strip} -v #{parse[:version].strip} -N ; else echo \"gem #{parse[:name].strip} #{parse[:version].strip} already installed\" ; fi")
     }
+  end
+end
+
+#----------------------------------------------------------------------------------------------------------------------
+# task list : avant :
+#----------------------------------------------------------------------------------------------------------------------
+namespace :avant do
+  task :install_rvm do
+    run_without_rvm ("#{sudo} apt update")
+    run_without_rvm ("#{sudo} apt -y full-upgrade")
+  end
+end
+#----------------------------------------------------------------------------------------------------------------------
+# task list : apres :
+#----------------------------------------------------------------------------------------------------------------------
+namespace :apres do
+  task :install_ruby do
+    run_rvm ("alias create default #{rvm_ruby_string}")
   end
 
   task :update do
@@ -238,6 +269,21 @@ def gemlist(file)
         catch_gem = true
     end
   }
-  p gemlist
   gemlist
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
