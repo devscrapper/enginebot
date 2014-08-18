@@ -31,6 +31,7 @@
 #     after : paramtrage de fichier de environement.yml
 #     after : parametrage du serveur ftp
 # cap deploy:start/stop/restart : démarrer stop ou redemmarre tous les serveurs de l'application
+# cap deploy:all_param : upload tous les fichiers de parametrage du repertoire ./parameter vers la machine cible
 # cap machine:reboot : redemarre le serveur physique
 #----------------------------------------------------------------------------------------------------------------------
 # ordre de lancement des commandes deploy : first deploy
@@ -50,7 +51,6 @@
 
 
 require 'pathname'
-
 #----------------------------------------------------------------------------------------------------------------------
 # proprietes de l'application
 #----------------------------------------------------------------------------------------------------------------------
@@ -165,6 +165,10 @@ end
 # task list : deploy
 #----------------------------------------------------------------------------------------------------------------------
 namespace :deploy do
+  task :all_param do
+    top.upload(File.join(File.dirname(__FILE__), '..', 'parameter'), File.join(current_path, 'parameter'))
+  end
+
   task :start, :roles => :app, :except => {:no_release => true} do
     server_list.each { |server| run "#{sudo} initctl start #{server}" }
   end
