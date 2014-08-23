@@ -24,13 +24,13 @@ test:
         :pattern: "Windows-Vista"
         :servers:
           :server1:
-            :ip: 127.0.0.1
+            :ip: 192.168.1.87
             :port: 9201,
       :seven:
         :pattern: "Windows-7"
         :servers:
           :server1:
-            :ip: 192.168.1.99
+            :ip: 192.168.1.86
             :port: 9201
 
 production:
