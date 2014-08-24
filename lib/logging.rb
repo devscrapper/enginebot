@@ -159,7 +159,7 @@ module Logging
       @logger.add_appenders(email)
       @logger.add_appenders(syslog)  if HAVE_SYSLOG
       @logger.add_appenders(debfile)
-      @logger.add_appenders(ymfile)
+      @logger.add_appenders(ymlfile)
     end
 
     def param_2(obj)
