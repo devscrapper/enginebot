@@ -69,11 +69,6 @@ set :server_list, ["authentification_#{application}",
                    "input_flows_#{application}",
                    "tasks_#{application}",
                    "scheduler_#{application}"]
-set :log_list, ["authentification_server.deb",
-                "calendar_server.deb",
-                "input_flows_server.deb",
-                "tasks_server.deb",
-                "scheduler_server.deb"]
 
 #----------------------------------------------------------------------------------------------------------------------
 # param rvm

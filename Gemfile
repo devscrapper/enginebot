@@ -12,7 +12,7 @@ gem 'logging', '~> 1.8.1'
 gem 'rest-client', '~> 1.6.7'
 gem 'uuid', '~> 2.3.7'
 gem 'tzinfo', '~> 1.0.0'
-
+gem 'pony', '~> 1.10'
 
 # fin new gem
 
