@@ -88,7 +88,7 @@ module Building
     end
 
     def to_mail
-
+       # TO_DO : meo de la fonction d'nevoie de mail du reporting.
     end
 
   end
