@@ -24,6 +24,9 @@ module Building
          :java_enabled,
          :screens_colors,
          :screen_resolution,
+         :source,
+         :medium,
+         :keyword,
          :pages,
          :advert
 

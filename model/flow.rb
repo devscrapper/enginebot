@@ -155,7 +155,6 @@ class Flow
     # en prenant en compte le multivolume
     # l'objectif est de faire le ménage dans le répertoire qui contient l'instance courante
     # le ou les flow sont déplacés dans ARCHIVE
-    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     Flow.list(@dir, {:type_flow => @type_flow, :label => @label, :ext => @ext}).each { |flow|
       flow.archive unless self == flow
     }
@@ -175,12 +174,29 @@ class Flow
     @logger.an_event.debug "close flow <#{absolute_path}>" if $debugging
   end
 
-  def cp(to_path)
-    raise FlowException, "target <#{to_path}> is not valid" unless File.exists?(to_path) && File.directory?(to_path)
+  # Copie un flow origine :
+  # soit vers un autre flow et il est retourné en sortie
+  # soit vers un repertoire (String/Dir/Pathname)et un nouveau flow est retourné qui pointe sur le nouveau fichier en sortie
+  # remarque  : si le fichier cible existe, il est alors ecrasé
+  def cp(to)
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+
+    # un répertoire peut être soit un objet Dir, Pathname ou String
+    to_path = to.path if to.is_a?(Dir)
+    to_path = to.to_path if to.is_a?(Pathname)
+    to_path = to if to.is_a?(String)
+    unless to_path.nil?
+      raise FlowException, "target <#{to_path}> not a directory" if File.ftype(to_path) != "directory"
+      raise FlowException, "target directory <#{to_path}> not exist" if  !Dir.exist?(to_path)
+    end
+    # un fichier est représenté par un Flow exclusivement
+    to_path = to.absolute_path if to.is_a?(Flow)
+
     FileUtils.cp(absolute_path, to_path)
-    @dir = to_path
     @logger.an_event.debug "copy flow <#{absolute_path}> to <#{to_path}>" if $debugging
+    #si to est un flow alors on le retourne
+    #si to est un répertoire alors on retourne un nouveau Flow qui représente le fichier cible
+    to.is_a?(Flow) ? to : Flow.from_basename(to_path, basename)
   end
 
   def count_lines(eofline)
@@ -200,6 +216,14 @@ class Flow
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     open("r:BOM|UTF-8:-") if @descriptor.nil?
     @descriptor
+  end
+
+  # creé une copie identique du flow courant dont le type flow est suffixé par -dup
+  # retourne nouveau flow qui pointe sur le fichier dupliqué
+  def duplicate
+    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    dup_flow = Flow.new(@dir, "#{@type_flow}-dup", @label, @date, @vol, @ext)
+    cp(dup_flow)
   end
 
   def empty
@@ -240,8 +264,9 @@ class Flow
   end
 
   def last
-    #retourn nil si pas de flow ancien, sinon le plus recent, sinon le flox lui-même
-
+    # si plusieurs flow de date differente retourne le plus récent
+    # si un seul flow retourne le flow courant
+    # si pas de flow retourne nil
     volum = "#{SEPARATOR}#{@vol}" unless @vol.nil?
     volum = "" if @vol.nil?
     max_time = Time.new(2001, 01, 01)
@@ -272,6 +297,23 @@ class Flow
       }
     }
     array
+  end
+
+  def load_to_hash(eofline)
+    # class_definition est une class
+    # si class_definition est nil alors on range la ligne dans le array
+    # si class_definition n'est pas nil alors on range une instance de la class construite à partir de la ligne, dans le array
+    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    raise FlowException, "eofline not define" if eofline.nil?
+    hsh = {}
+    p = ProgressBar.create(:title => "Loading #{basename} file", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => total_lines(eofline), :format => '%t, %c/%C, %a|%w|')
+    volumes.each { |flow|
+      IO.foreach(flow.absolute_path, eofline, encoding: "BOM|UTF-8:-") { |line|
+        hsh.merge!(yield(line.chomp))
+        p.increment
+      }
+    }
+    hsh
   end
 
   def move(to_path)
@@ -459,7 +501,7 @@ class Flow
     close unless @descriptor.nil?
     data = Kernel.open(absolute_path)
     output_lines = data.lines.sort_by { |line| yield(line) }
-    Kernel.open(absolute_path,"w") { |f| f.write(output_lines.join) }
+    Kernel.open(absolute_path, "w") { |f| f.write(output_lines.join) }
     @logger.an_event.info "sorting <#{basename}>"
   end
 

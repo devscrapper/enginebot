@@ -104,6 +104,12 @@ module Tasking
                                                                   is_nil_or_empty? { objective["return_visitor_rate"] }.to_f) }
     end
 
+    def Reporting_visits
+      label = @data["label"]
+      date_building = @data["date_building"]
+      execute { Visits.new(label, date_building).Reporting_visits }
+    end
+
     def Publishing_visits()
       label = @data["label"]
       date_building = @data["date_building"]

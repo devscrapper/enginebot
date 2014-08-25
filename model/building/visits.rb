@@ -4,6 +4,7 @@ require_relative '../../lib/logging'
 require_relative '../../model/tasking/task'
 require_relative 'visit'
 require_relative 'page'
+require_relative 'reporting'
 require 'ruby-progressbar'
 #------------------------------------------------------------------------------------------
 # Pre requis gem
@@ -76,7 +77,7 @@ module Building
         @logger.an_event.debug("min_durations #{min_durations}")
         @logger.an_event.debug("min_pages #{min_pages}")
 
-        @matrix_file = Flow.new(TMP, "matrix", @label, @date_building).last #input utilisé par building_not_bounce_visit
+        @matrix_file = Flow.new(TMP, "matrix", @label, @date_building).last.duplicate #input utilisé par building_not_bounce_visit
         raise IOError, "input matrix file for #{@label} is missing" if @matrix_file.nil?
         chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", @label, @date_building) #input
         raise IOError, "tmp flow <#{chosen_landing_pages_file.basename}> is missing" unless chosen_landing_pages_file.exist?
@@ -86,10 +87,10 @@ module Building
         count_pages = (count_visit * page_views_per_visit).to_i
         count_durations = (count_visit * avg_time_on_site).to_i
         @duration_pages = distributing(count_pages, count_durations, min_durations)
-                                                                            #TODO : valider que la distribution de duration pour les pages de la visite, positionne comme première valeur, la valeur minimale afin que la landing page soit déclencher en premier
-                                                                            #TODO : controler commen cela est fait  : les durée associé aux page sont elle
-                                                                            # TODO en delta par rapport à la précédent => il n'est pas nécessaire que les durées soit croissante
-                                                                            # TODO par rapport à la visit : il faut que les durée soit croissante pour la llstye depage de la visit
+                                                                                      #TODO : valider que la distribution de duration pour les pages de la visite, positionne comme première valeur, la valeur minimale afin que la landing page soit déclencher en premier
+                                                                                      #TODO : controler commen cela est fait  : les durée associé aux page sont elle
+                                                                                      # TODO en delta par rapport à la précédent => il n'est pas nécessaire que les durées soit croissante
+                                                                                      # TODO par rapport à la visit : il faut que les durée soit croissante pour la llstye depage de la visit
         min_duration_idx = @duration_pages.index(@duration_pages.min)
         if min_duration_idx > 0
           min_duration = @duration_pages[min_duration_idx]
@@ -112,6 +113,7 @@ module Building
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE}"); p.increment }
         @visits_file.close
         @matrix_file.close
+        @matrix_file.delete #suppression de la duplication de la matrice
         Task.new("Building_planification", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.error "cannot build visits for #{@label} for #{@date_building}"
@@ -148,7 +150,7 @@ module Building
         #initialisation des fichier à empty car il se peut que pour une une heure il n y ait pas de visit,
         # il faut qd même crer un fichier vide pour eviter que l'extending échoue et
         # cela eviter de se poser des questions sur l'absence de fichier
-        24.times { |anhour| Flow.new(TMP, "planed-visits", @label, @date_building, anhour + 1).empty}
+        24.times { |anhour| Flow.new(TMP, "planed-visits", @label, @date_building, anhour + 1).empty }
 
         @count_visits_by_hour.each { |count_visit_per_hour| count_visits_of_day_origin += count_visit_per_hour[1].to_i }
         @logger.an_event.debug "@count_visits_by_hour #{@count_visits_by_hour}"
@@ -174,7 +176,7 @@ module Building
           p.increment
         }
 
-        24.times { |anhour| @planed_visits_by_hour_file[anhour].close}
+        24.times { |anhour| @planed_visits_by_hour_file[anhour].close }
 
         Task.new("Extending_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
@@ -201,7 +203,7 @@ module Building
         raise IOError, "tmp flow pages for <#{@label}> for <#{@date_building}> is missing" if  pages_file.nil?
 
         #on tri le fichier de page sur le id pour accelerer la recherche de page qui s'appuie sur une dichotomie
-        pages_file.sort{ |line| [line.split(SEPARATOR1)[0]]}
+        pages_file.sort { |line| [line.split(SEPARATOR1)[0]] }
         #on charge en memoire le fichier
         pages = pages_file.load_to_array(EOFLINE)
 
@@ -233,6 +235,8 @@ module Building
         }
         device_platform_file.close
         pages_file.close
+
+        Task.new("Reporting_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.debug e
         @logger.an_event.error("cannot extend visits for #{@label}")
@@ -240,11 +244,46 @@ module Building
       @logger.an_event.info("Extending visits for #{@label} is over")
     end
 
-#--------------------------------------------------------------------------------------------------------------
-# Publishing_visits
-#--------------------------------------------------------------------------------------------------------------
-#
-# --------------------------------------------------------------------------------------------------------------
+    #--------------------------------------------------------------------------------------------------------------
+    # Reporting_visits
+    #--------------------------------------------------------------------------------------------------------------
+    #
+    # --------------------------------------------------------------------------------------------------------------
+    def Reporting_visits
+      @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is starting")
+      start_time = Time.now
+
+      reporting = Reporting.new(@label, @date_building)
+      p = ProgressBar.create(:title => "Saving Final visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
+
+      24.times { |hour|
+        final_visits_by_hour_file = Flow.new(TMP, "final-visits", @label, @date_building, hour + 1) #input
+
+        raise IOError, "tmp flow <#{final_visits_by_hour_file.basename}> is missing" unless final_visits_by_hour_file.exist?
+
+        final_visits_by_hour_file.foreach(EOFLINE) { |visit|
+          begin
+            reporting << Published_visit.new(visit)
+          rescue Exception => e
+            @logger.an_event.debug visit
+            @logger.an_event.debug e
+            @logger.an_event.error "cannot report visit"
+          end
+          p.increment
+        } unless final_visits_by_hour_file.zero?
+        final_visits_by_hour_file.close
+      }
+
+      reporting.to_file
+      reporting.to_mail
+
+      @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is over (#{Time.now - start_time})")
+    end
+    #--------------------------------------------------------------------------------------------------------------
+    # Publishing_visits
+    #--------------------------------------------------------------------------------------------------------------
+    #
+    # --------------------------------------------------------------------------------------------------------------
     def Publishing_visits_by_hour(day=nil)
       # le déclenchement de la publication est réalisée 2 heures avant l'heure d'exécution proprement dite des visits
       # de 22:00 à j-1 pour j à 00:00
@@ -282,7 +321,7 @@ module Building
           if day.nil?
             start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
           else
-            start_date_time = Time.new(day.year, day.month, day.day, v.start_date_time.hour,v.start_date_time.min,v.start_date_time.sec).strftime("%Y-%m-%d-%H-%M-%S")
+            start_date_time = Time.new(day.year, day.month, day.day, v.start_date_time.hour, v.start_date_time.min, v.start_date_time.sec).strftime("%Y-%m-%d-%H-%M-%S")
           end
           published_visits_to_yaml_file = Flow.new(TMP, "#{v.operating_system}-#{v.operating_system_version}", @label, start_date_time, v.id_visit, ".yml")
           published_visits_to_yaml_file.write(v.generate_output(@label).to_yaml)
