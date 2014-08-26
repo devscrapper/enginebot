@@ -110,11 +110,8 @@ module Building
       @device_platforms_obj[device_platform.browser][device_platform.browser_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version][device_platform.java_enabled] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version][device_platform.java_enabled].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version][device_platform.java_enabled][device_platform.screen_colors] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version][device_platform.java_enabled][device_platform.screen_colors].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version][device_platform.java_enabled][device_platform.screen_colors][device_platform.screen_resolution] = 0 if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version][device_platform.java_enabled][device_platform.screen_colors][device_platform.screen_resolution].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.flash_version][device_platform.java_enabled][device_platform.screen_colors][device_platform.screen_resolution] += 1
+      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] = 0 if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution].nil?
+      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += 1
 
     end
 
@@ -149,11 +146,8 @@ module Building
       @device_platforms[visit.browser][visit.browser_version] = {} if @device_platforms[visit.browser][visit.browser_version].nil?
       @device_platforms[visit.browser][visit.browser_version][visit.operating_system] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system].nil?
       @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version][visit.java_enabled] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version][visit.java_enabled].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version][visit.java_enabled][visit.screens_colors] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version][visit.java_enabled][visit.screens_colors].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version][visit.java_enabled][visit.screens_colors][visit.screen_resolution] = 0 if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version][visit.java_enabled][visit.screens_colors][visit.screen_resolution].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.flash_version][visit.java_enabled][visit.screens_colors][visit.screen_resolution] += 1
+      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] = 0 if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution].nil?
+      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] += 1
 
       case visit.medium
         when "(none)"
@@ -183,7 +177,7 @@ module Building
     end
 
     def to_mail
-      # TO_DO : meo de la fonction d'nevoie de mail du reporting.
+      #TODO : meo de la fonction d'envoie de mail du reporting.
     end
 
     def to_html
