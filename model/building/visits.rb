@@ -77,6 +77,10 @@ module Building
         @logger.an_event.debug("min_durations #{min_durations}")
         @logger.an_event.debug("min_pages #{min_pages}")
 
+        reporting = Reporting.new(@label, @date_building)
+        reporting.visit_obj(count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages)
+        reporting.to_file
+
         @matrix_file = Flow.new(TMP, "matrix", @label, @date_building).last.duplicate #input utilisé par building_not_bounce_visit
         raise IOError, "input matrix file for #{@label} is missing" if @matrix_file.nil?
         chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", @label, @date_building) #input
@@ -130,6 +134,10 @@ module Building
     def Building_planification(hourly_distribution, count_visits)
       @logger.an_event.info("Building planification of visit for #{@label}  for #{@date_building} is starting")
       begin
+        reporting = Reporting.new(@label, @date_building)
+        reporting.planification_obj(hourly_distribution)
+        reporting.to_file
+
         visits_tmp = Flow.new(TMP, "visits", @label, @date_building)
         raise IOError, "tmp flow <#{visits_tmp.basename}> is missing" unless visits_tmp.exist?
         count_visits_of_day = 0
@@ -194,6 +202,10 @@ module Building
     def Extending_visits(count_visit, account_ga, return_visitor_rate)
       @logger.an_event.info("Extending visits for #{@label}  for #{@date_building} is starting")
       begin
+        reporting = Reporting.new(@label, @date_building)
+        reporting.return_visitor_obj(return_visitor_rate)
+        reporting.to_file
+
         device_platform_file = Flow.new(TMP, "chosen-device-platform", @label, @date_building)
         raise IOError, "tmp flow <#{device_platform_file.basename}>  is missing" unless device_platform_file.exist?
         count_device_platform = device_platform_file.count_lines(EOFLINE)
@@ -263,7 +275,7 @@ module Building
 
         final_visits_by_hour_file.foreach(EOFLINE) { |visit|
           begin
-            reporting << Published_visit.new(visit)
+            reporting.visit(Published_visit.new(visit))
           rescue Exception => e
             @logger.an_event.debug visit
             @logger.an_event.debug e

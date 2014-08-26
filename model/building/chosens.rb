@@ -1,3 +1,5 @@
+require_relative 'reporting'
+
 module Building
 
   EOFLINE ="\n"
@@ -44,6 +46,10 @@ module Building
     def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
       @logger.an_event.info "Choosing landing pages for #{label} for #{date} is starting"
 
+      reporting = Reporting.new(label, date)
+      reporting.landing_pages_obj(direct_medium_percent, organic_medium_percent, referral_medium_percent)
+      reporting.to_file
+
       Flow.new(TMP, "chosen-landing-pages", label, date).delete
       chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", label, date) #output
 
@@ -75,6 +81,8 @@ module Building
         device_platform = Flow.new(TMP, "device-platform", label, date).last
         raise IOError "input flow device-platform for <#{label}> for <#{date}> is missing" if device_platform.nil?
 
+        reporting = Reporting.new(label, date)
+
         chosen_device_platform_file = Flow.new(TMP, "chosen-device-platform", label, date) #output
         total_visits = 0
         pob = ProgressBar.create(:title => device_platform.basename, :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_visits, :format => '%t, %c/%C, %a|%w|')
@@ -85,8 +93,9 @@ module Building
           count_device = count_visits - total_visits if total_visits + count_device > count_visits # pour eviter de passer le nombre de visite attendues
           total_visits += count_device
           count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE}"); pob.increment }
+          reporting.device_platform_obj(chosen_device)
         }
-
+        reporting.to_file
         chosen_device_platform_file.archive_previous
       rescue Exception => e
         @logger.an_event.debug e
