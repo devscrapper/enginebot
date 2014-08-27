@@ -4,8 +4,10 @@ require_relative '../../lib/logging'
 require_relative '../flow'
 require_relative 'visit'
 require_relative 'page'
+require_relative '../../lib/mail_sender'
 require 'ruby-progressbar'
 require 'pathname'
+require 'pony'
 
 module Building
   class Reporting
@@ -13,6 +15,7 @@ module Building
     #statistics
     attr_reader :label,
                 :date_building,
+                :logger,
                 :hours, #repartition horaire du nombre de visit pour la journée courante
                 :return_visitor_count,
                 :device_platforms, # nombre de visite par (browser, browser_version, os, os_version, flash_version, java_enabled, screen_colors, screen_resolution)
@@ -39,8 +42,9 @@ module Building
                 :min_durations_obj,
                 :min_pages_obj
 
-    def initialize (label, date_building)
+    def initialize (label, date_building, logger)
       begin
+        @logger = logger
         data = YAML::load(Flow.new(TMP, "reporting-visits", label, date_building, nil, ".yml").read)
       rescue Exception => e
         @label = label
@@ -101,7 +105,7 @@ module Building
         @min_durations_obj = data.min_durations_obj
         @min_pages_obj = data.min_pages_obj
       ensure
-        p self
+        @logger.an_event.info "reporting #{to_s}"
       end
     end
 
@@ -129,13 +133,52 @@ module Building
       @return_visitor_rate_obj = return_visitor_rate
     end
 
-    def visit_obj(count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages)
-      @visit_count_obj = count_visit
-      @visit_bounce_rate_obj = visit_bounce_rate
-      @page_views_per_visit_obj = page_views_per_visit
-      @avg_time_on_site_obj = avg_time_on_site
-      @min_durations_obj = min_durations
-      @min_pages_obj = min_pages
+    def to_file
+      reporting_file = Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml") #output
+      reporting_file.archive_previous
+      reporting_file.write(self.to_yaml)
+      reporting_file.close
+    end
+
+    def to_html
+      html =<<-_end_of_html_
+<HTML><HEAD><style>.dimension {text-align:right;} .value {text-align:center;} </style></HEAD><BODY><table><tr><th class='dimension'>Dimension</th><th class='value'>Objective</th><th class='value'>Statistic</th></tr>
+#{dimension_html("Visit count", @visit_count_obj, @visit_count)}
+      #{dimension_html("Visit bounce rate", @visit_bounce_rate_obj, (@visit_bounce_count * 100/ @visit_count).round(0))}
+      #{dimension_html("Return visitor rate", @return_visitor_rate_obj, (@return_visitor_count * 100/ @visit_count).round(0))}
+      #{dimension_html("Direct medium percent", @direct_medium_percent_obj, (@direct_count * 100/ @visit_count).round(0))}
+      #{dimension_html("Referral medium percent", @referral_medium_percent_obj, (@referral_count * 100/ @visit_count).round(0))}
+      #{dimension_html("organic medium percent", @organic_medium_percent_obj, (@organic_count * 100/ @visit_count).round(0))}
+      #{dimension_html("page views per visit count", @page_views_per_visit_obj, (@page_views_per_visit_count * 100/ @visit_count).round(0))}
+      #{dimension_html("avg time on site", @avg_time_on_site_obj, (@time_on_site_count * 100/ @visit_count).round(0))}
+      #{dimension_html("Min duration", @min_durations_obj, @min_durations)}
+      #{dimension_html("Min page", @min_pages, @min_pages_obj)}
+      #{24.times.collect { |h| dimension_html("#{h}:00-#{h+1}:00", @hours_obj[h], @hours[h]) }.join}
+      #{device_platforms_display_html}
+</table><BODY></HTML>
+      _end_of_html_
+      html.gsub("\n", "")
+    end
+
+    def to_mail
+      MailSender.new("visits@building.fr","olinouane@gmail.com", "reporting", to_html).send_html
+    end
+
+    def to_s
+      <<-_end_of_string_
+      #{dimension_s("Visit count", @visit_count_obj, @visit_count)}
+      #{dimension_s("Visit bounce rate", @visit_bounce_rate_obj, (@visit_bounce_count * 100/ @visit_count).round(0))}
+      #{dimension_s("Return visitor rate", @return_visitor_rate_obj, (@return_visitor_count * 100/ @visit_count).round(0))}
+      #{dimension_s("Direct medium percent", @direct_medium_percent_obj, (@direct_count * 100/ @visit_count).round(0))}
+      #{dimension_s("Referral medium percent", @referral_medium_percent_obj, (@referral_count * 100/ @visit_count).round(0))}
+      #{dimension_s("organic medium percent", @organic_medium_percent_obj, (@organic_count * 100/ @visit_count).round(0))}
+      #{dimension_s("page views per visit count", @page_views_per_visit_obj, (@page_views_per_visit_count * 100/ @visit_count).round(0))}
+      #{dimension_s("avg time on site", @avg_time_on_site_obj, (@time_on_site_count * 100/ @visit_count).round(0))}
+      #{dimension_s("Min duration", @min_durations_obj, @min_durations)}
+      #{dimension_s("Min page", @min_pages, @min_pages_obj)}
+      #{24.times.collect { |h| dimension_s("#{h}:00-#{h+1}:00", @hours_obj[h], @hours[h]) }.join}
+      #{device_platforms_display_s}
+_end_of_string_
     end
 
     def visit(visit)
@@ -168,72 +211,60 @@ module Building
       @min_pages = visit.pages.size if @min_pages > visit.pages.size
     end
 
-
-    def to_file
-      reporting_file = Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml") #output
-      reporting_file.archive_previous
-      reporting_file.write(self.to_yaml)
-      reporting_file.close
-    end
-
-    def to_mail
-      #TODO : meo de la fonction d'envoie de mail du reporting.
-    end
-
-    def to_html
-      html =<<-_end_of_html_
-<HTML><HEAD><style>.dimension {text-align:right;} .value {text-align:center;} </style></HEAD><BODY><table><tr><th class='dimension'>Dimension</th><th class='value'>Objective</th><th class='value'>Statistic</th></tr>
-#{dimension("Visit count", @visit_count_obj, @visit_count)}
-      #{dimension("Visit bounce rate", @visit_bounce_rate_obj, (@visit_bounce_count * 100/ @visit_count).round(0))}
-      #{dimension("Return visitor rate", @return_visitor_rate_obj, (@return_visitor_count * 100/ @visit_count).round(0))}
-      #{dimension("Direct medium percent", @direct_medium_percent_obj, (@direct_count * 100/ @visit_count).round(0))}
-      #{dimension("Referral medium percent", @referral_medium_percent_obj, (@referral_count * 100/ @visit_count).round(0))}
-      #{dimension("organic medium percent", @organic_medium_percent_obj, (@organic_count * 100/ @visit_count).round(0))}
-      #{dimension("page views per visit count", @page_views_per_visit_obj, (@page_views_per_visit_count * 100/ @visit_count).round(0))}
-      #{dimension("avg time on site", @avg_time_on_site_obj, (@time_on_site_count * 100/ @visit_count).round(0))}
-      #{dimension("Min duration", @min_durations_obj, @min_durations)}
-      #{dimension("Min page", @min_pages, @min_pages_obj)}
-      #{24.times.collect { |h| dimension("#{h}:00-#{h+1}:00", @hours_obj[h], @hours[h]) }.join}
-      #{device_platforms_display}
-</table><BODY></HTML>
-      _end_of_html_
-      html.gsub("\n","" )
+    def visit_obj(count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages)
+      @visit_count_obj = count_visit
+      @visit_bounce_rate_obj = visit_bounce_rate
+      @page_views_per_visit_obj = page_views_per_visit
+      @avg_time_on_site_obj = avg_time_on_site
+      @min_durations_obj = min_durations
+      @min_pages_obj = min_pages
     end
 
     private
-    def device_platforms_display
-    statistic = parcours(@device_platforms)
-    objective = parcours(@device_platforms_obj)
-    objective.map{|k,v|
-      [dimension(k,v,statistic[k].nil? ? 0 : statistic[k])].join
-    }.join
+    def device_platforms_display_html
+      #met en forme les device platforme pour présentation html
+      statistic = parcours(@device_platforms)
+      objective = parcours(@device_platforms_obj)
+      objective.map { |k, v|
+        [dimension_html(k, v, statistic[k].nil? ? 0 : statistic[k])].join
+      }.join
     end
 
-    def dimension(title, objective, statistic)
-<<-_end_of_html_
+    def device_platforms_display_s
+      #met en forme les device platforme pour présentation html
+      statistic = parcours(@device_platforms)
+      objective = parcours(@device_platforms_obj)
+      objective.map { |k, v|
+        [dimension_s(k, v, statistic[k].nil? ? 0 : statistic[k])].join
+      }.join
+    end
+
+    def dimension_html(title, objective, statistic)
+      #mise ne forme html d'une dimension (count_visit, return_visitor, ....) pour présenter dans un tableau.
+      <<-_end_of_html_
 <tr><td class='dimension'>#{title}</td><td class='value'>#{objective}</td><td class='value'>#{statistic}</td></tr>
-_end_of_html_
+      _end_of_html_
     end
 
-    def keys(h)
-      [h.map { |k, v| [k, v.is_a?(Hash) ? ",#{keys(v)}" : ""] },].join
+    def dimension_s(title, objective, statistic)
+      #mise ne forme string d'une dimension (count_visit, return_visitor, ....) pour présenter dans un tableau.
+      <<-_end_of_string_
+#{title}\t\t\t\t#{objective}\t\t#{statistic}
+      _end_of_string_
     end
 
     def parcours(h, chem=[], chem_arr={})
+      #tranforme le hash ayant un profondeur > 1 dont le chemin est les attributs de device_platfoirem (browser, browser_version, os, os_version, screen_resolution) en un hash à une profondeur dont la clé est le chemijn et la valeur le nombre de visite.
       if h.is_a?(Hash)
         i = 0
         h.each_value { |v|
-          chem_arr  =  parcours(v, chem + [h.keys[i]], chem_arr)
+          chem_arr = parcours(v, chem + [h.keys[i]], chem_arr)
           i += 1
         }
         chem_arr
       else
         chem_arr.merge!({[chem.join("-")][0] => h})
       end
-    end
-
-    def value(h)
-      [h.map { |k, v| [v.is_a?(Hash) ? value(v) : v] },].join.to_i
     end
   end
 end
