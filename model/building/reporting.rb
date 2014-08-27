@@ -108,6 +108,7 @@ module Building
     end
 
     def device_platform_obj(device_platform)
+      #TODO device_platform_obj == 0. pas bon
       @device_platforms_obj[device_platform.browser] = {} if @device_platforms_obj[device_platform.browser].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os].nil?
@@ -180,6 +181,10 @@ _end_of_string_
     end
 
     def visit(visit)
+      #TODO return_visitor_rate == 0. pas bon ?
+      #TODO page views per visit count	!= de l'obj : 2	199
+      #TODO avg time on site != de l'obj
+      #TODO Min page != de l'obj
       @hours[visit.start_date_time.hour] += 1
       @return_visitor_count += visit.return_visitor == true ? 1 : 0
 
