@@ -111,7 +111,7 @@ module Building
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] = 0 if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += 1
+      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += (device_platform.count_visits * @visit_count_obj / 100).to_i
 
     end
 
@@ -182,7 +182,7 @@ module Building
 
     def to_html
       html =<<-_end_of_html_
-<HTML><HEAD></HEAD><BODY><table><tr><th>Dimension</th><th>Objective</th><th>Statistic</th></tr>
+<HTML><HEAD><style>.dimension {text-align:right;} .value {text-align:center;} </style></HEAD><BODY><table><tr><th class='dimension'>Dimension</th><th class='value'>Objective</th><th class='value'>Statistic</th></tr>
 #{dimension("Visit count", @visit_count_obj, @visit_count)}
       #{dimension("Visit bounce rate", @visit_bounce_rate_obj, (@visit_bounce_count * 100/ @visit_count).round(0))}
       #{dimension("Return visitor rate", @return_visitor_rate_obj, (@return_visitor_count * 100/ @visit_count).round(0))}
@@ -194,25 +194,42 @@ module Building
       #{dimension("Min duration", @min_durations_obj, @min_durations)}
       #{dimension("Min page", @min_pages, @min_pages_obj)}
       #{24.times.collect { |h| dimension("#{h}:00-#{h+1}:00", @hours_obj[h], @hours[h]) }.join}
+      #{device_platforms_display}
 </table><BODY></HTML>
       _end_of_html_
+      html.gsub("\n","" )
     end
 
     private
     def device_platforms_display
-    statistic = [keys(@device_platforms), value(@device_platforms)]
-    objective = [keys(@device_platforms_obj), value(@device_platforms_obj)]
-    objective.map{|k,v| [dimension(k,v,statistic[k].nil? ? 0 : statistic[k])].join}
+    statistic = parcours(@device_platforms)
+    objective = parcours(@device_platforms_obj)
+    objective.map{|k,v|
+      [dimension(k,v,statistic[k].nil? ? 0 : statistic[k])].join
+    }.join
     end
 
     def dimension(title, objective, statistic)
-      <<-_end_of_html_
-    <tr><td>#{title}</td><td>#{objective}</td><td>#{statistic}</td></tr>
-      _end_of_html_
+<<-_end_of_html_
+<tr><td class='dimension'>#{title}</td><td class='value'>#{objective}</td><td class='value'>#{statistic}</td></tr>
+_end_of_html_
     end
 
     def keys(h)
       [h.map { |k, v| [k, v.is_a?(Hash) ? ",#{keys(v)}" : ""] },].join
+    end
+
+    def parcours(h, chem=[], chem_arr={})
+      if h.is_a?(Hash)
+        i = 0
+        h.each_value { |v|
+          chem_arr  =  parcours(v, chem + [h.keys[i]], chem_arr)
+          i += 1
+        }
+        chem_arr
+      else
+        chem_arr.merge!({[chem.join("-")][0] => h})
+      end
     end
 
     def value(h)
