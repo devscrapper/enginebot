@@ -60,6 +60,6 @@ class Parameter
   # l'adresse d'un fichier de paramètre
   #----------------------------------------------------------------------------------------------------------------
   def method_missing (name, *args, &block)
-    @parameters[name]
+    @parameters[name] || @parameters[name.to_s]
   end
 end
