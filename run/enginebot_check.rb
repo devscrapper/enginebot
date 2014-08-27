@@ -119,9 +119,9 @@ end
 # le deuxieme diffuse regulierement les visits vers les statupbot
 #------------------------------------------------------------------------------------------------------------------
 #scheduler.cron CRON do
-#cleaning
-#deploying
-#building_inputs
+cleaning
+deploying
+building_inputs
 choosing
 building_visits
 

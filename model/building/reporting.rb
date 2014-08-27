@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
-require_relative '../../lib/logging'
+
 require_relative '../flow'
 require_relative 'visit'
 require_relative 'page'
@@ -15,7 +15,6 @@ module Building
     #statistics
     attr_reader :label,
                 :date_building,
-                :logger,
                 :hours, #repartition horaire du nombre de visit pour la journée courante
                 :return_visitor_count,
                 :device_platforms, # nombre de visite par (browser, browser_version, os, os_version, flash_version, java_enabled, screen_colors, screen_resolution)
@@ -42,9 +41,8 @@ module Building
                 :min_durations_obj,
                 :min_pages_obj
 
-    def initialize (label, date_building, logger)
+    def initialize (label, date_building)
       begin
-        @logger = logger
         data = YAML::load(Flow.new(TMP, "reporting-visits", label, date_building, nil, ".yml").read)
       rescue Exception => e
         @label = label
@@ -105,7 +103,7 @@ module Building
         @min_durations_obj = data.min_durations_obj
         @min_pages_obj = data.min_pages_obj
       ensure
-        @logger.an_event.info "reporting #{to_s}"
+
       end
     end
 

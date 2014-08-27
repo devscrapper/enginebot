@@ -46,7 +46,7 @@ module Building
     def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
       @logger.an_event.info "Choosing landing pages for #{label} for #{date} is starting"
 
-      reporting = Reporting.new(label, date,@logger)
+      reporting = Reporting.new(label, date)
       reporting.landing_pages_obj(direct_medium_percent, organic_medium_percent, referral_medium_percent)
       reporting.to_file
 
@@ -81,7 +81,7 @@ module Building
         device_platform = Flow.new(TMP, "device-platform", label, date).last
         raise IOError "input flow device-platform for <#{label}> for <#{date}> is missing" if device_platform.nil?
 
-        reporting = Reporting.new(label, date, @logger)
+        reporting = Reporting.new(label, date)
 
         chosen_device_platform_file = Flow.new(TMP, "chosen-device-platform", label, date) #output
         total_visits = 0
@@ -107,27 +107,27 @@ module Building
 
     private
     def Choosing_landing_medium_in_mem(label, date, medium_type, medium_count, chosen_landing_pages_file)
-         # ouverture du dernier fichier créé
-         begin
-           landing_pages_file = Flow.new(TMP, "landing-pages-#{medium_type}", label, date).last
-           raise IOError, "tmp flow landing-pages-#{medium_type} for <#{label}> for <#{date}> is missing" if landing_pages_file.nil?
+      # ouverture du dernier fichier créé
+      landing_pages_file = Flow.new(TMP, "landing-pages-#{medium_type}", label, date).last
+      raise IOError, "tmp flow landing-pages-#{medium_type} for <#{label}> for <#{date}> is missing" if landing_pages_file.nil?
+      begin
+       landing_pages_array = landing_pages_file.load_to_array(EOFLINE)
+        landing_pages_file_lines = landing_pages_array.size
+        p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
+        while medium_count > 0 and landing_pages_file_lines > 0
+          chose = rand(landing_pages_file_lines)
+          page = landing_pages_array[chose]
+          chosen_landing_pages_file.append(page)
+          medium_count -= 1
+          p.increment
+        end
 
-           landing_pages_array = landing_pages_file.load_to_array(EOFLINE)
-           landing_pages_file_lines = landing_pages_array.size
-           p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
-           while medium_count > 0 and landing_pages_file_lines > 0
-             chose = rand(landing_pages_file_lines)
-             page = landing_pages_array[chose]
-             chosen_landing_pages_file.append(page)
-             medium_count -= 1
-             p.increment
-           end
+      rescue Exception => e
+        @logger.an_event.error "cannot chose landing page of medium <#{medium_type}> for #{label} : #{e.message}"
+      ensure
+        landing_pages_file.close
+      end
 
-         rescue Exception => e
-           @logger.an_event.error "cannot chose landing page of medium <#{medium_type}> for #{label}"
-           @logger.an_event.debug e
-         end
-         landing_pages_file.close
     end
 
     def Choosing_landing_medium_with_file(label, date, medium_type, medium_count, chosen_landing_pages_file)
