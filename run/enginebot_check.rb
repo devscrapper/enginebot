@@ -11,11 +11,11 @@ $debugging = true
 $staging = "development"
 LOG = Pathname.new(File.join(File.dirname(__FILE__), '..', 'log')).realpath
 JDD = Pathname.new(File.join(File.dirname(__FILE__), '..', 'jdd')).realpath
-INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input')).realpath
-TMP = Pathname.new(File.join(File.dirname(__FILE__), '..', 'tmp')).realpath
-OUTPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'output')).realpath
-ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive')).realpath
-CRON = "0 0 * * 1-7"
+INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input'))
+TMP = Pathname.new(File.join(File.dirname(__FILE__), '..', 'tmp'))
+OUTPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'output'))
+ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive'))
+CRON = "58 16 * * 1-7" # mm hh
 #------------------------------------------------------------------------------------------------------------------
 #creation du scheduler
 #------------------------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ end
 #------------------------------------------------------------------------------------------------------------------
 def building_visits
   Visits.new("epilation-laser-definitive", "2013-05-05").Building_visits(1390,
-                                                                         90,
+                                                                         65,
                                                                          2,
                                                                          120,
                                                                          20,
@@ -108,6 +108,8 @@ def building_visits
 
   Visits.new("epilation-laser-definitive", "2013-05-05").Extending_visits(1390, "pppppppppp", 10)
 
+  Visits.new("epilation-laser-definitive", "2013-05-05").Reporting_visits
+
 
 end
 
@@ -116,13 +118,14 @@ end
 # le premier cronifie la construction des visits
 # le deuxieme diffuse regulierement les visits vers les statupbot
 #------------------------------------------------------------------------------------------------------------------
-scheduler.cron CRON do
-cleaning
-deploying
-building_inputs
+#scheduler.cron CRON do
+#cleaning
+#deploying
+#building_inputs
 choosing
 building_visits
-end
+
+#end
 p "cronification de la construction des visit is on"
 scheduler.every 3600 do
   Visits.new("epilation-laser-definitive", "2013-05-05").Publishing_visits_by_hour(Date.today)
