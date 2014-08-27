@@ -265,7 +265,7 @@ module Building
       @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is starting")
       start_time = Time.now
 
-      reporting = Reporting.new(@label, @date_building, @logger)
+      reporting = Reporting.new(@label, @date_building)
       p = ProgressBar.create(:title => "Saving Final visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
 
       24.times { |hour|
