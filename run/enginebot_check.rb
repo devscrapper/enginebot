@@ -7,8 +7,8 @@ require 'pathname'
 
 include Flowing
 include Building
-$debugging = true
-$staging = "development"
+$debugging = false
+$staging = "test"
 LOG = Pathname.new(File.join(File.dirname(__FILE__), '..', 'log')).realpath
 JDD = Pathname.new(File.join(File.dirname(__FILE__), '..', 'jdd')).realpath
 INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input'))
