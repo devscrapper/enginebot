@@ -11,13 +11,13 @@ require 'pony'
 
 module Building
   class Reporting
-    TMP = Pathname.new(File.dirname(__FILE__) + "/../../tmp").realpath
+    TMP = File.dirname(__FILE__) + "/../../tmp"
     #statistics
     attr_reader :label,
                 :date_building,
                 :hours, #repartition horaire du nombre de visit pour la journée courante
                 :return_visitor_count,
-                :device_platforms, # nombre de visite par (browser, browser_version, os, os_version, flash_version, java_enabled, screen_colors, screen_resolution)
+                :device_platforms, # nombre de visite par (browser, browser_version, os, os_version, screen_resolution) dans le fichier yml et par mail
                 :direct_count,
                 :referral_count, # nombre de visite par medium (referral)
                 :organic_count,
@@ -30,7 +30,7 @@ module Building
     #objectives
     attr_reader :hours_obj,
                 :return_visitor_rate_obj,
-                :device_platforms_obj,
+                :device_platforms_obj,   # pourentage de visite par (browser, browser_version, os, os_version, screen_resolution) dans le fichier yml. est transformé en nombre de visit dans le mail
                 :direct_medium_percent_obj,
                 :organic_medium_percent_obj,
                 :referral_medium_percent_obj,
@@ -107,6 +107,11 @@ module Building
       end
     end
 
+    def archive
+      #archive les anciens reporting et laisse le dernier du site
+      Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml").archive_previous
+    end
+
     def device_platform_obj(device_platform)
       #TODO device_platform_obj == 0. pas bon
       @device_platforms_obj[device_platform.browser] = {} if @device_platforms_obj[device_platform.browser].nil?
@@ -114,7 +119,7 @@ module Building
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] = 0 if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += (device_platform.count_visits * @visit_count_obj / 100).to_i
+      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += device_platform.count_visits
 
     end
 
@@ -134,7 +139,6 @@ module Building
 
     def to_file
       reporting_file = Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml") #output
-      reporting_file.archive_previous
       reporting_file.write(self.to_yaml)
       reporting_file.close
     end
@@ -229,7 +233,7 @@ _end_of_string_
       statistic = parcours(@device_platforms)
       objective = parcours(@device_platforms_obj)
       objective.map { |k, v|
-        [dimension_html(k, v, statistic[k].nil? ? 0 : statistic[k])].join
+        [dimension_html(k, (v * @visit_count_obj / 100).to_i, statistic[k].nil? ? 0 : statistic[k])].join
       }.join
     end
 
@@ -238,7 +242,7 @@ _end_of_string_
       statistic = parcours(@device_platforms)
       objective = parcours(@device_platforms_obj)
       objective.map { |k, v|
-        [dimension_s(k, v, statistic[k].nil? ? 0 : statistic[k])].join
+        [dimension_s(k, (v * @visit_count_obj / 100).to_i, statistic[k].nil? ? 0 : statistic[k])].join
       }.join
     end
 

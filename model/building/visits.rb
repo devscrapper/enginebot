@@ -288,6 +288,7 @@ module Building
 
       reporting.to_file
       reporting.to_mail
+      reporting.archive
 
       @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is over (#{Time.now - start_time})")
     end
@@ -395,6 +396,7 @@ module Building
 # quand un lien a été identifié alors il est chargé en mémoire pour accéler, au cas où on repasse par là
 #------------------------------------------------------------------------------------------------------------------
     def children(pt)
+    #TODO charger en memoire les children ie la matrix
       @matrix = {} if @matrix.nil?
       if @matrix[pt].nil?
         begin

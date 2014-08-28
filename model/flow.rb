@@ -131,6 +131,10 @@ class Flow
         @ext == flow.ext
   end
 
+  def !=(flow)
+    !(self == flow)
+  end
+
   def absolute_path
     File.join(@dir, basename)
   end
@@ -156,9 +160,13 @@ class Flow
     # l'objectif est de faire le ménage dans le répertoire qui contient l'instance courante
     # le ou les flow sont déplacés dans ARCHIVE
     Flow.list(@dir, {:type_flow => @type_flow, :label => @label, :ext => @ext}).each { |flow|
-      flow.archive unless self == flow
+      if self != flow
+        flow.archive
+        @logger.an_event.info "archive previous <#{flow.basename}>"
+      end
+
     }
-    @logger.an_event.info "archive previous <#{basename}>"
+
   end
 
   def basename
