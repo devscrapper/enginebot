@@ -115,7 +115,7 @@ before 'rvm:install_ruby', 'rvm:create_gemset' #, 'avant:install_ruby'
 after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
 after "deploy:update", "apres:update"
-
+before "deploy:update", "log:delete"
 #----------------------------------------------------------------------------------------------------------------------
 # task list : stage
 #----------------------------------------------------------------------------------------------------------------------
