@@ -37,6 +37,7 @@ module Building
     attr :matrix,
          :duration_pages,
          :visits,
+         :children,
          :matrix_file,
          :count_visits_by_hour,
          :planed_visits_by_hour_file,
@@ -366,6 +367,20 @@ module Building
         @logger.an_event.debug("count_pages_not_bounce_visit #{count_pages_not_bounce_visit}")
         @logger.an_event.debug("count_pages_per_visits #{count_pages_per_visits}")
 
+        @children = @matrix_file.load_to_hash(EOFLINE) { |line|
+          arr = line.split(SEPARATOR1)
+          key = arr[0]
+          res =  {}
+          if arr[1].nil?
+            # la page est une feuille, n'a donc pas de lien vers d'autre page => on ne la charge pas en mémoire
+            # c'est pourquoi la methode leaf? teste si la page est présente dans le hash en mémoire et pas le nombre de page associé
+          else
+            value = arr[1].split(SEPARATOR3)
+            value.compact! unless value.delete(key).nil?  # suppression de la clé ie la page origine pour eliminer les cycles
+            res =  {key => value}
+          end
+          res
+        }
 
         p = ProgressBar.create(:title => "Building not bounce visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_not_bounce_visit, :format => '%t, %c/%C, %a|%w|')
         count_not_bounce_visit.times { |visit|
@@ -395,26 +410,27 @@ module Building
 # les liens sont dans le fichier matrix.
 # quand un lien a été identifié alors il est chargé en mémoire pour accéler, au cas où on repasse par là
 #------------------------------------------------------------------------------------------------------------------
-    def children(pt)
-    #TODO charger en memoire les children ie la matrix
-      @matrix = {} if @matrix.nil?
-      if @matrix[pt].nil?
-        begin
-          @matrix[pt] = []
-          @matrix_file.rewind
-          (pt.to_i - 1).times { @matrix_file.readline(EOFLINE) }
-          line = @matrix_file.readline(EOFLINE)
-          children = line.split(SEPARATOR1)[1]
-          children.strip.split(SEPARATOR3).each { |page| @matrix[pt] << page.strip }
-        rescue Exception => e
-          @logger.an_event.error "cannot calculate children of #{pt} for #{@label} at #{@date_building}"
-          @logger.an_event.debug line
-          @logger.an_event.debug children
-          @logger.an_event.debug e
-        end
-      end
-      Array.new(@matrix[pt])
-    end
+# no more use since v0.29 which load in memory matrix file
+#------------------------------------------------------------------------------------------------------------------
+#    def children(pt)
+#      @matrix = {} if @matrix.nil?
+#      if @matrix[pt].nil?
+#        begin
+#          @matrix[pt] = []
+#          @matrix_file.rewind
+#          (pt.to_i - 1).times { @matrix_file.readline(EOFLINE) }
+#          line = @matrix_file.readline(EOFLINE)
+#          children = line.split(SEPARATOR1)[1]
+#          children.strip.split(SEPARATOR3).each { |page| @matrix[pt] << page.strip }
+#        rescue Exception => e
+#          @logger.an_event.error "cannot calculate children of #{pt} for #{@label} at #{@date_building}"
+#          @logger.an_event.debug line
+#          @logger.an_event.debug children
+#          @logger.an_event.debug e
+#        end
+#      end
+#      Array.new(@matrix[pt])
+#    end
 
 #------------------------------------------------------------------------------------------------------------------
 # leaf?
@@ -423,7 +439,9 @@ module Building
 #------------------------------------------------------------------------------------------------------------------
 #la page pointe elle sur d'autre page (feuille du graphe)
     def leaf?(pt)
-      children(pt).size == 0
+      #children(pt).size == 0
+      p "leaf <#{pt}> : #{@children[pt].nil?}"
+      @children[pt].nil?
     end
 
 #------------------------------------------------------------------------------------------------------------------
@@ -438,19 +456,16 @@ module Building
 
       if !leaf?(start) and # on continue d'explorer si il y a un enfant, sinon tant pis la visite n'aura pas la bonnne longueur
           count_visit > 1
-        children = children(start)
-        children.each { |child|
-          if child == start
-            children.delete(child)
-          end
-        }
-        child = children.shuffle![0]
-        @logger.an_event.info("start #{start}") if child == ""
+        #children = children(start)
+        child = @children[start].shuffle![0]
+        @logger.an_event.alert("start #{start}") if child == "" #ne doit jamais arrivé
         visit.add_page(child, @duration_pages.pop)
         explore_visit_from(visit,
                            child,
                            count_visit-=1,
                            stack)
+      else
+      #  @logger.an_event.alert("start #{start} is leaf? #{!leaf?(start)} and count_visit = #{count_visit}")
       end
     end
 
