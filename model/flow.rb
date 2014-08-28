@@ -153,7 +153,6 @@ class Flow
   end
 
   def archive_previous
-    #TODO valider archive_previous
     # N'ARCHIVE PAS L'INSTANCE COURANTE
     # archive le flow ou les flows qui sont antérieurs à l'instance courante
     # en prenant en compte le multivolume

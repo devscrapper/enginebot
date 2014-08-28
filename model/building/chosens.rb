@@ -93,7 +93,7 @@ module Building
           count_device = count_visits - total_visits if total_visits + count_device > count_visits # pour eviter de passer le nombre de visite attendues
           total_visits += count_device
           count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE}"); pob.increment }
-          reporting.device_platform_obj(chosen_device)
+          reporting.device_platform_obj(chosen_device, count_visits)
         }
         reporting.to_file
         chosen_device_platform_file.archive_previous
