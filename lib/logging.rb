@@ -86,13 +86,13 @@ module Logging
 #      Cette option est clairement destinée à l'envoi d'eMails depuis une connexion appartenant à un opérateur différent.
       Logging::appenders.email('email',
                                :from => "error@log.com",
-                               :to => "devscrapper@yahoo.fr",
+                               :to => "olinouane@gmail.com",
                                :subject => "Application Error []",
-                               :address => "smtp.free.fr",
+                               :address => "smtp.gmail.com",
                                :port => 587,
                                :domain => "google.com",
-                               :user_name => "ericgelin",
-                               :password => "brembo",
+                               :user_name => "olinouane",
+                               :password => "Brembo01",
                                :authentication => :cram_md5,
                                :enable_starttls_auto => true,
                                :auto_flushing => 200, # send an email after 200 messages have been buffered

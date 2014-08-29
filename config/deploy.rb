@@ -101,6 +101,7 @@ set :branch, "master" # version à déployer
 
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
+set :server_name, "olgadays.synology.me:22" #adresse du server de destination hors reseau local
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
@@ -114,8 +115,8 @@ before 'rvm:install_rvm', 'avant:install_rvm'
 before 'rvm:install_ruby', 'rvm:create_gemset' #, 'avant:install_ruby'
 after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
-after "deploy:update", "apres:update"
-before "deploy:update",  "log:delete"
+after "deploy:update", "apres:update", "deploy:start"
+before "deploy:update", "deploy:stop", "log:delete"
 #----------------------------------------------------------------------------------------------------------------------
 # task list : stage
 #----------------------------------------------------------------------------------------------------------------------
@@ -148,6 +149,21 @@ namespace :log do
 end
 
 #----------------------------------------------------------------------------------------------------------------------
+# task list : log
+#----------------------------------------------------------------------------------------------------------------------
+namespace :tmp do
+  task :down, :roles => :app do
+    capture("ls #{File.join(current_path, 'tmp', '*.*')}").split(/\r\n/).each{|log_file|
+      get log_file, File.join(File.dirname(__FILE__), '..', 'tmp', File.basename(log_file))
+    }
+  end
+
+  task :delete, :roles => :app do
+    run "rm #{File.join(current_path, 'log', '*')}"
+  end
+
+end
+#----------------------------------------------------------------------------------------------------------------------
 # task list : machine
 #----------------------------------------------------------------------------------------------------------------------
 namespace :machine do
@@ -172,9 +188,13 @@ namespace :deploy do
     server_list.each { |server| run "#{sudo} initctl stop #{server}" }
   end
 
+  task :status, :roles => :app, :except => {:no_release => true} do
+    server_list.each { |server| run "#{sudo} initctl status #{server}" }
+  end
+
   task :restart, :roles => :app, :except => {:no_release => true} do
-    server_list.each { |server| run "#{sudo} initctl stop #{server}" }
-    server_list.each { |server| run "#{sudo} initctl start #{server}" }
+    stop
+    start
   end
 
   task :first, :roles => :app do

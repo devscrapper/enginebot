@@ -457,14 +457,14 @@ module Building
           count_visit > 1
         #children = children(start)
         child = @children[start].shuffle![0]
-        @logger.an_event.alert("start #{start}") if child == "" #ne doit jamais arrivé
+        @logger.an_event.fatal("start #{start}") if child == "" #ne doit jamais arrivé
         visit.add_page(child, @duration_pages.pop)
         explore_visit_from(visit,
                            child,
                            count_visit-=1,
                            stack)
       else
-        @logger.an_event.info("start #{start} is leaf? #{leaf?(start)} and count_visit = #{count_visit}")
+        #@logger.an_event.info("start #{start} is leaf? #{leaf?(start)} and count_visit = #{count_visit}")
       end
     end
 
