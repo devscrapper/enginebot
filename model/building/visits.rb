@@ -293,6 +293,7 @@ module Building
 
       @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is over (#{Time.now - start_time})")
     end
+
     #--------------------------------------------------------------------------------------------------------------
     # Publishing_visits
     #--------------------------------------------------------------------------------------------------------------
@@ -370,14 +371,14 @@ module Building
         @children = @matrix_file.load_to_hash(EOFLINE) { |line|
           arr = line.split(SEPARATOR1)
           key = arr[0]
-          res =  {}
+          res = {}
           if arr[1].nil?
             # la page est une feuille, n'a donc pas de lien vers d'autre page => on ne la charge pas en mémoire
             # c'est pourquoi la methode leaf? teste si la page est présente dans le hash en mémoire et pas le nombre de page associé
           else
             value = arr[1].split(SEPARATOR3)
-            value.compact! unless value.delete(key).nil?  # suppression de la clé ie la page origine pour eliminer les cycles
-            res =  {key => value}
+            value.compact! unless value.delete(key).nil? # suppression de la clé ie la page origine pour eliminer les cycles
+            res = {key => value}
           end
           res
         }
@@ -440,7 +441,6 @@ module Building
 #la page pointe elle sur d'autre page (feuille du graphe)
     def leaf?(pt)
       #children(pt).size == 0
-      p "leaf <#{pt}> : #{@children[pt].nil?}"
       @children[pt].nil?
     end
 
@@ -450,7 +450,6 @@ module Building
 # construit la visite en respectant le nombre de pages comme objectif
 #------------------------------------------------------------------------------------------------------------------
     def explore_visit_from(visit, start, count_visit, stack=nil)
-
       stack << start unless stack.nil?
       stack = [start] if stack.nil?
 
@@ -465,7 +464,7 @@ module Building
                            count_visit-=1,
                            stack)
       else
-      #  @logger.an_event.alert("start #{start} is leaf? #{!leaf?(start)} and count_visit = #{count_visit}")
+        @logger.an_event.info("start #{start} is leaf? #{leaf?(start)} and count_visit = #{count_visit}")
       end
     end
 

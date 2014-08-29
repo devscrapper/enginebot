@@ -78,6 +78,8 @@ module Building
     def Choosing_device_platform(label, date, count_visits)
       @logger.an_event.info "Choosing device platform for #{label} for #{date} is starting"
       begin
+        raise ArgumentError "count_visits is zero" if count_visits == 0
+
         device_platform = Flow.new(TMP, "device-platform", label, date).last
         raise IOError "input flow device-platform for <#{label}> for <#{date}> is missing" if device_platform.nil?
 
@@ -89,12 +91,28 @@ module Building
 
         device_platform.foreach(EOFLINE) { |device|
           chosen_device = Chosen_device_platform.new(device)
-          count_device = max((chosen_device.count_visits * count_visits / 100).to_i, 1)
-          count_device = count_visits - total_visits if total_visits + count_device > count_visits # pour eviter de passer le nombre de visite attendues
-          total_visits += count_device
-          count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE}"); pob.increment }
-          reporting.device_platform_obj(chosen_device, count_visits)
+          # en entree la somme des chosen_device.count_visits = 100%
+          ################################################################################"
+          # IMPORTANT
+          # -----------------------------------------------------------------------------
+          # max((chosen_device.count_visits * count_visits / 100).to_i + 1 , 1)
+          # on ajoute + 1 à la partie entiere pour ne pas avoir un manque de device_platforme en raison des dixièmes qui apparaissent lors de la
+          # division par 100.
+          # en conséquence il y aura tj plus de device_platform que de visit ; alors les derniers (ceux qui ont peu de visites )
+          # device_platforme ne seront jamais utilisés.
+
+          if total_visits < count_visits
+            # si chosen_device.count_visits == 0 alors on le remplace par 1 => max()
+            count_device = max((chosen_device.count_visits * count_visits / 100).to_i + 1, 1)
+            # pour eviter de dépasser le nombre de visite attendues
+            count_device = count_visits - total_visits if total_visits + count_device > count_visits
+            total_visits += count_device
+            count_device.times { chosen_device_platform_file.write("#{chosen_device.to_s}#{EOFLINE}"); pob.increment }
+            chosen_device.count_visits = count_device
+            reporting.device_platform_obj(chosen_device, count_visits)
+          end
         }
+
         reporting.to_file
         chosen_device_platform_file.archive_previous
       rescue Exception => e
@@ -111,7 +129,7 @@ module Building
       landing_pages_file = Flow.new(TMP, "landing-pages-#{medium_type}", label, date).last
       raise IOError, "tmp flow landing-pages-#{medium_type} for <#{label}> for <#{date}> is missing" if landing_pages_file.nil?
       begin
-       landing_pages_array = landing_pages_file.load_to_array(EOFLINE)
+        landing_pages_array = landing_pages_file.load_to_array(EOFLINE)
         landing_pages_file_lines = landing_pages_array.size
         p = ProgressBar.create(:title => "#{medium_type} landing pages", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => medium_count, :format => '%t, %c/%C, %a|%w|')
         while medium_count > 0 and landing_pages_file_lines > 0
