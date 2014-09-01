@@ -8,7 +8,7 @@ test:
   listening_port: 9104
   scrape_server_port: 9101
   periodicity: "0 0 * * * * Europe/Paris"   #toutes les heures (pile) sur le fuseau hoare GMT+2
-  debugging: false
+  debugging: true
 production:
   listening_port: 9104
   scrape_server_port: 9101

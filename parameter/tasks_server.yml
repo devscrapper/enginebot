@@ -17,6 +17,6 @@ test:
   statupweb_server_ip: 192.168.1.11
   statupweb_server_port: 3000
   calendar_server_port: 9104
-  debugging: false
+  debugging: true
 
 production:

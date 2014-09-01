@@ -101,7 +101,7 @@ set :branch, "master" # version à déployer
 
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
-set :server_name, "olgadays.synology.me:22" #adresse du server de destination hors reseau local
+#set :server_name, "olgadays.synology.me:22" #adresse du server de destination hors reseau local
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"

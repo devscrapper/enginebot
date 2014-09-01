@@ -7,8 +7,8 @@ require 'pathname'
 
 include Flowing
 include Building
-$debugging = false
-$staging = "test"
+$debugging = true
+$staging = "development"
 LOG = Pathname.new(File.join(File.dirname(__FILE__), '..', 'log')).realpath
 JDD = Pathname.new(File.join(File.dirname(__FILE__), '..', 'jdd')).realpath
 INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input'))
@@ -119,10 +119,10 @@ end
 # le deuxieme diffuse regulierement les visits vers les statupbot
 #------------------------------------------------------------------------------------------------------------------
 #scheduler.cron CRON do
-cleaning
-deploying
-building_inputs
-choosing
+#cleaning
+#deploying
+#building_inputs
+#choosing
 building_visits
 
 #end
