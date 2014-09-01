@@ -113,13 +113,13 @@ class Objective
     #}
 
 
-    begin
-      options = {"path" => "/objectives/create",
-                 "scheme" => "http"}
-      Information.new(self.to_db).send_to(where_ip, where_port, options)
-    rescue Exception => e
-      raise ObjectiveException, e.message
-    end
+    #begin
+    #  options = {"path" => "/objectives/create",
+    #             "scheme" => "http"}
+    #  Information.new(self.to_db).send_to(where_ip, where_port, options)
+    #rescue Exception => e
+    #  raise ObjectiveException, e.message
+    #end
   end
 
 
