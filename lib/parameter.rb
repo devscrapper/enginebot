@@ -60,10 +60,6 @@ class Parameter
   # l'adresse d'un fichier de paramètre
   #----------------------------------------------------------------------------------------------------------------
   def method_missing (name, *args, &block)
-    if @parameters[name].nil?
-      @parameters[name.to_s]
-    else
       @parameters[name]
-    end
   end
 end

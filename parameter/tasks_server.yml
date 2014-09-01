@@ -4,8 +4,6 @@ development:
   listening_port: 9101
   ftp_server_port: 9102
   authentification_server_port: 9103
-  statupbot_server_ip: localhost
-  statupbot_server_port: 9201
   statupweb_server_ip: localhost
   statupweb_server_port: 3000
   calendar_server_port: 9104
@@ -16,8 +14,6 @@ test:
   listening_port: 9101
   ftp_server_port: 9102
   authentification_server_port: 9103
-  statupbot_server_ip: 192.168.1.53
-  statupbot_server_port: 9201
   statupweb_server_ip: 192.168.1.11
   statupweb_server_port: 3000
   calendar_server_port: 9104

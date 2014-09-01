@@ -13,8 +13,6 @@ ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
 listening_port = 9002 # port d'ecoute du load_server
 scraper_server_port = 9003 # port d'ecoute du scraper_server
 $authentification_server_port = 9001
-$statupbot_server_ip = "localhost"
-$statupbot_server_port = 9006
 $statupweb_server_ip="localhost"
 $statupweb_server_port=3000
 $calendar_server_port=9104
@@ -35,8 +33,6 @@ begin
   params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
   listening_port = params[$staging]["listening_port"] unless params[$staging]["listening_port"].nil?
   $authentification_server_port = params[$staging]["authentification_server_port"] unless params[$staging]["authentification_server_port"].nil?
-  $statupbot_server_ip = params[$staging]["statupbot_server_ip"] unless params[$staging]["statupbot_server_ip"].nil?
-  $statupbot_server_port = params[$staging]["statupbot_server_port"] unless params[$staging]["statupbot_server_port"].nil?
   $statupweb_server_ip = params[$staging]["statupweb_server_ip"] unless params[$staging]["statupweb_server_ip"].nil?
   $statupweb_server_port = params[$staging]["statupweb_server_port"] unless params[$staging]["statupweb_server_port"].nil?
   $calendar_server_port = params[$staging]["calendar_server_port"] unless params[$staging]["calendar_server_port"].nil?
@@ -52,8 +48,6 @@ logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(
 logger.a_log.info "parameters of tasks server :"
 logger.a_log.info "listening port : #{listening_port}"
 logger.a_log.info "authentification server port : #{$authentification_server_port}"
-logger.a_log.info "statupbot servers ip : #{$statupbot_server_ip}"
-logger.a_log.info "statupbot server port : #{$statupbot_server_port}"
 logger.a_log.info "statupweb server ip : #{$statupweb_server_ip}"
 logger.a_log.info "statupweb server port : #{$statupweb_server_port}"
 logger.a_log.info "calendar server port : #{$calendar_server_port}"

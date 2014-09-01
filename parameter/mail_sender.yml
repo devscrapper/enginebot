@@ -1,20 +1,20 @@
 ﻿development:
-  address: smtp.gmail.com
-  port: 587
-  user_name: olinouane
-  password: Brembo01
-  debugging: true
+  :address: smtp.gmail.com
+  :port: 587
+  :user_name: olinouane
+  :password: Brembo01
+  :debugging: true
 
 test:
-  address: smtp.gmail.com
-  port: 587
-  user_name: olinouane
-  password: Brembo01
-  debugging: false
+  :address: smtp.gmail.com
+  :port: 587
+  :user_name: olinouane
+  :password: Brembo01
+  :debugging: false
 
 production:
-  address: smtp.gmail.com
-  port: 587
-  user_name: olinouane
-  password: Brembo01
-  debugging: false
+  :address: smtp.gmail.com
+  :port: 587
+  :user_name: olinouane
+  :password: Brembo01
+  :debugging: false
