@@ -1,13 +1,14 @@
 #referentiels
 source "http://rubygems.org"
 source "http://gems.github.com"
+# utiliser en dev net-ssh 2.6.x et pas > sinon capistrano n'arrive plus à se connecter à la machine distante. Si nécessire en prod alors utiliser les groupes
 
 gem 'eventmachine', '~> 1.0.0'
 gem 'json', '~> 1.7.5'
 gem 'em-ftpd', '~> 0.0.1'
 gem 'ruby-progressbar', '~> 1.0.2'
 gem 'rufus-scheduler', '~> 2.0.17'
-gem 'ice_cube', '0.9.1'
+gem 'ice_cube', '0.11.0'
 gem 'logging', '~> 1.8.1'
 gem 'rest-client', '~> 1.6.7'
 gem 'uuid', '~> 2.3.7'
