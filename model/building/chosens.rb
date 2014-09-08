@@ -44,6 +44,12 @@ module Building
     end
 
     def Choosing_landing_pages(label, date, direct_medium_percent, organic_medium_percent, referral_medium_percent, count_visit)
+      # 2014/09/08 : les referral ne sont plus captés à partir de Google Analytics car ils n'ont pas de valeur. Cela sera
+      #remplacer à terme par un service de recherche de backlink
+      # En attendant, au fichier referral n'est produit par scraperbot => bug remonté par  Choosing_landing_medium_in_mem
+      # on commente alors : Choosing_landing_medium_in_mem(label, date, "referral", medium_count, chosen_landing_pages_file)
+      # tant que le srrvice de backlink n'a pas produit de fichier pour referral.
+      # referral_medium_percent est forcé à zero pour éviter un bug si dans statupweb on saisit un pourcentage pour referral.
       @logger.an_event.info "Choosing landing pages for #{label} for #{date} is starting"
 
       reporting = Reporting.new(label, date)
@@ -53,21 +59,20 @@ module Building
       Flow.new(TMP, "chosen-landing-pages", label, date).delete
       chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", label, date) #output
 
-      medium_count = (direct_medium_percent * count_visit / 100).to_i
-      @logger.an_event.debug "count direct medium #{medium_count}"
+      direct_medium_count = (direct_medium_percent * count_visit / 100).to_i
+      @logger.an_event.debug "count direct medium #{direct_medium_count}"
+      Choosing_landing_medium_in_mem(label, date, "direct", direct_medium_count, chosen_landing_pages_file)
 
-      #Choosing_landing_medium_with_file(label, date, "direct", medium_count, chosen_landing_pages_file)
-      Choosing_landing_medium_in_mem(label, date, "direct", medium_count, chosen_landing_pages_file)
 
-      medium_count = (referral_medium_percent * count_visit / 100).to_i
-      @logger.an_event.debug "count referral medium #{medium_count}"
-      #Choosing_landing_medium_with_file(label, date, "referral", medium_count, chosen_landing_pages_file)
-      Choosing_landing_medium_in_mem(label, date, "referral", medium_count, chosen_landing_pages_file)
+      referral_medium_percent = 0 # TODO à supprimer quand les backlinks seront disponibles
+      referral_medium_count = (referral_medium_percent * count_visit / 100).to_i
+      @logger.an_event.debug "count referral medium #{referral_medium_count}"
+      # TODO à decommenter quand les backlinks seront disponibles
+      #Choosing_landing_medium_in_mem(label, date, "referral", referral_medium_count, chosen_landing_pages_file)
 
-      medium_count = count_visit - ((direct_medium_percent * count_visit / 100).to_i + (referral_medium_percent * count_visit / 100).to_i)
-      @logger.an_event.debug "count organic medium #{medium_count}"
-      #Choosing_landing_medium_with_file(label, date, "organic", medium_count, chosen_landing_pages_file)
-      Choosing_landing_medium_in_mem(label, date, "organic", medium_count, chosen_landing_pages_file)
+      organic_medium_count = count_visit - (direct_medium_count + referral_medium_count)
+      @logger.an_event.debug "count organic medium #{organic_medium_count}"
+      Choosing_landing_medium_in_mem(label, date, "organic", organic_medium_count, chosen_landing_pages_file)
 
       chosen_landing_pages_file.close
       chosen_landing_pages_file.archive_previous
