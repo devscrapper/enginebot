@@ -220,6 +220,11 @@ module Building
         #on charge en memoire le fichier
         pages = pages_file.load_to_array(EOFLINE)
 
+        #initialisation des fichier à empty car il se peut que pour une une heure il n y ait pas de visit,
+        # et que le fichier soit vide.
+        # il faut qd même crer un fichier final- vide pour eviter que le publishing échoue et
+        # cela eviter de se poser des questions sur l'absence de fichier
+        24.times { |anhour| Flow.new(TMP, "final-visits", @label, @date_building, anhour + 1).empty }
 
         device_platforms = device_platform_file.readlines(EOFLINE).shuffle
         @logger.an_event.debug device_platforms
