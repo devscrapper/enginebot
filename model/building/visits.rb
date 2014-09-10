@@ -272,7 +272,7 @@ module Building
       start_time = Time.now
 
       reporting = Reporting.new(@label, @date_building)
-      p = ProgressBar.create(:title => "Saving Final visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
+      p = ProgressBar.create(:title => "Reporting visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
 
       24.times { |hour|
         final_visits_by_hour_file = Flow.new(TMP, "final-visits", @label, @date_building, hour + 1) #input
