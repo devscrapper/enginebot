@@ -291,9 +291,10 @@ module Building
             @logger.an_event.debug e
             @logger.an_event.error "cannot report visit"
           end
-          p.increment
+
         } unless final_visits_by_hour_file.zero?
         final_visits_by_hour_file.close
+        p.increment
       }
 
       reporting.to_file
