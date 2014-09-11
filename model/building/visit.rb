@@ -10,7 +10,7 @@ module Building
     SEPARATOR5=","
     SEPARATOR3="!"
     EOFLINE2 ="\n"
-    @@count_visit = 0
+
 
     attr :id_visit,
          :start_date_time,
@@ -31,8 +31,6 @@ module Building
          :advert
 
     def initialize(first_page, duration)
-      @@count_visit += 1
-      @id_visit = @@count_visit #TODO remplacer la valeur de id_visit par un uuid pour avoir une clé unique car dans statupbot on perd l'association au website
       @id_visit = UUID.generate
       splitted_page = first_page.split(SEPARATOR2)
       @referral_path = splitted_page[1].strip
