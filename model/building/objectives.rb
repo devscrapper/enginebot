@@ -84,14 +84,20 @@ module Building
                             account_ga)
 
         @logger.an_event.debug obj
-        begin
 
+        # TODO mise en commentaire pour supprimer les messages de log qd statupbweb n'est pas demarré : aucune interet à ce jour
+        # TODO tant que statupweb n a pas été revisé
+        # TODO sortir cet envoie de l'exception cannot building objective car ce n'est pas revelateur d'un bug de creation de objective
+        # TODO mais un prb de reporting
+=begin
+        begin
           obj.send_to_db($statupweb_server_ip, $statupweb_server_port)
           @logger.an_event.info "send objective for <#{label}> at date <#{day}> to statupweb"
         rescue Exception => e
           @logger.an_event.debug e
           @logger.an_event.warn "cannot send objective <#{label}> at date <#{day}> to statupweb(#{$statupweb_server_ip}:#{$statupweb_server_port})"
         end
+=end
         begin
           obj.send_to_calendar($calendar_server_port)
           @logger.an_event.info "send objective for <#{label}> at date <#{day}> to calendar"

@@ -82,7 +82,7 @@ module Building
         reporting.visit_obj(count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages)
         reporting.to_file
 
-        @matrix_file = Flow.new(TMP, "matrix", @label, @date_building).last.duplicate #input utilisé par building_not_bounce_visit
+        @matrix_file = Flow.new(TMP, "matrix", @label, @date_building).last #input utilisé par building_not_bounce_visit
         raise IOError, "input matrix file for #{@label} is missing" if @matrix_file.nil?
         chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", @label, @date_building) #input
         raise IOError, "tmp flow <#{chosen_landing_pages_file.basename}> is missing" unless chosen_landing_pages_file.exist?
@@ -118,7 +118,7 @@ module Building
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE}"); p.increment }
         @visits_file.close
         @matrix_file.close
-        @matrix_file.delete #suppression de la duplication de la matrice
+
         Task.new("Building_planification", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.error "cannot build visits for #{@label} for #{@date_building}"
@@ -187,6 +187,8 @@ module Building
 
         24.times { |anhour| @planed_visits_by_hour_file[anhour].close }
 
+        Flow.new(TMP, "planed-visits", @label, @date_building).archive_previous
+
         Task.new("Extending_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.debug e
@@ -253,6 +255,8 @@ module Building
         }
         device_platform_file.close
         pages_file.close
+
+        Flow.new(TMP, "final-visits", @label, @date_building).archive_previous
 
         Task.new("Reporting_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e

@@ -32,6 +32,20 @@ class Scheduler
     @scheduler = Rufus::Scheduler.start_new
 
 
+    # quand un scheduler a été stoppé(deploiement nouvelle version), les visites planifiées ne le sont plus.
+    # les visites planfifiées ont été stockées dnas output.
+    # pour éviter de perdre des visites lors du re demarrage du scheduler 
+    # on planifie une nouvelle fois ces visites lors de la creation du scheduler par scan du repertoire OUTPUT
+    # on ne planifie que les visites dont la date de demarrage est dans le futur de 5 * 60s
+    @logger.an_event.info "scan visit file for #{@pattern} in #{OUTPUT}"
+
+    output_flow_visit_arr = Flow.list(OUTPUT, {:type_flow => @pattern, :ext => "yml"})
+    @logger.an_event.info "output flow count for #{@pattern} #{output_flow_visit_arr.size}"
+
+    output_flow_visit_arr.each { |output_flow_visit|
+      plan_visit_file(output_flow_visit)
+    }
+
     input_flow_servers[:servers].each_value { |server|
       scheduler_instance = EM::ThreadedResource.new do
         {:ip => server[:ip], :port => server[:port]}
@@ -49,33 +63,40 @@ class Scheduler
       EM::PeriodicTimer.new(@delay_periodic_scan) do
         @logger.an_event.info "scan visit file for #{@pattern} in #{TMP}"
         @logger.an_event.info "visit planed count for #{@pattern} #{@scheduler.jobs.size}"
-        start_time = Time.now
+
         tmp_flow_visit_arr = Flow.list(TMP, {:type_flow => @pattern, :ext => "yml"})
 
         @logger.an_event.info "output flow count for #{@pattern} #{tmp_flow_visit_arr.size}"
 
         tmp_flow_visit_arr.each { |tmp_flow_visit|
-          if tmp_flow_visit.exist?
-            year, month, day, hour, min, sec = tmp_flow_visit.date.split(/-/)
-            start_date_time =Time.new(year.to_i, month.to_i, day.to_i, hour.to_i, min.to_i, sec.to_i)
-
-            if start_date_time > Time.now
-              @logger.an_event.info "tmp_flow_visit #{tmp_flow_visit.basename} is plan at #{start_date_time}"
-              tmp_flow_visit.move(OUTPUT)
-              @scheduler.at start_date_time.to_s do
-                send_visit_to_statupbot(tmp_flow_visit)
-              end
-            else
-              @logger.an_event.warn "visit flow #{tmp_flow_visit.basename} not plan, too old"
-            end
-          else
-            @logger.an_event.warn "visit flow #{tmp_flow_visit.basename} not exist"
-          end
+          plan_visit_file(tmp_flow_visit)
+          tmp_flow_visit.move(OUTPUT)
         }
       end
     rescue Exception => e
       @logger.an_event.error "scan visit file for #{@pattern} catch exception : #{e.message} => restarting"
       retry
+    end
+  end
+
+
+  def plan_visit_file(flow_visit)
+    if flow_visit.exist?
+      year, month, day, hour, min, sec = flow_visit.date.split(/-/)
+      start_date_time = Time.new(year.to_i, month.to_i, day.to_i, hour.to_i, min.to_i, sec.to_i)
+
+      if start_date_time > Time.now
+        @logger.an_event.info "flow_visit #{flow_visit.basename} is plan at #{start_date_time}"
+
+        @scheduler.at start_date_time.to_s do
+          send_visit_to_statupbot(flow_visit)
+        end
+
+      else
+        @logger.an_event.warn "visit flow #{flow_visit.basename} not plan, too old"
+      end
+    else
+      @logger.an_event.warn "visit flow #{flow_visit.basename} not exist"
     end
   end
 
@@ -86,8 +107,6 @@ class Scheduler
         dispatcher.dispatch do |details|
           ip = details[:ip]
           port = details[:port]
-          p ip
-          p port
           @logger.an_event.info "visit file name #{visit.absolute_path}"
           visit.push(@authentification_server_port,
                      ip,
@@ -101,6 +120,7 @@ class Scheduler
       @logger.an_event.error "visit flow #{visit.basename} not push to #{@os}/#{@version} input flow server #{ip}:#{ip} : #{e.message}"
     else
       @logger.an_event.info "push visit flow #{visit.basename} to #{@os}/#{@version} input flow server #{ip}:#{port}"
+      #pas besoin d'archiver les flow car ils automatiquement supprimés lors du download vers le statupbot
     end
   end
 
