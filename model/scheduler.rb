@@ -61,17 +61,16 @@ class Scheduler
   def scan_visit_file
     begin
       EM::PeriodicTimer.new(@delay_periodic_scan) do
-        @logger.an_event.info "scan visit file for #{@pattern} in #{TMP}"
         @logger.an_event.info "visit planed count for #{@pattern} #{@scheduler.jobs.size}"
-
         tmp_flow_visit_arr = Flow.list(TMP, {:type_flow => @pattern, :ext => "yml"})
-
-        @logger.an_event.info "output flow count for #{@pattern} #{tmp_flow_visit_arr.size}"
 
         tmp_flow_visit_arr.each { |tmp_flow_visit|
           plan_visit_file(tmp_flow_visit)
           tmp_flow_visit.move(OUTPUT)
         }
+      end
+      EM::PeriodicTimer.new(5 * 60) do
+        @logger.an_event.info "visit planed count for #{@pattern} #{@scheduler.jobs.size}"
       end
     rescue Exception => e
       @logger.an_event.error "scan visit file for #{@pattern} catch exception : #{e.message} => restarting"

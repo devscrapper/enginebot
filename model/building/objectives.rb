@@ -68,8 +68,8 @@ module Building
         splitted_behaviour = behaviour[line].strip.split(SEPARATOR2)
         splitted_hourly_daily_distribution = hourly_daily_distribution[line].strip.split(SEPARATOR2)
         obj = Objective.new(label, day,
-                            (splitted_behaviour[5].to_i * (1 + (change_count_visits_percent.to_f / 100))).to_i,
-                            (splitted_behaviour[2].to_f * (1 + (change_bounce_visits_percent.to_f / 100))).round(2),
+                            (splitted_behaviour[5].to_i * (change_count_visits_percent.to_f / 100)).to_i,
+                            (splitted_behaviour[2].to_f * (change_bounce_visits_percent.to_f / 100)).round(2),
                             splitted_behaviour[1].to_f.round(2),
                             splitted_behaviour[3].to_f.round(2),
                             splitted_behaviour[4].to_f.round(2),

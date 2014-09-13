@@ -92,10 +92,10 @@ module Building
         count_pages = (count_visit * page_views_per_visit).to_i
         count_durations = (count_visit * avg_time_on_site).to_i
         @duration_pages = distributing(count_pages, count_durations, min_durations)
-                                                                                      #TODO : valider que la distribution de duration pour les pages de la visite, positionne comme première valeur, la valeur minimale afin que la landing page soit déclencher en premier
-                                                                                      #TODO : controler commen cela est fait  : les durée associé aux page sont elle
-                                                                                      # TODO en delta par rapport à la précédent => il n'est pas nécessaire que les durées soit croissante
-                                                                                      # TODO par rapport à la visit : il faut que les durée soit croissante pour la llstye depage de la visit
+                                                                            #TODO : valider que la distribution de duration pour les pages de la visite, positionne comme première valeur, la valeur minimale afin que la landing page soit déclencher en premier
+                                                                            #TODO : controler commen cela est fait  : les durée associé aux page sont elle
+                                                                            # TODO en delta par rapport à la précédent => il n'est pas nécessaire que les durées soit croissante
+                                                                            # TODO par rapport à la visit : il faut que les durée soit croissante pour la llstye depage de la visit
         min_duration_idx = @duration_pages.index(@duration_pages.min)
         if min_duration_idx > 0
           min_duration = @duration_pages[min_duration_idx]
@@ -187,7 +187,6 @@ module Building
 
         24.times { |anhour| @planed_visits_by_hour_file[anhour].close }
 
-        Flow.new(TMP, "planed-visits", @label, @date_building).archive_previous
 
         Task.new("Extending_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
@@ -252,11 +251,10 @@ module Building
           } unless planed_visits_file.zero?
           planed_visits_file.close
           final_visits_by_hour_file.close
+          planed_visits_file.archive
         }
         device_platform_file.close
         pages_file.close
-
-        Flow.new(TMP, "final-visits", @label, @date_building).archive_previous
 
         Task.new("Reporting_visits", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
@@ -274,34 +272,37 @@ module Building
     def Reporting_visits
       @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is starting")
       start_time = Time.now
+      begin
+        reporting = Reporting.new(@label, @date_building)
+        p = ProgressBar.create(:title => "Reporting visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
 
-      reporting = Reporting.new(@label, @date_building)
-      p = ProgressBar.create(:title => "Reporting visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
+        24.times { |hour|
+          final_visits_by_hour_file = Flow.new(TMP, "final-visits", @label, @date_building, hour + 1) #input
 
-      24.times { |hour|
-        final_visits_by_hour_file = Flow.new(TMP, "final-visits", @label, @date_building, hour + 1) #input
+          raise IOError, "tmp flow <#{final_visits_by_hour_file.basename}> is missing" unless final_visits_by_hour_file.exist?
 
-        raise IOError, "tmp flow <#{final_visits_by_hour_file.basename}> is missing" unless final_visits_by_hour_file.exist?
+          final_visits_by_hour_file.foreach(EOFLINE) { |visit|
+            begin
+              reporting.visit(Published_visit.new(visit))
+            rescue Exception => e
+              @logger.an_event.debug visit
+              @logger.an_event.debug e
+              @logger.an_event.error "cannot report visit"
+            end
 
-        final_visits_by_hour_file.foreach(EOFLINE) { |visit|
-          begin
-            reporting.visit(Published_visit.new(visit))
-          rescue Exception => e
-            @logger.an_event.debug visit
-            @logger.an_event.debug e
-            @logger.an_event.error "cannot report visit"
-          end
+          } unless final_visits_by_hour_file.zero?
+          final_visits_by_hour_file.close
+          p.increment
+        }
 
-        } unless final_visits_by_hour_file.zero?
-        final_visits_by_hour_file.close
-        p.increment
-      }
-
-      reporting.to_file
-      reporting.to_mail
-      reporting.archive
-
-      @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is over (#{Time.now - start_time})")
+        reporting.to_file
+        reporting.to_mail
+        reporting.archive
+      rescue Exception => e
+        @logger.an_event.error("cannot report for #{@label} : #{e.message}")
+      ensure
+        @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is over (#{Time.now - start_time})")
+      end
     end
 
     #--------------------------------------------------------------------------------------------------------------
@@ -353,8 +354,7 @@ module Building
           published_visits_to_yaml_file.close
           p.increment
         }
-
-          #TODO coder les archives qui manquent => voir les repertoire tmp /input pour savoir ce qui manque
+        final_visits_file.archive
       rescue Exception => e
         @logger.an_event.debug e
         @logger.an_event.error "cannot publish visits  at #{hour} hour for #{@label}"
@@ -522,7 +522,7 @@ module Building
       res
     end
 
-    def chose_an_hour()
+    def chose_an_hour
       @count_visits_by_hour.delete_if { |value| value[1] == 0 }
       @logger.an_event.debug "@count_visits_by_hour: #{@count_visits_by_hour}"
       @logger.an_event.debug "@count_visits_by_hour.size: #{@count_visits_by_hour.size}"
