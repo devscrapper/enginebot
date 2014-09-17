@@ -78,7 +78,8 @@ module Building
         @logger.an_event.debug("min_durations #{min_durations}")
         @logger.an_event.debug("min_pages #{min_pages}")
 
-        reporting = Reporting.new(@label, @date_building)
+
+        reporting = Reporting.new(@label, @date_building, @logger)
         reporting.visit_obj(count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages)
         reporting.to_file
 
@@ -118,7 +119,7 @@ module Building
         @visits.each { |visit| @visits_file.write("#{visit.to_s}#{EOFLINE}"); p.increment }
         @visits_file.close
         @matrix_file.close
-
+        @visits_file.archive_previous
         Task.new("Building_planification", {"label" => @label, "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.error "cannot build visits for #{@label} for #{@date_building}"
@@ -135,7 +136,7 @@ module Building
     def Building_planification(hourly_distribution, count_visits)
       @logger.an_event.info("Building planification of visit for #{@label}  for #{@date_building} is starting")
       begin
-        reporting = Reporting.new(@label, @date_building)
+        reporting = Reporting.new(@label, @date_building, @logger)
         reporting.planification_obj(hourly_distribution)
         reporting.to_file
 
@@ -201,11 +202,17 @@ module Building
 #--------------------------------------------------------------------------------------------------------------
 #
 # --------------------------------------------------------------------------------------------------------------
-    def Extending_visits(count_visit, account_ga, return_visitor_rate)
+    def Extending_visits(count_visit,
+        return_visitor_rate,
+        advertising_percent,
+        advertisers)
       @logger.an_event.info("Extending visits for #{@label}  for #{@date_building} is starting")
+      @logger.an_event.debug("advertising_percent #{advertising_percent}")
+      @logger.an_event.debug("advertisers #{advertisers}")
       begin
-        reporting = Reporting.new(@label, @date_building)
+        reporting = Reporting.new(@label, @date_building, @logger)
         reporting.return_visitor_obj(return_visitor_rate)
+        reporting.advertising_obj(advertising_percent, advertisers)
         reporting.to_file
 
         device_platform_file = Flow.new(TMP, "chosen-device-platform", @label, @date_building)
@@ -231,6 +238,10 @@ module Building
         @logger.an_event.debug device_platforms
         return_visitors = Array.new(count_visit, false)
         return_visitors.fill(true, 0..(count_visit * return_visitor_rate / 100).to_i).shuffle!
+
+        adverts = Array.new(count_visit, "none")
+        adverts.fill(advertisers.shuffle![0], 0..(count_visit * advertising_percent / 100).to_i).shuffle!
+
         p = ProgressBar.create(:title => "Saving Final visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => count_visit, :format => '%t, %c/%C, %a|%w|')
 
         24.times { |hour|
@@ -239,8 +250,9 @@ module Building
           raise IOError, "tmp flow <#{planed_visits_file.basename}> is missing" unless planed_visits_file.exist?
           planed_visits_file.foreach(EOFLINE) { |visit|
             return_visitor = return_visitors.shift
+            advert = adverts.shift
             begin
-              v = Final_visit.new(visit, account_ga, return_visitor, pages, device_platforms.shift)
+              v = Final_visit.new(visit, return_visitor, advert, pages, device_platforms.shift)
               final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE}")
             rescue Exception => e
               @logger.an_event.debug visit
@@ -273,7 +285,7 @@ module Building
       @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is starting")
       start_time = Time.now
       begin
-        reporting = Reporting.new(@label, @date_building)
+        reporting = Reporting.new(@label, @date_building, @logger)
         p = ProgressBar.create(:title => "Reporting visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
 
         24.times { |hour|
@@ -285,9 +297,8 @@ module Building
             begin
               reporting.visit(Published_visit.new(visit))
             rescue Exception => e
-              @logger.an_event.debug visit
-              @logger.an_event.debug e
-              @logger.an_event.error "cannot report visit"
+              @logger.an_event.debug visit.to_s
+              @logger.an_event.error "cannot report visit : #{e.message}"
             end
 
           } unless final_visits_by_hour_file.zero?
@@ -299,7 +310,7 @@ module Building
         reporting.to_mail
         reporting.archive
       rescue Exception => e
-        @logger.an_event.error("cannot report for #{@label} : #{e.message}")
+        @logger.an_event.error("Reporting visits for #{@label} for #{@date_building} : #{e.message}")
       ensure
         @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is over (#{Time.now - start_time})")
       end
@@ -338,7 +349,6 @@ module Building
       @logger.an_event.info("Publishing at #{current_time} visits for #{@label} for #{@date_building}:#{hour}:00 is starting")
       begin
         final_visits_file = Flow.new(TMP, "final-visits", @label, @date_building, hour) #input
-        @logger.an_event.debug final_visits_file
         raise IOError, "tmp flow <#{final_visits_file.basename}> is missing" unless final_visits_file.exist?
 
         p = ProgressBar.create(:title => "publish #{final_visits_file.basename}", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => final_visits_file.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')

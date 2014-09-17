@@ -12,6 +12,7 @@ require 'pony'
 module Building
   class Reporting
     TMP = File.dirname(__FILE__) + "/../../tmp"
+    attr :logger
     #statistics
     attr_reader :label,
                 :date_building,
@@ -26,11 +27,13 @@ module Building
                 :page_views_per_visit_count,
                 :time_on_site_count,
                 :min_durations,
-                :min_pages
+                :min_pages,
+                :advertising_count, # nombre de visits qui ont un advert
+                :advertisers
     #objectives
     attr_reader :hours_obj,
                 :return_visitor_rate_obj,
-                :device_platforms_obj,   # nombre de visite par (browser, browser_version, os, os_version, screen_resolution)
+                :device_platforms_obj, # nombre de visite par (browser, browser_version, os, os_version, screen_resolution)
                 :direct_medium_percent_obj,
                 :organic_medium_percent_obj,
                 :referral_medium_percent_obj,
@@ -39,9 +42,12 @@ module Building
                 :page_views_per_visit_obj,
                 :avg_time_on_site_obj,
                 :min_durations_obj,
-                :min_pages_obj
+                :min_pages_obj,
+                :advertisers_obj,
+                :advertising_percent_obj
 
-    def initialize (label, date_building)
+    def initialize (label, date_building, logger)
+      @logger = logger
       begin
         data = YAML::load(Flow.new(TMP, "reporting-visits", label, date_building, nil, ".yml").read)
       rescue Exception => e
@@ -60,6 +66,8 @@ module Building
         @time_on_site_count = 0
         @min_durations = 9999
         @min_pages = 9999
+        @advertising_count = 0
+        @advertisers = []
         #objectives
         @hours_obj = Array.new(24, 0)
         @return_visitor_rate_obj = 0
@@ -72,7 +80,9 @@ module Building
         @page_views_per_visit_obj = 0
         @avg_time_on_site_obj = 0
         @min_durations_obj = 0
-        @min_pages_obj
+        @min_pages_obj = 0
+        @advertisers_obj = []
+        @advertising_percent_obj = 0
       else
         @label = label
         @date_building = date_building
@@ -83,6 +93,8 @@ module Building
         @referral_count = data.referral_count
         @organic_count = data.organic_count
         @device_platforms = data.device_platforms
+        @advertisers = data.advertisers
+        @advertising_count = data.advertising_count
         @visit_count = data.visit_count
         @visit_bounce_count = data.visit_bounce_count
         @page_views_per_visit_count = data.page_views_per_visit_count
@@ -102,6 +114,8 @@ module Building
         @avg_time_on_site_obj = data.avg_time_on_site_obj
         @min_durations_obj = data.min_durations_obj
         @min_pages_obj = data.min_pages_obj
+        @advertisers_obj = data.advertisers
+        @advertising_percent_obj = data.advertising_percent_obj
       ensure
 
       end
@@ -118,7 +132,7 @@ module Building
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version].nil?
       @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] = 0 if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += (device_platform.count_visits  * count_visits / 100).to_i
+      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += (device_platform.count_visits * count_visits / 100).to_i
 
     end
 
@@ -137,9 +151,18 @@ module Building
     end
 
     def to_file
-      reporting_file = Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml") #output
-      reporting_file.write(self.to_yaml)
-      reporting_file.close
+      begin
+        reporting_file = Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml") #output
+        #suppression de la log pour eviter de la retrouverdans le fichier
+        @logger = nil
+        reporting_file.write(self.to_yaml)
+        reporting_file.close
+      rescue Exception => e
+        @logger.an_event.error "report file  not save : #{e.message}"
+        raise
+      else
+        @logger.an_event.info "report file save"
+      end
     end
 
     def to_html
@@ -155,6 +178,8 @@ module Building
       #{dimension_html("avg time on site", @avg_time_on_site_obj, (@time_on_site_count * 100/ @visit_count).round(0))}
       #{dimension_html("Min duration", @min_durations_obj, @min_durations)}
       #{dimension_html("Min page", @min_pages, @min_pages_obj)}
+      #{dimension_html("Advertising percent", @advertising_percent_obj, (@advertising_count * 100/ @visit_count).round(0))}
+      #{dimension_html("Advertisers", @advertisers_obj, @advertisers)}
       #{24.times.collect { |h| dimension_html("#{h}:00-#{h+1}:00", @hours_obj[h], @hours[h]) }.join}
       #{device_platforms_display_html}
 </table><BODY></HTML>
@@ -163,12 +188,19 @@ module Building
     end
 
     def to_mail
-      MailSender.new("visits@building.fr","olinouane@gmail.com", "reporting", to_html).send_html
+      begin
+        MailSender.new("visits@building.fr", "olinouane@gmail.com", "reporting", to_html).send_html
+      rescue Exception => e
+        @logger.an_event.error "report mail not send : #{e.message}"
+        raise
+      else
+        @logger.an_event.info "report mail send"
+      end
     end
 
     def to_s
       <<-_end_of_string_
-      #{dimension_s("Visit count", @visit_count_obj, @visit_count)}
+#{dimension_s("Visit count", @visit_count_obj, @visit_count)}
       #{dimension_s("Visit bounce rate", @visit_bounce_rate_obj, (@visit_bounce_count * 100/ @visit_count).round(0))}
       #{dimension_s("Return visitor rate", @return_visitor_rate_obj, (@return_visitor_count * 100/ @visit_count).round(0))}
       #{dimension_s("Direct medium percent", @direct_medium_percent_obj, (@direct_count * 100/ @visit_count).round(0))}
@@ -178,9 +210,11 @@ module Building
       #{dimension_s("avg time on site", @avg_time_on_site_obj, (@time_on_site_count * 100/ @visit_count).round(0))}
       #{dimension_s("Min duration", @min_durations_obj, @min_durations)}
       #{dimension_s("Min page", @min_pages, @min_pages_obj)}
+      #{dimension_s("Advertising percent", @advertising_percent_obj, (@advertising_count * 100/ @visit_count).round(0))}
+      #{dimension_s("Advertisers", @advertisers_obj, @advertisers)}
       #{24.times.collect { |h| dimension_s("#{h}:00-#{h+1}:00", @hours_obj[h], @hours[h]) }.join}
       #{device_platforms_display_s}
-_end_of_string_
+      _end_of_string_
     end
 
     def visit(visit)
@@ -188,33 +222,52 @@ _end_of_string_
       #TODO page views per visit count	!= de l'obj : 2	199
       #TODO avg time on site != de l'obj
       #TODO Min page != de l'obj
-      @hours[visit.start_date_time.hour] += 1
-      @return_visitor_count += visit.return_visitor == true ? 1 : 0
+      begin
+        @hours[visit.start_date_time.hour] += 1
+        @return_visitor_count += visit.return_visitor == true ? 1 : 0
 
-      @device_platforms[visit.browser] = {} if @device_platforms[visit.browser].nil?
-      @device_platforms[visit.browser][visit.browser_version] = {} if @device_platforms[visit.browser][visit.browser_version].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] = 0 if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution].nil?
-      @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] += 1
+        @device_platforms[visit.browser] = {} if @device_platforms[visit.browser].nil?
+        @device_platforms[visit.browser][visit.browser_version] = {} if @device_platforms[visit.browser][visit.browser_version].nil?
+        @device_platforms[visit.browser][visit.browser_version][visit.operating_system] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system].nil?
+        @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version].nil?
+        @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] = 0 if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution].nil?
+        @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] += 1
 
-      case visit.medium
-        when "(none)"
-          @direct_count += 1
-        when "referral"
-          @referral_count +=1
-        when "organic"
-          @organic_count += 1
+        @return_visitor_count +=1 if visit.return_visitor == "true"
+
+        case visit.advert
+          when "none"
+          else
+            @advertising_count += 1
+            @advertisers << visit.advert unless @advertisers.include?(visit.advert)
+        end
+
+        case visit.medium
+          when "(none)"
+            @direct_count += 1
+          when "referral"
+            @referral_count +=1
+          when "organic"
+            @organic_count += 1
+        end
+        @visit_count += 1
+        @visit_bounce_count += 1 if visit.pages.size == 1
+        @page_views_per_visit_count += visit.pages.size
+
+        visit.pages.each { |page|
+          @time_on_site_count += page.delay_from_start.to_i
+          @min_durations = page.delay_from_start.to_i if @min_durations > page.delay_from_start.to_i
+        }
+        @min_pages = visit.pages.size if @min_pages > visit.pages.size
+      rescue Exception => e
+        @logger.an_event.error "calculate statistics visit : #{e.message}"
+        raise
       end
-      @visit_count += 1
-      @visit_bounce_count += 1 if visit.pages.size == 1
-      @page_views_per_visit_count += visit.pages.size
+    end
 
-      visit.pages.each { |page|
-        @time_on_site_count += page.delay_from_start.to_i
-        @min_durations = page.delay_from_start.to_i if @min_durations > page.delay_from_start.to_i
-      }
-      @min_pages = visit.pages.size if @min_pages > visit.pages.size
+    def advertising_obj(advertising_percent, advertisers)
+      @advertising_percent_obj = advertising_percent
+      @advertisers_obj = advertisers
     end
 
     def visit_obj(count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages)

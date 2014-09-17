@@ -14,7 +14,6 @@ module Building
 
     attr :id_visit,
          :start_date_time,
-         :account_ga,
          :return_visitor,
          :browser,
          :browser_version,
@@ -40,11 +39,11 @@ module Building
       @pages = [Page.new("#{splitted_page[0]}#{SEPARATOR4}#{duration}")]
     end
 
-    def length()
+    def length
       @pages.size
     end
 
-    def bounce?()
+    def bounce?
       length == 1
     end
 
@@ -59,7 +58,6 @@ module Building
     def to_s(*a)
       visit = "#{@id_visit}"
       visit += "#{SEPARATOR2}#{@start_date_time}" unless @start_date_time.nil?
-      visit += "#{SEPARATOR2}#{@account_ga}" unless @account_ga.nil?
       visit += "#{SEPARATOR2}#{@return_visitor}" unless @return_visitor.nil?
       visit += "#{SEPARATOR2}#{@browser}" unless @browser.nil?
       visit += "#{SEPARATOR2}#{@browser_version}" unless @browser_version.nil?
@@ -73,6 +71,7 @@ module Building
       visit += "#{SEPARATOR2}#{@source}" unless @source.nil?
       visit += "#{SEPARATOR2}#{@medium}" unless @medium.nil?
       visit += "#{SEPARATOR2}#{@keyword}" unless @keyword.nil?
+      visit += "#{SEPARATOR2}#{@advert}" unless @advert.nil?
       if !@pages.nil?
         pages = "#{SEPARATOR2}"
         @pages.map { |page| pages += "#{page.to_s}#{SEPARATOR3}" }
@@ -110,12 +109,11 @@ module Building
 
   class Final_visit < Planed_visit
 
-    def initialize(visit, account_ga, return_visitor, pages, device_platform)
+    def initialize(visit, return_visitor, advert, pages, device_platform)
       splitted_visit = visit.split(SEPARATOR2)
 
       @id_visit = splitted_visit[0].strip
       @start_date_time = splitted_visit[1].strip
-      @account_ga = account_ga
       @return_visitor = return_visitor
       @referral_path = splitted_visit[2].strip
       @source = splitted_visit[3].strip
@@ -136,7 +134,7 @@ module Building
       @java_enabled = splitted_device_platform[5]
       @screens_colors = splitted_device_platform[6]
       @screen_resolution = splitted_device_platform[7]
-
+      @advert = advert
     end
   end
 
@@ -158,21 +156,20 @@ module Building
       splitted_visit = visit.strip.split(SEPARATOR2)
       @id_visit = splitted_visit[0]
       @start_date_time = Time.parse(splitted_visit[1])
-      @account_ga = splitted_visit[2]
-      @return_visitor = splitted_visit[3]
-      @browser = splitted_visit[4]
-      @browser_version = splitted_visit[5]
-      @operating_system = splitted_visit[6]
-      @operating_system_version = splitted_visit[7]
-      @flash_version = splitted_visit[8]
-      @java_enabled = splitted_visit[9]
-      @screens_colors = splitted_visit[10]
-      @screen_resolution = splitted_visit[11]
-      @referral_path = splitted_visit[12]
-      @source = splitted_visit[13]
-      @medium = splitted_visit[14]
-      @keyword = splitted_visit[15]
-
+      @return_visitor = splitted_visit[2]
+      @browser = splitted_visit[3]
+      @browser_version = splitted_visit[4]
+      @operating_system = splitted_visit[5]
+      @operating_system_version = splitted_visit[6]
+      @flash_version = splitted_visit[7]
+      @java_enabled = splitted_visit[8]
+      @screens_colors = splitted_visit[9]
+      @screen_resolution = splitted_visit[10]
+      @referral_path = splitted_visit[11]
+      @source = splitted_visit[12]
+      @medium = splitted_visit[13]
+      @keyword = splitted_visit[14]
+      @advert = splitted_visit[15]
       @pages = []
       splitted_visit[16].strip.split(SEPARATOR3).each { |page|
         p = Page.new(page)
@@ -182,15 +179,14 @@ module Building
         p.title=splitted_page[4]
         @pages << p
       }
-      #TODO à reviser qd on mettra en place le click sur la pub
-      @advert = nil
+
+
     end
 
 
     def to_json(*a)
       {"id_visit" => @id_visit,
        "start_date_time" => @start_date_time,
-       "account_ga" => @account_ga,
        "return_visitor" => @return_visitor,
        "browser" => @browser,
        "browser_version" => @browser_version,
@@ -204,7 +200,8 @@ module Building
        "source" => @source,
        "medium" => @medium,
        "keyword" => @keyword,
-       "pages" => @pages
+       "pages" => @pages,
+       "advert" => @advert
       }.to_json(*a)
     end
 
@@ -241,7 +238,7 @@ module Building
                :landing => {:fqdn => @pages[0].hostname,
                             :page_path => @pages[0].page_path
                },
-               :advert => @advert.nil? ? {:advertising => :none} : {:advertising => @advert.to_sym,
+               :advert => @advert == "none" ? {:advertising => :none} : {:advertising => @advert.to_sym,
                                                                     :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ADVERTISER..MAX_DURATION_PAGE_ADVERTISER) }, #calculé par engine_bot
                                                                                     :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * PERCENT_LOCAL_PAGE_ADVERTISER/100).round(0))} #calculé par engine_bot
                }

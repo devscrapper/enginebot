@@ -21,27 +21,28 @@ module Tasking
     #--------------------------------------------------------------------------------------
     # OBJECTIVE
     #--------------------------------------------------------------------------------------
-    def Building_objectives()
+    def Building_objectives
       label = @data["label"]
       date_building = @data["date_building"]
       business = @data["data"]
       execute { Objectives.new.Building_objectives(label,
-                                          date_building,
-                                          is_nil_or_empty? { business["change_count_visits_percent"] }.to_i,
-                                          is_nil_or_empty? { business["change_bounce_visits_percent"] }.to_i,
-                                          is_nil_or_empty? { business["direct_medium_percent"] }.to_i,
-                                          is_nil_or_empty? { business["organic_medium_percent"] }.to_i,
-                                          is_nil_or_empty? { business["referral_medium_percent"] }.to_i,
-                                          is_nil_or_empty? { business["policy_id"] }.to_i,
-                                          is_nil_or_empty? { business["website_id"] }.to_i,
-                                          business["account_ga"])
+                                                   date_building,
+                                                   is_nil_or_empty? { business["change_count_visits_percent"] }.to_i,
+                                                   is_nil_or_empty? { business["change_bounce_visits_percent"] }.to_i,
+                                                   is_nil_or_empty? { business["direct_medium_percent"] }.to_i,
+                                                   is_nil_or_empty? { business["organic_medium_percent"] }.to_i,
+                                                   is_nil_or_empty? { business["referral_medium_percent"] }.to_i,
+                                                   is_nil_or_empty? { business["advertising_percent"] }.to_i,
+                                                   is_nil_or_empty? { business["advertisers"] },
+                                                   is_nil_or_empty? { business["policy_id"] }.to_i,
+                                                   is_nil_or_empty? { business["website_id"] }.to_i)
       }
     end
 
     #--------------------------------------------------------------------------------------
     # CHOSEN
     #--------------------------------------------------------------------------------------
-    def Choosing_landing_pages()
+    def Choosing_landing_pages
       label = @data["label"]
       date_building = @data["date_building"]
       business = @data["data"]
@@ -53,7 +54,7 @@ module Tasking
                                                    is_nil_or_empty? { business["count_visits"] }.to_i) }
     end
 
-    def Choosing_device_platform()
+    def Choosing_device_platform
       label = @data["label"]
       date_building = @data["date_building"]
       business = @data["data"]
@@ -65,7 +66,7 @@ module Tasking
     #--------------------------------------------------------------------------------------
     # VISIT
     #--------------------------------------------------------------------------------------
-    def Building_visits()
+    def Building_visits
       label = @data["label"]
       date_building = @data["date_building"]
       business = @data["data"]
@@ -80,7 +81,7 @@ module Tasking
                                                                  is_nil_or_empty? { business["min_pages"] }.to_i) }
     end
 
-    def Building_planification()
+    def Building_planification
       label = @data["label"]
       date_building = @data["date_building"]
       objective = YAML::load Flow.new(TMP, "objective", label, date_building, 1, ".yml").read
@@ -88,7 +89,7 @@ module Tasking
                                                                         is_nil_or_empty? { objective["count_visits"] }.to_i) }
     end
 
-    def Extending_visits()
+    def Extending_visits
       label = @data["label"]
       date_building = @data["date_building"]
       objective_file = Flow.new(TMP, "objective", label, date_building, 1, ".yml")
@@ -100,8 +101,9 @@ module Tasking
         @logger.an_event.warn e
       end
       execute { Visits.new(label, date_building).Extending_visits(is_nil_or_empty? { objective["count_visits"] }.to_i,
-                                                                  objective["account_ga"],
-                                                                  is_nil_or_empty? { objective["return_visitor_rate"] }.to_f) }
+                                                                  is_nil_or_empty? { objective["return_visitor_rate"] }.to_f,
+                                                                  is_nil_or_empty? { objective["advertising_percent"].to_i },
+                                                                  is_nil_or_empty? { objective["advertisers"] }) }
     end
 
     def Reporting_visits

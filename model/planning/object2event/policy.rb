@@ -11,10 +11,10 @@ module Planning
          :direct_medium_percent,
          :organic_medium_percent,
          :referral_medium_percent,
+         :advertising_percent,
+         :advertisers,
          :website_id,
          :policy_id,
-         :account_ga,
-         :monday_start,
          :count_weeks
 
     def initialize(data)
@@ -26,12 +26,13 @@ module Planning
       @direct_medium_percent=data["direct_medium_percent"]
       @organic_medium_percent=data["organic_medium_percent"]
       @referral_medium_percent= data["referral_medium_percent"]
+      @advertising_percent= data["advertising_percent"]
+      @advertisers = YAML::load(data["advertisers"])
       @website_id=data["website_id"]
       @policy_id=data["policy_id"]
-      @account_ga = data["account_ga"]
     end
 
-    def to_event()
+    def to_event
 
       key = {"policy_id" => @policy_id}
 
@@ -52,9 +53,12 @@ module Planning
             "direct_medium_percent" => @direct_medium_percent,
             "organic_medium_percent" => @organic_medium_percent,
             "referral_medium_percent" => @referral_medium_percent,
+            "advertising_percent" => @advertising_percent,
+            "advertiser" => @advertisers,
             "website_id" => @website_id,
             "policy_id" => @policy_id,
-            "account_ga" => @account_ga
+            "advertisers" => @advertisers,
+            "advertising_percent" => @advertising_percent
         }
 
         [Event.new(key,

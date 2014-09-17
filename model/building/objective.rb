@@ -17,10 +17,11 @@ class Objective
        :direct_medium_percent,
        :referral_medium_percent,
        :organic_medium_percent,
+       :advertising_percent,
+       :advertisers,
        :hourly_distribution,
        :policy_id,
-       :website_id,
-       :account_ga
+       :website_id
 
   def initialize(label, date,
       count_visits =nil,
@@ -33,10 +34,11 @@ class Objective
       direct_medium_percent=nil,
       referral_medium_percent=nil,
       organic_medium_percent=nil,
+      advertising_percent=nil,
+      advertisers = nil,
       hourly_distribution=nil,
       policy_id=nil,
-      website_id=nil,
-      account_ga=nil)
+      website_id=nil)
 
     @date = date
     @label = label
@@ -50,10 +52,11 @@ class Objective
     @direct_medium_percent=direct_medium_percent
     @referral_medium_percent=referral_medium_percent
     @organic_medium_percent=organic_medium_percent
+    @advertising_percent=advertising_percent
+    @advertisers = advertisers
     @hourly_distribution=translate_to_count_visits_target(hourly_distribution, count_visits)
     @policy_id = policy_id
     @website_id = website_id
-    @account_ga = account_ga
   end
 
   def to_db(*a)
@@ -71,6 +74,8 @@ class Objective
                         "direct_medium_percent" => @direct_medium_percent.to_s,
                         "organic_medium_percent" => @organic_medium_percent.to_s,
                         "referral_medium_percent" => @referral_medium_percent.to_s,
+                        "advertising_percent" => @advertising_percent.to_s,
+                        "advertisers" => @advertisers,
                         "hourly_distribution" => @hourly_distribution,
                         "policy_id" => @policy_id,
                         "website_id" => @website_id
@@ -94,8 +99,9 @@ class Objective
         "direct_medium_percent" => @direct_medium_percent,
         "organic_medium_percent" => @organic_medium_percent,
         "referral_medium_percent" => @referral_medium_percent,
-        "hourly_distribution" => @hourly_distribution,
-        "account_ga" => @account_ga
+        "advertising_percent" => @advertising_percent,
+        "advertisers" => @advertisers,
+        "hourly_distribution" => @hourly_distribution
     }
   end
 

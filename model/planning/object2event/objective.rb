@@ -24,10 +24,11 @@ module Planning
          :min_pages,
          :hourly_distribution,
          :return_visitor_rate,
-         :account_ga,
          :direct_medium_percent,
          :organic_medium_percent,
-         :referral_medium_percent
+         :referral_medium_percent,
+         :advertising_percent,
+         :advertiser
 
 
     def initialize(data)
@@ -44,11 +45,12 @@ module Planning
       @direct_medium_percent=data["direct_medium_percent"]
       @organic_medium_percent=data["organic_medium_percent"]
       @referral_medium_percent= data["referral_medium_percent"]
-      @account_ga = data["account_ga"]
+      @advertising_percent= data["advertising_percent"]
+      @advertisers = data["advertisers"]
       @periodicity = data["periodicity"]
     end
 
-    def to_event()
+    def to_event
       date_objective = IceCube::Schedule.from_yaml(@periodicity).start_time
       key = {"building_date" => @building_date,
              "label" => @label
@@ -96,7 +98,8 @@ module Planning
           "min_pages" => @min_pages,
           "hourly_distribution" => @hourly_distribution,
           "return_visitor_rate" => @return_visitor_rate,
-          "account_ga" => @account_ga
+          "advertisers" => @advertisers,
+          "advertising_percent" => @advertising_percent
       }
 
       start_time = date_objective + BUILDING_VISITS_DAY + BUILDING_VISITS_HOUR

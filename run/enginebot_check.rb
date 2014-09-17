@@ -1,6 +1,7 @@
 require_relative '../model/building/inputs'
 require_relative '../model/building/chosens'
 require_relative '../model/building/visits'
+require_relative '../model/building/objectives'
 require_relative '../model/flow'
 require 'rufus-scheduler'
 require 'pathname'
@@ -9,6 +10,7 @@ include Flowing
 include Building
 $debugging = true
 $staging = "development"
+$calendar_server_port = 9104
 LOG = Pathname.new(File.join(File.dirname(__FILE__), '..', 'log')).realpath
 JDD = Pathname.new(File.join(File.dirname(__FILE__), '..', 'jdd')).realpath
 INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input'))
@@ -16,13 +18,13 @@ TMP = Pathname.new(File.join(File.dirname(__FILE__), '..', 'tmp'))
 OUTPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'output'))
 ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive'))
 CRON = "58 16 * * 1-7" # mm hh
-#------------------------------------------------------------------------------------------------------------------
-#creation du scheduler
-#------------------------------------------------------------------------------------------------------------------
+                       #------------------------------------------------------------------------------------------------------------------
+                       #creation du scheduler
+                       #------------------------------------------------------------------------------------------------------------------
 scheduler = Rufus::Scheduler.start_new
-#------------------------------------------------------------------------------------------------------------------
-#nettoyage des répertoires
-#------------------------------------------------------------------------------------------------------------------
+                       #------------------------------------------------------------------------------------------------------------------
+                       #nettoyage des répertoires
+                       #------------------------------------------------------------------------------------------------------------------
 def cleaning
   FileUtils.rm Dir.glob(File.join(LOG, "#{File.basename(__FILE__, ".rb")}.*"))
   logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
@@ -62,6 +64,21 @@ def deploying
   }
 end
 
+
+def building_objectives
+  Objectives.new.Building_objectives("epilation-laser-definitive",
+                                     "2013-02-24",
+                                     10,
+                                     1,
+                                     50,
+                                     50,
+                                      0, # aucun referral n'est scrapper de GA ; attend le service de backlink
+                                      1,
+                                      ["adsense"],
+                                     1,
+                                     1)
+end
+
 #------------------------------------------------------------------------------------------------------------------
 # construction des inputs en fonction des fichiers qui viennent de statup
 #------------------------------------------------------------------------------------------------------------------
@@ -96,17 +113,17 @@ end
 # construction des visits
 #------------------------------------------------------------------------------------------------------------------
 def building_visits
-  Visits.new("epilation-laser-definitive", "2013-05-05").Building_visits(1390,
-                                                                         65,
-                                                                         2,
-                                                                         120,
-                                                                         20,
-                                                                         2)
-
-  Visits.new("epilation-laser-definitive", "2013-05-05").Building_planification("21|60|7|60|11|62|80|15|32|79|100|87|88|73|108|85|79|69|55|48|49|52|48|22",
-                                                                                1390)
-
-  Visits.new("epilation-laser-definitive", "2013-05-05").Extending_visits(1390, "pppppppppp", 10)
+ # Visits.new("epilation-laser-definitive", "2013-05-05").Building_visits(1390,
+ #                                                                        65,
+ #                                                                        2,
+ #                                                                        120,
+ #                                                                        20,
+ #                                                                        2)
+ #
+ #Visits.new("epilation-laser-definitive", "2013-05-05").Building_planification("21|60|7|60|11|62|80|15|32|79|100|87|88|73|108|85|79|69|55|48|49|52|48|22",
+ #                                                                              1390)
+ #
+ # Visits.new("epilation-laser-definitive", "2013-05-05").Extending_visits(1390, 10, 1, ["adsense"])
 
   Visits.new("epilation-laser-definitive", "2013-05-05").Reporting_visits
 
@@ -122,9 +139,10 @@ end
 #cleaning
 #deploying
 #building_inputs
+#building_objectives
 #choosing
 building_visits
-
+Visits.new("epilation-laser-definitive", "2013-05-05").Publishing_visits_by_hour()
 #end
 p "cronification de la construction des visit is on"
 scheduler.every 3600 do

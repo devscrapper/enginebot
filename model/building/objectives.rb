@@ -19,7 +19,7 @@ module Building
     class ObjectivesArgumentError < ArgumentError
     end
 
-    def initialize()
+    def initialize
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     end
 
@@ -35,9 +35,10 @@ module Building
         direct_medium_percent,
         organic_medium_percent,
         referral_medium_percent,
+        advertising_percent,
+        advertisers,
         policy_id,
-        website_id,
-        account_ga)
+        website_id)
 
       @logger.an_event.info "Building objectives for <#{label}> is starting"
       @logger.an_event.debug "change_count_visits_percent #{change_count_visits_percent}"
@@ -45,9 +46,11 @@ module Building
       @logger.an_event.debug "direct_medium_percent #{direct_medium_percent}"
       @logger.an_event.debug "organic_medium_percent #{organic_medium_percent}"
       @logger.an_event.debug "referral_medium_percent #{referral_medium_percent}"
+      @logger.an_event.debug "advertising_percent #{advertising_percent}"
+      @logger.an_event.debug "advertisers #{advertisers}"
       @logger.an_event.debug "policy_id #{policy_id}"
       @logger.an_event.debug "website_id #{website_id}"
-      @logger.an_event.debug "account_ga #{account_ga}"
+
       begin
       hourly_daily_distribution = []
       hourly_daily_distribution_file = Flow.new(TMP, "hourly-daily-distribution", label, date).last    #input
@@ -78,10 +81,11 @@ module Building
                             direct_medium_percent,
                             referral_medium_percent,
                             organic_medium_percent,
+                            advertising_percent,
+                            advertisers,
                             splitted_hourly_daily_distribution[1],
                             policy_id,
-                            website_id,
-                            account_ga)
+                            website_id)
 
         @logger.an_event.debug obj
 
