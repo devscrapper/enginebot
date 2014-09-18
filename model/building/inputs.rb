@@ -181,10 +181,6 @@ module Flowing
         pages_file = Flow.new(TMP, "pages", input_website.label, input_website.date) #output
 
         raise IOError, "a volume of input flow <#{input_website.basename}> is missing" unless input_website.volumes_exist?
-        #raise IOError, "a volume of input flow <#{input_website.basename}> is missing" unless (input_website.volumes_exist? and
-        #    input_website.volume_exist?(0))
-        #leaves = Flow.new(input_website.dir, input_website.type_flow, input_website.label, input_website.date, 0, input_website.ext).readlines(EOFLINE).map { |leaf| leaf.strip.to_i } #input
-        #@logger.an_event.debug leaves
 
         input_website.volumes.each { |volume|
           @logger.an_event.info "Loading vol <#{volume.vol}> of website input file"
@@ -192,15 +188,14 @@ module Flowing
           #--------------------------------------------------------------------------------------------------------------
           # IMPORTANT
           #--------------------------------------------------------------------------------------------------------------
-          # on ne prend pas en compte le fichier des feuilles car :
+          # on ne prend pas en compte le fichier des feuilles (volume = 0)car :
           # si on supprime une page qui est une feuille alors toutes les pages qui pointent sur elle et qui n'ont quelle
           # comme lien alors on crée une nouvelle feuille. cela risque d'augmenter le nombre de feuille plutot que de le reduire
           # pour corriger cela il faudra rechercher à nouveau les feuilles et les supprimer jusqu'à ce qu'il ny en ait plus => couteux pour quel benefice
           # et risqué, car en fonction de la topologie du site (exemple : un arbre sans cycle) il pourrait ne plus y avoir de page de conserver
           #--------------------------------------------------------------------------------------------------------------
-          #if leaves.empty?
           volume.foreach(EOFLINE) { |p|
-            # si il n'y a pas de feuille
+
             begin
               page = Page.new(p)
               matrix_file.write(page.to_matrix)
@@ -213,32 +208,11 @@ module Flowing
               @logger.an_event.debug e
             end
           }
-          #else
-          #  volume.foreach(EOFLINE) { |p|
-          #    # si il y a au moins une feuille on les supprime
-          #    begin
-          #      page = Page.new(p)
-          #      # sauvegarde de la page dans matrix et page ssi ce n'est pas une feuille
-          #      unless leaves.include?(page.id_uri)
-          #        @logger.an_event.debug page.links
-          #        page.links = page.links - leaves #on enleve les feuilles des links de la page
-          #        matrix_file.write(page.to_matrix)
-          #        pages_file.write(page.to_page)
-          #      end
-          #      pob.increment
-          #    rescue Exception => e
-          #      @logger.an_event.debug p
-          #      @logger.an_event.debug page
-          #      @logger.an_event.debug e
-          #      @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
-          #    end
-          #  }
-          #end
           volume.archive
         }
         # on archive le volume 0 de input flow website
-        #input_website.vol = 0
-        #input_website.archive
+        input_website.vol = 0
+        input_website.archive
         matrix_file.close
         pages_file.close
         matrix_file.archive_previous
