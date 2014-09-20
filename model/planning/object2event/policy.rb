@@ -54,11 +54,9 @@ module Planning
             "organic_medium_percent" => @organic_medium_percent,
             "referral_medium_percent" => @referral_medium_percent,
             "advertising_percent" => @advertising_percent,
-            "advertiser" => @advertisers,
+            "advertisers" => @advertisers,
             "website_id" => @website_id,
             "policy_id" => @policy_id,
-            "advertisers" => @advertisers,
-            "advertising_percent" => @advertising_percent
         }
 
         [Event.new(key,
