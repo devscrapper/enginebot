@@ -28,7 +28,7 @@ module Planning
          :organic_medium_percent,
          :referral_medium_percent,
          :advertising_percent,
-         :advertiser
+         :advertisers
 
 
     def initialize(data)
