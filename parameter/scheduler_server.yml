@@ -26,6 +26,12 @@ test:
           :server1:
             :ip: 192.168.1.87
             :port: 9201,
+      :xp:
+        :pattern: "Windows-XP"
+        :servers:
+          :server1:
+            :ip: 192.168.1.88
+            :port: 9201,
       :seven:
         :pattern: "Windows-7"
         :servers:
