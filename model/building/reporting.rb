@@ -158,10 +158,9 @@ module Building
         reporting_file.write(self.to_yaml)
         reporting_file.close
       rescue Exception => e
-        @logger.an_event.error "report file  not save : #{e.message}"
         raise
       else
-        @logger.an_event.info "report file save"
+
       end
     end
 
