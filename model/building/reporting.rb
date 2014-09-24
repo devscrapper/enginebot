@@ -2,17 +2,14 @@
 # encoding: UTF-8
 
 require_relative '../flow'
-require_relative 'visit'
-require_relative 'page'
 require_relative '../../lib/mail_sender'
-require 'ruby-progressbar'
 require 'pathname'
-require 'pony'
+
 
 module Building
   class Reporting
     TMP = File.dirname(__FILE__) + "/../../tmp"
-    attr :logger
+
     #statistics
     attr_reader :label,
                 :date_building,
@@ -46,8 +43,7 @@ module Building
                 :advertisers_obj,
                 :advertising_percent_obj
 
-    def initialize (label, date_building, logger)
-      @logger = logger
+    def initialize (label, date_building)
       begin
         data = YAML::load(Flow.new(TMP, "reporting-visits", label, date_building, nil, ".yml").read)
       rescue Exception => e
@@ -153,14 +149,12 @@ module Building
     def to_file
       begin
         reporting_file = Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml") #output
-        #suppression de la log pour eviter de la retrouverdans le fichier
-        @logger = nil
         reporting_file.write(self.to_yaml)
         reporting_file.close
       rescue Exception => e
-        raise
+        $stderr << "reporting not save to file #{reporting_file.basename} : #{e.message}" << "\n"
       else
-
+        $stdout << "reporting save to file #{reporting_file.basename}"  << "\n"
       end
     end
 
@@ -190,10 +184,10 @@ module Building
       begin
         MailSender.new("visits@building.fr", "olinouane@gmail.com", "reporting", to_html).send_html
       rescue Exception => e
-        @logger.an_event.error "report mail not send : #{e.message}"
+        $stderr << "reporting mail not send to olinouane@gmail.com : #{e.message}" << "\n"
         raise
       else
-        @logger.an_event.info "report mail send"
+        $stdout << "reporting mail send to olinouane@gmail.com" << "\n"
       end
     end
 
@@ -259,8 +253,8 @@ module Building
         }
         @min_pages = visit.pages.size if @min_pages > visit.pages.size
       rescue Exception => e
-        @logger.an_event.error "calculate statistics visit : #{e.message}"
-        raise
+        $stderr << "calculate statistics visit : #{e.message}" << "\n"
+      else
       end
     end
 

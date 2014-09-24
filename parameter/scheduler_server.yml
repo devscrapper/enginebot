@@ -2,7 +2,8 @@
 development:
   :authentification_server_port: 9103
   :ftp_server_port: 9102
-  :delay_periodic_scan: 5
+  :delay_periodic_scan: 5  #(seconde)
+  :delay_periodic_send_geolocation: 60 #(minute)
   :debugging: true
   :inputflow_factories:
     :windows:
@@ -16,7 +17,8 @@ development:
 test:
   :authentification_server_port: 9103
   :ftp_server_port: 9102
-  :delay_periodic_scan: 5
+  :delay_periodic_scan: 5 #(seconde)
+  :delay_periodic_send_geolocation: 60 #(minute)
   :debugging: true
   :inputflow_factories:
     :windows:
@@ -42,7 +44,8 @@ test:
 production:
   :authentification_server_port: 9103
   :ftp_server_port: 9102
-  :delay_periodic_scan: 5
+  :delay_periodic_scan: 5 #(seconde)
+  :delay_periodic_send_geolocation: 60 #(minute)
   :debugging: false
   :inputflow_factories:
     :windows:

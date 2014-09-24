@@ -113,17 +113,17 @@ end
 # construction des visits
 #------------------------------------------------------------------------------------------------------------------
 def building_visits
- # Visits.new("epilation-laser-definitive", "2013-05-05").Building_visits(1390,
- #                                                                        65,
- #                                                                        2,
- #                                                                        120,
- #                                                                        20,
- #                                                                        2)
- #
- #Visits.new("epilation-laser-definitive", "2013-05-05").Building_planification("21|60|7|60|11|62|80|15|32|79|100|87|88|73|108|85|79|69|55|48|49|52|48|22",
- #                                                                              1390)
- #
- # Visits.new("epilation-laser-definitive", "2013-05-05").Extending_visits(1390, 10, 1, ["adsense"])
+ Visits.new("epilation-laser-definitive", "2013-05-05").Building_visits(1390,
+                                                                         65,
+                                                                         2,
+                                                                         120,
+                                                                         20,
+                                                                         2)
+
+ Visits.new("epilation-laser-definitive", "2013-05-05").Building_planification("21|60|7|60|11|62|80|15|32|79|100|87|88|73|108|85|79|69|55|48|49|52|48|22",
+                                                                               1390)
+
+ Visits.new("epilation-laser-definitive", "2013-05-05").Extending_visits(1390, 10, 1, ["adsense"])
 
   Visits.new("epilation-laser-definitive", "2013-05-05").Reporting_visits
 
@@ -140,7 +140,7 @@ end
 #deploying
 #building_inputs
 #building_objectives
-#choosing
+choosing
 building_visits
 Visits.new("epilation-laser-definitive", "2013-05-05").Publishing_visits_by_hour()
 #end

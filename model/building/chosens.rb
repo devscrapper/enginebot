@@ -52,7 +52,7 @@ module Building
       # referral_medium_percent est forcé à zero pour éviter un bug si dans statupweb on saisit un pourcentage pour referral.
       @logger.an_event.info "Choosing landing pages for #{label} for #{date} is starting"
 
-      reporting = Reporting.new(label, date, @logger)
+      reporting = Reporting.new(label, date)
       reporting.landing_pages_obj(direct_medium_percent, organic_medium_percent, referral_medium_percent)
       reporting.to_file
 
@@ -88,7 +88,7 @@ module Building
         device_platform = Flow.new(TMP, "device-platform", label, date).last
         raise IOError "input flow device-platform for <#{label}> for <#{date}> is missing" if device_platform.nil?
 
-        reporting = Reporting.new(label, date, @logger)
+        reporting = Reporting.new(label, date)
 
         chosen_device_platform_file = Flow.new(TMP, "chosen-device-platform", label, date) #output
         total_visits = 0

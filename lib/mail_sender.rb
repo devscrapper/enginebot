@@ -14,8 +14,7 @@ class MailSender
        :from,
        :to,
        :subject,
-       :body,
-       :logger
+       :body
 
   def initialize(from = "mail@localhost.fr", to, subject, body)
     raise ArgumentError, "to is undefine" if  to.nil?
@@ -25,11 +24,11 @@ class MailSender
     @to = to
     @subject = subject
     @body = body
-    @logger = Logging::Log.new(self, :staging => "development", :id_file => File.basename(__FILE__, ".rb"), :debugging => true)
+
     begin
       parameters = Parameter.new(__FILE__)
     rescue Exception => e
-      STDERR << e.message
+      $stderr << e.message << "\n"
     else
       @address = parameters.address
       @port = parameters.port
@@ -39,7 +38,6 @@ class MailSender
       raise ArgumentError, "parameter <user_name> is undefine" if  @user_name.nil?
       raise ArgumentError, "parameter <password> is undefine" if  @password.nil?
       raise ArgumentError, "parameter <port> is undefine" if  @port.nil?
-      @logger.an_event.info "mail #{to_s}"
     end
   end
 
@@ -69,9 +67,9 @@ class MailSender
                  }
                 }.merge!(options))
     rescue Exception => e
-      @logger.an_event.error "mail to #{@to} about #{@subject} not send : #{e.message}"
+      $stderr << "mail to #{@to} about #{@subject} not send : #{e.message}"  << "\n"
     else
-      @logger.an_event.info "mail to #{@to} about #{@subject} send"
+      $stdout << "mail to #{@to} about #{@subject} send"  << "\n"
     ensure
 
     end
@@ -79,7 +77,7 @@ class MailSender
 
   def to_s
     "from <#{@from}>\n" +
-    "to <#{@to}>\n" +
+        "to <#{@to}>\n" +
         "subject <#{@subject}>\n" +
         "body <#{@body}>\n" +
         "smtp <#{@address}>\n" +

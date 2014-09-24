@@ -25,11 +25,11 @@ class FTPDriver
       authen = Authentification.new(user, pass)
       check = authen.check(@authentification_server_port)
       @logger.an_event.debug "check authentification #{user}, #{pass} =>  #{check == true}"
-      STDOUT << "check authentification #{user}, #{pass} =>  #{check == true}" << "\n"
+      $stdout << "check authentification #{user}, #{pass} =>  #{check == true}" << "\n"
       yield check == true
     rescue Exception => e
       @logger.an_event.error "FTPServer cannot check authentification <#{user}> : #{e.message}"
-      STDERR << "FTPServer cannot check authentification <#{user}> : #{e.message}"  << "\n"
+      $stderr << "FTPServer cannot check authentification <#{user}> : #{e.message}"  << "\n"
       yield false
     end
 
@@ -42,11 +42,11 @@ class FTPDriver
 
       Authentification.new(@user, @pwd).delete(@authentification_server_port)
       @logger.an_event.debug "push file <#{path}>"
-      STDOUT << "push file <#{path}>"  << "\n"
+      $stdout << "push file <#{path}>"  << "\n"
       yield file
     rescue Exception => e
       @logger.an_event.error "FTPServer cannot push file <#{path}> : #{e.message}"
-      STDERR << "FTPServer cannot push file <#{path}> : #{e.message}" << "\n"
+      $stderr << "FTPServer cannot push file <#{path}> : #{e.message}" << "\n"
       yield false
     end
   end
@@ -73,11 +73,11 @@ class FTPDriver
       FileUtils.mv(OUTPUT + path, ARCHIVE)
 
       @logger.an_event.debug "move file <#{path}> to archive"
-       STDOUT << "move file <#{path}> to archive"   << "\n"
+       $stdout << "move file <#{path}> to archive"   << "\n"
       yield true
     rescue Exception => e
       @logger.an_event.error "FTPServer cannot delete file <#{path}> : #{e.message}"
-      STDERR << "FTPServer cannot move file <#{path}> : #{e.message}"  << "\n"
+      $stderr << "FTPServer cannot move file <#{path}> : #{e.message}"  << "\n"
       yield false
     end
   end
@@ -110,7 +110,7 @@ class FTPDriver
       environment = YAML::load(File.open(ENVIRONMENT), "r:UTF-8")
       @envir = environment["staging"] unless environment["staging"].nil?
     rescue Exception => e
-      STDERR << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"
+      $stderr << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"  << "\n"
     end
 
     begin
@@ -118,7 +118,7 @@ class FTPDriver
       @authentification_server_port = params[@envir]["authentification_server_port"] unless params[@envir]["authentification_server_port"].nil?
       @debugging = params[@envir]["debugging"] unless params[@envir]["debugging"].nil?
     rescue Exception => e
-      STDERR << "loading parameters file #{PARAMETERS} failed : #{e.message}"
+      $stderr << "loading parameters file #{PARAMETERS} failed : #{e.message}"  << "\n"
     end
     @logger = Logging::Log.new(self, :staging => @envir, :debugging => @debugging)
     @logger.an_event.info "parameters of ftp server :"

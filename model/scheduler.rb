@@ -61,7 +61,6 @@ class Scheduler
   def scan_visit_file
     begin
       EM::PeriodicTimer.new(@delay_periodic_scan) do
-        @logger.an_event.info "visit planed count for #{@pattern} #{@scheduler.jobs.size}"
         tmp_flow_visit_arr = Flow.list(TMP, {:type_flow => @pattern, :ext => "yml"})
 
         tmp_flow_visit_arr.each { |tmp_flow_visit|
@@ -93,6 +92,7 @@ class Scheduler
 
       else
         @logger.an_event.warn "visit flow #{flow_visit.basename} not plan, too old"
+        flow_visit.archive
       end
     else
       @logger.an_event.warn "visit flow #{flow_visit.basename} not exist"

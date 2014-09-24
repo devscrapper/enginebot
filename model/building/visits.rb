@@ -79,7 +79,7 @@ module Building
         @logger.an_event.debug("min_pages #{min_pages}")
 
 
-        reporting = Reporting.new(@label, @date_building, @logger)
+        reporting = Reporting.new(@label, @date_building)
         reporting.visit_obj(count_visit, visit_bounce_rate, page_views_per_visit, avg_time_on_site, min_durations, min_pages)
         reporting.to_file
 
@@ -136,7 +136,7 @@ module Building
     def Building_planification(hourly_distribution, count_visits)
       @logger.an_event.info("Building planification of visit for #{@label}  for #{@date_building} is starting")
       begin
-        reporting = Reporting.new(@label, @date_building, @logger)
+        reporting = Reporting.new(@label, @date_building)
         reporting.planification_obj(hourly_distribution)
         reporting.to_file
 
@@ -210,7 +210,7 @@ module Building
       @logger.an_event.debug("advertising_percent #{advertising_percent}")
       @logger.an_event.debug("advertisers #{advertisers}")
       begin
-        reporting = Reporting.new(@label, @date_building, @logger)
+        reporting = Reporting.new(@label, @date_building)
         reporting.return_visitor_obj(return_visitor_rate)
         reporting.advertising_obj(advertising_percent, advertisers)
         reporting.to_file
@@ -285,7 +285,7 @@ module Building
       @logger.an_event.info("Reporting visits for #{@label} for #{@date_building} is starting")
       start_time = Time.now
       begin
-        reporting = Reporting.new(@label, @date_building, @logger)
+        reporting = Reporting.new(@label, @date_building)
         p = ProgressBar.create(:title => "Reporting visits", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => 24, :format => '%t, %c/%C, %a|%w|')
 
         24.times { |hour|

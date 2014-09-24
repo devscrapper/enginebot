@@ -158,7 +158,7 @@ begin
   environment = YAML::load(File.open(ENVIRONMENT), "r:UTF-8")
   $staging = environment["staging"] unless environment["staging"].nil?
 rescue Exception => e
-  STDERR << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"
+  $stderr << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"  << "\n"
 end
 
 
@@ -167,7 +167,7 @@ begin
   calendar_server_port = params[$staging]["calendar_server_port"] unless params[$staging]["calendar_server_port"].nil?
   debugging = params[$staging]["debugging"] unless params[$staging]["debugging"].nil?
 rescue Exception => e
-  STDERR << "loading parameters file #{PARAMETERS} failed : #{e.message}"
+  $stderr << "loading parameters file #{PARAMETERS} failed : #{e.message}"   << "\n"
 end
 logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => debugging)
 
