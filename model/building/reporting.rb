@@ -123,12 +123,12 @@ module Building
     end
 
     def device_platform_obj(device_platform, count_visits)
-      @device_platforms_obj[device_platform.browser] = {} if @device_platforms_obj[device_platform.browser].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version] = {} if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] = 0 if @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution].nil?
-      @device_platforms_obj[device_platform.browser][device_platform.browser_version][device_platform.os][device_platform.os_version][device_platform.screen_resolution] += (device_platform.count_visits * count_visits / 100).to_i
+      @device_platforms_obj[device_platform.os] = {} if @device_platforms_obj[device_platform.os].nil?
+      @device_platforms_obj[device_platform.os][device_platform.os_version] = {} if @device_platforms_obj[device_platform.os][device_platform.os_version].nil?
+      @device_platforms_obj[device_platform.os][device_platform.os_version][device_platform.browser] = {} if @device_platforms_obj[device_platform.os][device_platform.os_version][device_platform.browser].nil?
+      @device_platforms_obj[device_platform.os][device_platform.os_version][device_platform.browser][device_platform.browser_version] = {} if @device_platforms_obj[device_platform.os][device_platform.os_version][device_platform.browser][device_platform.browser_version].nil?
+      @device_platforms_obj[device_platform.os][device_platform.os_version][device_platform.browser][device_platform.browser_version][device_platform.screen_resolution] = 0 if  @device_platforms_obj[device_platform.os][device_platform.os_version][device_platform.browser][device_platform.browser_version][device_platform.screen_resolution].nil?
+      @device_platforms_obj[device_platform.os][device_platform.os_version][device_platform.browser][device_platform.browser_version][device_platform.screen_resolution] += (device_platform.count_visits * count_visits / 100).to_i
 
     end
 
@@ -154,7 +154,7 @@ module Building
       rescue Exception => e
         $stderr << "reporting not save to file #{reporting_file.basename} : #{e.message}" << "\n"
       else
-        $stdout << "reporting save to file #{reporting_file.basename}"  << "\n"
+        $stdout << "reporting save to file #{reporting_file.basename}" << "\n"
       end
     end
 
@@ -219,12 +219,12 @@ module Building
         @hours[visit.start_date_time.hour] += 1
         @return_visitor_count += visit.return_visitor == true ? 1 : 0
 
-        @device_platforms[visit.browser] = {} if @device_platforms[visit.browser].nil?
-        @device_platforms[visit.browser][visit.browser_version] = {} if @device_platforms[visit.browser][visit.browser_version].nil?
-        @device_platforms[visit.browser][visit.browser_version][visit.operating_system] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system].nil?
-        @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version] = {} if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version].nil?
-        @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] = 0 if @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution].nil?
-        @device_platforms[visit.browser][visit.browser_version][visit.operating_system][visit.operating_system_version][visit.screen_resolution] += 1
+        @device_platforms[visit.operating_system] = {} if @device_platforms[visit.operating_system].nil?
+        @device_platforms[visit.operating_system][visit.operating_system_version] = {} if @device_platforms[visit.operating_system][visit.operating_system_version].nil?
+        @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser] = {} if @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser].nil?
+        @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version] = {} if @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version].nil?
+        @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version][visit.screen_resolution] = 0 if  @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version][visit.screen_resolution].nil?
+        @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version][visit.screen_resolution] += 1
 
         @return_visitor_count +=1 if visit.return_visitor == "true"
 
