@@ -15,7 +15,7 @@ class Geolocation
             geo_file_source = "geolocations_#{$staging}.txt"
             geolocations_flow = Flow.from_basename(OUTPUT, "geolocations_#{$staging}_#{Date.today.strftime("%Y-%m-%d")}_#{Time.now.hour}.txt")
 
-            raise "flow <#{geo_file_source}> not exist" unless File.exist?(geo_file_source)
+            raise "flow <#{geo_file_source}> not exist" unless File.exist?(File.join(TMP, geo_file_source))
 
             FileUtils.cp(File.join(TMP, geo_file_source), geolocations_flow.absolute_path)
 

@@ -360,11 +360,16 @@ class Flow
                  input_flows_server_port,
                  ftp_server_port,
                  true)
-        @logger.an_event.debug "push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}" if $debugging
+
       rescue Exception => e
-        @logger.an_event.error "cannot push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
+        @logger.an_event.error "cannot push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
         @logger.an_event.debug e if $debugging
-        raise FlowException
+        raise FlowException, "cannot push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
+
+      else
+
+        @logger.an_event.debug "push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}" if $debugging
+
       end
     else
       # le flow a des volumes
@@ -379,11 +384,17 @@ class Flow
                             input_flows_server_port,
                             ftp_server_port,
                             count_volumes == volume.vol.to_i)
-            @logger.an_event.debug "push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}" if $debugging
+
+
+
           rescue Exception => e
-            @logger.an_event.error "cannot push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"
+            @logger.an_event.error "cannot push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
             @logger.an_event.debug e if $debugging
-            raise FlowException
+            raise FlowException, "cannot push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
+          else
+
+            @logger.an_event.debug "push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}" if $debugging
+
           end
         }
       else
@@ -398,10 +409,15 @@ class Flow
                    ftp_server_port,
                    last_volume)
         rescue Exception => e
-          @logger.an_event.error "push vol <#{@vol}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} failed"
+          @logger.an_event.error "cannot push vol <#{@vol}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
           @logger.an_event.debug e if $debugging
-          raise FlowException
+          raise FlowException, "cannot push vol <#{@vol}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
+        else
+
+          @logger.an_event.info "push vol <#{@vol}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port}"  if $debugging
+
         end
+
       end
     end
   end
@@ -413,13 +429,17 @@ class Flow
       last_volume = false)
     #pousse un volume vers un input flow server en applicquant le sécurité
     begin
+
       authen = Authentification.get_one(authentification_server_port)
-      @logger.an_event.info "ask a new authentification"
+
     rescue Exception => e
-      @logger.an_event.error "cannot ask a new authentification to localhost:#{authentification_server_port}"
+      @logger.an_event.error "cannot ask a new authentification to localhost:#{authentification_server_port} : #{e.message}"
       @logger.an_event.debug e if $debugging
-      raise FlowException
+      raise FlowException, "cannot ask a new authentification to localhost:#{authentification_server_port} : #{e.message}"
+    else
+      @logger.an_event.info "ask a new authentification"
     end
+
     begin
       put(input_flows_server_ip,
           input_flows_server_port,
@@ -428,7 +448,8 @@ class Flow
           authen.pwd,
           last_volume)
     rescue Exception => e
-      raise FlowException
+      raise e
+    else
     end
   end
 
@@ -443,12 +464,15 @@ class Flow
                    "last_volume" => last_volume}
     }
     begin
+
       Information.new(data).send_to(ip_to, port_to)
-      @logger.an_event.debug "send properties flow <#{basename}> to #{ip_to}:#{port_to}" if $debugging
+
     rescue Exception => e
-      @logger.an_event.error "cannot send properties flow <#{basename}> to #{ip_to}:#{port_to}"
+      @logger.an_event.error "cannot send properties flow <#{basename}> to #{ip_to}:#{port_to} : #{e.message}"
       @logger.an_event.debug e if $debugging
-      raise FlowException, e.message
+      raise FlowException, "cannot send properties flow <#{basename}> to #{ip_to}:#{port_to} : #{e.message}"
+    else
+      @logger.an_event.debug "send properties flow <#{basename}> to #{ip_to}:#{port_to}" if $debugging
     end
   end
 
