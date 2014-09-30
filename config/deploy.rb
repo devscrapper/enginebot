@@ -101,7 +101,7 @@ set :branch, "master" # version à déployer
 
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
-set :server_name, "olgadays.synology.me:22" #adresse du server de destination hors reseau local
+#set :server_name, "olgadays.synology.me:22" #adresse du server de destination hors reseau local
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
@@ -117,20 +117,7 @@ after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
 after "deploy:update", "apres:update", "deploy:start" , "deploy:status"
 before "deploy:update","deploy:stop" , "log:delete"
-#----------------------------------------------------------------------------------------------------------------------
-# task list : stage
-#----------------------------------------------------------------------------------------------------------------------
-namespace :stage do
-  task :dev, :roles => :app do
-    run "echo 'staging: development' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
-  end
-  task :testing, :roles => :app do
-    run "echo 'staging: test' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
-  end
-  task :prod, :roles => :app do
-    run "echo 'staging: production' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
-  end
-end
+
 
 #----------------------------------------------------------------------------------------------------------------------
 # task list : log
@@ -176,6 +163,10 @@ end
 # task list : deploy
 #----------------------------------------------------------------------------------------------------------------------
 namespace :deploy do
+  task :geo do
+    top.upload(File.join(File.dirname(__FILE__), '..', 'tmp', "geolocations_#{staging}.txt"), File.join(current_path, 'tmp', "geolocations_#{staging}.txt"))
+  end
+
   task :all_param do
     top.upload(File.join(File.dirname(__FILE__), '..', 'parameter'), File.join(current_path, 'parameter'))
   end
