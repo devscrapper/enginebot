@@ -353,16 +353,21 @@ module Building
 
         p = ProgressBar.create(:title => "publish #{final_visits_file.basename}", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => final_visits_file.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
         final_visits_file.foreach(EOFLINE) { |visit|
-          v = Published_visit.new(visit)
-          if day.nil?
-            start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
-          else
-            start_date_time = Time.new(day.year, day.month, day.day, v.start_date_time.hour, v.start_date_time.min, v.start_date_time.sec).strftime("%Y-%m-%d-%H-%M-%S")
+          begin
+            v = Published_visit.new(visit)
+            if day.nil?
+              start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
+            else
+              start_date_time = Time.new(day.year, day.month, day.day, v.start_date_time.hour, v.start_date_time.min, v.start_date_time.sec).strftime("%Y-%m-%d-%H-%M-%S")
+            end
+            published_visits_to_yaml_file = Flow.new(TMP, "#{v.operating_system}-#{v.operating_system_version}", @label, start_date_time, v.id_visit, ".yml")
+            published_visits_to_yaml_file.write(v.generate_output(@label).to_yaml)
+            published_visits_to_yaml_file.close
+            p.increment
+          rescue Exception => e
+            p visit
+            p e.message
           end
-          published_visits_to_yaml_file = Flow.new(TMP, "#{v.operating_system}-#{v.operating_system_version}", @label, start_date_time, v.id_visit, ".yml")
-          published_visits_to_yaml_file.write(v.generate_output(@label).to_yaml)
-          published_visits_to_yaml_file.close
-          p.increment
         }
         final_visits_file.archive
       rescue Exception => e

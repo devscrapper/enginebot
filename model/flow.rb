@@ -135,6 +135,7 @@ class Flow
     !(self == flow)
   end
 
+
   def absolute_path
     File.join(@dir, basename)
   end

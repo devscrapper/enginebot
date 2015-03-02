@@ -20,27 +20,33 @@ module Flowing
       @input_flow.get(data["ip_ftp_server"], data["port_ftp_server"], data["user"], data["pwd"])
     end
 
-    def website()
-      execute { Inputs.new.Building_matrix_and_pages(@input_flow) } if @last_volume
+    def website
+      @logger.an_event.info "input flow #{@input_flow.basename} downloaded" if @last_volume
+      #execute { Inputs.new.Building_matrix_and_pages(@input_flow) } if @last_volume
+      # n'est plus déclencher par l'arrivé du flow mais par le scheduler quotidiennement voir object2event/policy.rb
     end
 
-    def scraping_traffic_source_landing_page()
-      execute { Inputs.new.Building_landing_pages(@input_flow, @pages_in_mem) } if @last_volume
+    def scraping_traffic_source_organic
+      @logger.an_event.info "flow #{@input_flow.basename} downloaded" if @last_volume
     end
 
-    def scraping_device_platform_plugin()
+    def scraping_traffic_source_referral
+      @logger.an_event.info "flow #{@input_flow.basename} downloaded" if @last_volume
+    end
+
+    def scraping_device_platform_plugin
       execute { Inputs.new.Building_device_platform(@input_flow.label, @input_flow.date) } if @last_volume
     end
 
-    def scraping_device_platform_resolution()
+    def scraping_device_platform_resolution
       execute { Inputs.new.Building_device_platform(@input_flow.label, @input_flow.date) } if @last_volume
     end
 
-    def scraping_hourly_daily_distribution()
+    def scraping_hourly_daily_distribution
       execute { Inputs.new.Building_hourly_daily_distribution(@input_flow) } if @last_volume
     end
 
-    def scraping_behaviour()
+    def scraping_behaviour
       execute { Inputs.new.Building_behaviour(@input_flow) } if @last_volume
     end
 

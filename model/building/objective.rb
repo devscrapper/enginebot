@@ -21,7 +21,8 @@ class Objective
        :advertisers,
        :hourly_distribution,
        :policy_id,
-       :website_id
+       :website_id,
+       :url_root
 
   def initialize(label, date,
       count_visits =nil,
@@ -38,7 +39,8 @@ class Objective
       advertisers = nil,
       hourly_distribution=nil,
       policy_id=nil,
-      website_id=nil)
+      website_id=nil,
+  url_root = nil)
 
     @date = date
     @label = label
@@ -57,6 +59,7 @@ class Objective
     @hourly_distribution=translate_to_count_visits_target(hourly_distribution, count_visits)
     @policy_id = policy_id
     @website_id = website_id
+    @url_root = url_root
   end
 
   def to_db(*a)
@@ -101,7 +104,8 @@ class Objective
         "referral_medium_percent" => @referral_medium_percent,
         "advertising_percent" => @advertising_percent,
         "advertisers" => @advertisers,
-        "hourly_distribution" => @hourly_distribution
+        "hourly_distribution" => @hourly_distribution,
+        "url_root" => @url_root
     }
   end
 
@@ -129,17 +133,18 @@ class Objective
   end
 
 
-  def send_to_calendar(where_port)
+  def send_to_calendar(hostname, where_port)
     data = {"cmd" => "save",
             "object" => self.class.name,
             "data" => self.to_json}
     begin
-      Information.new(data).send_to("localhost", where_port)
+      Information.new(data).send_to(hostname, where_port)
     rescue Exception => e
       raise ObjectiveException, e.message
       #TODO gérer les rebus quand le calendar server n'est pas joignable
     end
   end
+
 
 
   def translate_to_count_visits_target(distribution, count_visits_of_day_target)

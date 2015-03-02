@@ -1,6 +1,7 @@
 require_relative '../building/objectives'
 require_relative '../building/chosens'
 require_relative '../building/visits'
+require_relative '../building/inputs'
 require 'json'
 
 module Tasking
@@ -10,7 +11,7 @@ module Tasking
     class TasklistArgumentException < ArgumentError;
     end
     include Building
-
+    include Flowing
     attr :data, :logger
 
     def initialize(data)
@@ -18,8 +19,22 @@ module Tasking
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     end
 
+    def Building_matrix_and_pages
+      label = @data["label"]
+      date_building = @data["date_building"]
+      execute { Inputs.new.Building_matrix_and_pages(label,
+                                                     date_building)
+      }
+    end
+
+    def Building_landing_pages_organic
+      label = @data["label"]
+      date_building = @data["date_building"]
+      execute { Inputs.new.Building_landing_pages(label, date_building)
+      }
+    end
     #--------------------------------------------------------------------------------------
-    # OBJECTIVE
+    # INPUT
     #--------------------------------------------------------------------------------------
     def Building_objectives
       label = @data["label"]
@@ -35,7 +50,8 @@ module Tasking
                                                    is_nil_or_empty? { business["advertising_percent"] }.to_i,
                                                    is_nil_or_empty? { business["advertisers"] },
                                                    is_nil_or_empty? { business["policy_id"] }.to_i,
-                                                   is_nil_or_empty? { business["website_id"] }.to_i)
+                                                   is_nil_or_empty? { business["website_id"] }.to_i,
+                                                   is_nil_or_empty? { business["url_root"] })
       }
     end
 

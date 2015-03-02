@@ -64,11 +64,9 @@ module Building
       Choosing_landing_medium_in_mem(label, date, "direct", direct_medium_count, chosen_landing_pages_file)
 
 
-      referral_medium_percent = 0 # TODO à supprimer quand les backlinks seront disponibles
       referral_medium_count = (referral_medium_percent * count_visit / 100).to_i
       @logger.an_event.debug "count referral medium #{referral_medium_count}"
-      # TODO à decommenter quand les backlinks seront disponibles
-      #Choosing_landing_medium_in_mem(label, date, "referral", referral_medium_count, chosen_landing_pages_file)
+      Choosing_landing_medium_in_mem(label, date, "referral", referral_medium_count, chosen_landing_pages_file)
 
       organic_medium_count = count_visit - (direct_medium_count + referral_medium_count)
       @logger.an_event.debug "count organic medium #{organic_medium_count}"

@@ -41,13 +41,14 @@ end
 #------------------------------------------------------------------------------------------------------------------
 #deploiement du jdd vers input
 #------------------------------------------------------------------------------------------------------------------
-def deploying
-  jdd_file = ["website_epilation-laser-definitive_2013-02-24_1.txt",
-              "scraping-hourly-daily-distribution_epilation-laser-definitive_2013-04-21_1.txt",
-              "scraping-behaviour_epilation-laser-definitive_2013-04-21_1.txt",
-              "scraping-traffic-source-landing-page_epilation-laser-definitive_2013-05-03_1.txt",
-              "scraping-device-platform-resolution_epilation-laser-definitive_2013-05-05_1.txt",
-              "scraping-device-platform-plugin_epilation-laser-definitive_2013-05-05_1.txt"]
+def deploying(label, today)
+  jdd_file = ["scraping-website_#{label}_#{today}_1.txt",
+              "scraping-hourly-daily-distribution_#{label}_2013-04-21_1.txt",
+              "scraping-behaviour_#{label}_2013-04-21_1.txt",
+              "scraping-traffic-source-organic_#{label}_#{today}_1.txt",
+              "scraping-traffic-source-referral_#{label}_#{today}_1.txt",
+              "scraping-device-platform-resolution_#{label}_#{today}_1.txt",
+              "scraping-device-platform-plugin_#{label}_#{today}_1.txt"]
 
 
   count_files = 0
@@ -65,9 +66,9 @@ def deploying
 end
 
 
-def building_objectives
-  Objectives.new.Building_objectives("epilation-laser-definitive",
-                                     "2013-02-24",
+def building_objectives(label, today, root_url)
+  Objectives.new.Building_objectives(label,
+                                     today,
                                      10,
                                      1,
                                      50,
@@ -76,56 +77,53 @@ def building_objectives
                                       1,
                                       ["adsense"],
                                      1,
-                                     1)
+                                     1,
+                                     root_url)
 end
 
 #------------------------------------------------------------------------------------------------------------------
 # construction des inputs en fonction des fichiers qui viennent de statup
 #------------------------------------------------------------------------------------------------------------------
-def building_inputs
-  @input_flow = Flow.from_basename(INPUT, "website_epilation-laser-definitive_2013-02-24_1.txt")
-  Inputs.new.Building_matrix_and_pages(@input_flow)
+def building_inputs(label, today)
+  Inputs.new.Building_matrix_and_pages(label, today)
 
-  @input_flow = Flow.from_basename(INPUT, "scraping-hourly-daily-distribution_epilation-laser-definitive_2013-04-21_1.txt")
+  @input_flow = Flow.from_basename(INPUT, "scraping-hourly-daily-distribution_#{label}_2013-04-21_1.txt")
   Inputs.new.Building_hourly_daily_distribution(@input_flow)
 
-  @input_flow = Flow.from_basename(INPUT, "scraping-behaviour_epilation-laser-definitive_2013-04-21_1.txt")
+  @input_flow = Flow.from_basename(INPUT, "scraping-behaviour_#{label}_2013-04-21_1.txt")
   Inputs.new.Building_behaviour(@input_flow)
 
-  @input_flow = Flow.from_basename(INPUT, "scraping-traffic-source-landing-page_epilation-laser-definitive_2013-05-03_1.txt")
-  pages_in_mem = true
-  Inputs.new.Building_landing_pages(@input_flow, pages_in_mem)
+  Inputs.new.Building_landing_pages(label, today)
 
-  @input_flow = Flow.from_basename(INPUT, "scraping-device-platform-resolution_epilation-laser-definitive_2013-05-05_1.txt")
-  Inputs.new.Building_device_platform(@input_flow.label, @input_flow.date)
+  Inputs.new.Building_device_platform(label, today)
 end
 
 #------------------------------------------------------------------------------------------------------------------
 # choix des landing pages et device platforme
 #------------------------------------------------------------------------------------------------------------------
-def choosing
-  Chosens.new.Choosing_landing_pages("epilation-laser-definitive", "2013-05-05", 45, 50, 5, 1390)
+def choosing(label, today)
+  Chosens.new.Choosing_landing_pages(label, today, 45, 50, 5, 1390)
 
-  Chosens.new.Choosing_device_platform("epilation-laser-definitive", "2013-05-05", 1390)
+  Chosens.new.Choosing_device_platform(label, today,  1390)
 end
 
 #------------------------------------------------------------------------------------------------------------------
 # construction des visits
 #------------------------------------------------------------------------------------------------------------------
-def building_visits
- Visits.new("epilation-laser-definitive", "2013-05-05").Building_visits(1390,
+def building_visits (label, today)
+ Visits.new(label, today,).Building_visits(1390,
                                                                          65,
                                                                          2,
                                                                          120,
                                                                          20,
                                                                          2)
 
- Visits.new("epilation-laser-definitive", "2013-05-05").Building_planification("21|60|7|60|11|62|80|15|32|79|100|87|88|73|108|85|79|69|55|48|49|52|48|22",
+ Visits.new(label, today,).Building_planification("21|60|7|60|11|62|80|15|32|79|100|87|88|73|108|85|79|69|55|48|49|52|48|22",
                                                                                1390)
 
- Visits.new("epilation-laser-definitive", "2013-05-05").Extending_visits(1390, 10, 1, ["adsense"])
+ Visits.new(label, today,).Extending_visits(1390, 10, 1, ["adsense"])
 
-  Visits.new("epilation-laser-definitive", "2013-05-05").Reporting_visits
+  Visits.new(label, today,).Reporting_visits
 
 
 end
@@ -136,17 +134,20 @@ end
 # le deuxieme diffuse regulierement les visits vers les statupbot
 #------------------------------------------------------------------------------------------------------------------
 #scheduler.cron CRON do
-#cleaning
-#deploying
-#building_inputs
-#building_objectives
-choosing
-building_visits
-Visits.new("epilation-laser-definitive", "2013-05-05").Publishing_visits_by_hour()
+label = "epilation-laser-definitive"
+today = "2015-02-27"
+root_url = "http://www.epilation-laser-definitive.info/"
+cleaning
+deploying(label, today)
+building_inputs(label, today)
+building_objectives(label, today, root_url)
+choosing(label, today)
+building_visits(label, today)
+Visits.new(label, today).Publishing_visits_by_hour()
 #end
 p "cronification de la construction des visit is on"
 scheduler.every 3600 do
-  Visits.new("epilation-laser-definitive", "2013-05-05").Publishing_visits_by_hour(Date.today)
+  Visits.new(label, today).Publishing_visits_by_hour(Date.today)
 end
 
 p "diffusion des visits is on"

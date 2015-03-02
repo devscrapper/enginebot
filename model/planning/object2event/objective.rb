@@ -28,7 +28,8 @@ module Planning
          :organic_medium_percent,
          :referral_medium_percent,
          :advertising_percent,
-         :advertisers
+         :advertisers,
+         :url_root
 
 
     def initialize(data)
@@ -48,6 +49,7 @@ module Planning
       @advertising_percent= data["advertising_percent"]
       @advertisers = data["advertisers"]
       @periodicity = data["periodicity"]
+      @url_root = data["url_root"]
     end
 
     def to_event

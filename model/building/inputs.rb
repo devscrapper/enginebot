@@ -37,6 +37,11 @@ module Flowing
     def to_page(*a)
       "#{@id_uri}#{SEPARATOR2}#{@hostname}#{SEPARATOR2}#{@page_path}#{SEPARATOR2}#{@title}#{EOFLINE}"
     end
+
+    def to_landing_page(*a)
+      #126;(not set);(direct);(none);(not set)
+      "#{@id_uri}#{SEPARATOR2}(not set)#{SEPARATOR2}(direct)#{SEPARATOR2}(none)#{SEPARATOR2}(not set)#{EOFLINE}"
+    end
   end
 
   class Traffic_source
@@ -50,7 +55,8 @@ module Flowing
          :referral_path,
          :source,
          :medium,
-         :keyword
+         :keyword,
+         :index_page_results #numero de page dans laquelle a été trouvé les mot cle (organic)
 
 
     def initialize(page)
@@ -62,10 +68,16 @@ module Flowing
       @source = splitted_page[3]
       @medium = splitted_page[4]
       @keyword = splitted_page[5]
+      if @medium =="organic"
+        @index_page_results =  splitted_page[6]
+      end
     end
 
     def to_landing_page(*a)
-      "#{@id_uri}#{SEPARATOR2}#{@referral_path}#{SEPARATOR2}#{@source}#{SEPARATOR2}#{@medium}#{SEPARATOR2}#{@keyword}#{EOFLINE}"
+      s = "#{@id_uri}#{SEPARATOR2}#{@referral_path}#{SEPARATOR2}#{@source}#{SEPARATOR2}#{@medium}#{SEPARATOR2}#{@keyword}"
+      s += "#{EOFLINE}" unless @medium =="organic"
+      s += "#{SEPARATOR2}#{@index_page_results}#{EOFLINE}" if @medium =="organic"
+      s
     end
 
     def set_id_uri_mem(label, date, pages_array)
@@ -75,12 +87,12 @@ module Flowing
       id = nil
       value = @hostname + @landing_page_path
       found = false
-      while max - min > 1 and not(found)
+      while max - min > 1 and not (found)
         i = ((max - min) / 2).round(0) + min
         crt = pages_array[i].split(";")
         @id_uri = crt[0].to_i if found =(crt[1] + crt[2] == value)
         max = i if crt[1] + crt[2] > value
-        min = i  if crt[1] + crt[2] < value
+        min = i if crt[1] + crt[2] < value
       end
     end
 
@@ -170,19 +182,22 @@ module Flowing
     TMP = File.dirname(__FILE__) + "/../../tmp"
     SEPARATOR2=";"
 
-    def initialize()
+    def initialize
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     end
 
-    def Building_matrix_and_pages(input_website)
-      @logger.an_event.info("Building matrix and page for <#{input_website.label}> for <#{input_website.date}> is starting")
+    def Building_matrix_and_pages(label, date_building)
+      @logger.an_event.info("Building matrix and page for <#{label}> for <#{date_building}> is starting")
       begin
-        matrix_file = Flow.new(TMP, "matrix", input_website.label, input_website.date) #output
-        pages_file = Flow.new(TMP, "pages", input_website.label, input_website.date) #output
 
-        raise IOError, "a volume of input flow <#{input_website.basename}> is missing" unless input_website.volumes_exist?
+        scraping_website = Flow.new(INPUT, "scraping-website", label, Date.today, 1, ".txt").last
+        matrix_file = Flow.new(TMP, "matrix", label, date_building) #output
+        pages_file = Flow.new(TMP, "pages", label, date_building) #output
+        landing_pages_direct_file = Flow.new(TMP, "landing-pages-direct", label, date_building) #output
 
-        input_website.volumes.each { |volume|
+        raise IOError, "a volume of input flow <#{scraping_website.basename}> is missing" unless scraping_website.volumes_exist?
+
+        scraping_website.volumes.each { |volume|
           @logger.an_event.info "Loading vol <#{volume.vol}> of website input file"
           pob = ProgressBar.create(:length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
           #--------------------------------------------------------------------------------------------------------------
@@ -200,9 +215,10 @@ module Flowing
               page = Page.new(p)
               matrix_file.write(page.to_matrix)
               pages_file.write(page.to_page)
+              landing_pages_direct_file.write(page.to_landing_page)
               pob.increment
             rescue Exception => e
-              @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
+              @logger.an_event.error "cannot build matrix and page for <#{scraping_website.label}> for <#{scraping_website.date}>"
               @logger.an_event.debug p
               @logger.an_event.debug page
               @logger.an_event.debug e
@@ -210,74 +226,52 @@ module Flowing
           }
           volume.archive
         }
-        # on archive le volume 0 de input flow website
-        input_website.vol = 0
-        input_website.archive
+       # TODO supprimer l'archivage du volume ZERO de scraping-website ssi ce volume n'est plus poussé par scraperbot
+       #  on archive le volume 0 de input flow website
+        scraping_website.vol = 0
+        scraping_website.archive
         matrix_file.close
         pages_file.close
+        landing_pages_direct_file.close
         matrix_file.archive_previous
         pages_file.archive_previous
+        landing_pages_direct_file.previous
+
+        Task.new("Building_landing_pages", {"label" => label, "date_building" => date_building}).execute()
 
       rescue Exception => e
         @logger.an_event.debug e
-        @logger.an_event.error "cannot build matrix and page for <#{input_website.label}> for <#{input_website.date}>"
+        @logger.an_event.error "cannot build matrix and page for <#{scraping_website.label}> for <#{scraping_website.date}>"
       end
-      @logger.an_event.info("Building matrix and page for <#{input_website.label}> is over")
+      @logger.an_event.info("Building matrix and page for <#{scraping_website.label}> is over")
     end
 
-    def Building_landing_pages(traffic_source_file, pages_in_mem)
-      @logger.an_event.info "Building landing pages for <#{traffic_source_file.label}> for <#{traffic_source_file.date}> is starting"
-      begin
-        pages_file = Flow.new(TMP, "pages", traffic_source_file.label, traffic_source_file.date).last
-        raise IOError, "tmp flow pages for <#{traffic_source_file.label}> for <#{traffic_source_file.date}> is missing" if pages_file.nil? #input
-        raise IOError, "input flow <#{traffic_source_file.basename}> is missing" unless traffic_source_file.exist? #input
-        label = traffic_source_file.label
-        date = traffic_source_file.date
+    def Building_landing_pages(label, date_building)
+      @logger.an_event.info "Building landing pages for <#{label}> for <#{date_building}> is starting"
 
-        landing_pages_direct_file = Flow.new(TMP, "landing-pages-direct", traffic_source_file.label, traffic_source_file.date) #output
-        landing_pages_referral_file = Flow.new(TMP, "landing-pages-referral", traffic_source_file.label, traffic_source_file.date) #output
-        landing_pages_organic_file = Flow.new(TMP, "landing-pages-organic", traffic_source_file.label, traffic_source_file.date) #output
+      begin
+        pages_file = Flow.new(TMP, "pages", label, date_building)
+        raise IOError, "tmp flow pages for <#{label}> for <#{date_building}> is missing" if pages_file.nil? #input
 
         #on tri le fichier de page sur le hostname et le landing_page_path pour accelerer la recherche de page qui s'appuie sur une dichotomie
-        pages_file.sort{ |line| [line.split(SEPARATOR2)[1], line.split(SEPARATOR2)[2]]}
-        pages = pages_file.load_to_array(EOFLINE) if pages_in_mem
-        pages = pages_file unless pages_in_mem
-
-        traffic_source_file.volumes.each { |volume|
-          @logger.an_event.info "Loading vol <#{volume.vol}> of scraping-traffic-source-landing input file"
-          pob = ProgressBar.create(:length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
-          volume.foreach(EOFLINE) { |p|
-            source_page = Traffic_source.new(p)
-            #source_page.set_id_uri(label, date)
-            #if source_page.isknown?
-            case source_page.medium
-              when "(none)"
-                landing_pages_direct_file.write(source_page.to_landing_page)
-              when "referral"
-                landing_pages_referral_file.write(source_page.to_landing_page)
-              when "organic"
-                landing_pages_organic_file.write(source_page.to_landing_page)
-              else
-                @logger.an_event.warn "medium unknown"
-                @logger.an_event.debug "medium <#{source_page.medium}>"
-            end if source_page.is_in_pages(label, date, pages)
-            #end
-            pob.increment
-          }
-          volume.archive
-        }
+        pages_file.sort { |line| [line.split(SEPARATOR2)[1], line.split(SEPARATOR2)[2]] }
+        pages = pages_file.load_to_array(EOFLINE)
         pages_file.close
-        landing_pages_direct_file.close
-        landing_pages_referral_file.close
-        landing_pages_organic_file.close
-        landing_pages_direct_file.archive_previous
-        landing_pages_referral_file.archive_previous
-        landing_pages_organic_file.archive_previous
+
+        convert_to_landing_page("scraping-traffic-source-organic", "landing-pages-organic", label, date_building, pages)
+
+        convert_to_landing_page("scraping-traffic-source-referral", "landing-pages-referral", label, date_building, pages)
+
       rescue Exception => e
         @logger.an_event.debug e
-        @logger.an_event.error "cannot build landing pages for <#{traffic_source_file.label}>"
+        @logger.an_event.error "cannot build landing pages for <#{label}>"
+
+      else
+      ensure
+
+
       end
-      @logger.an_event.info("Building landing pages for <#{traffic_source_file.label}> is over")
+      @logger.an_event.info("Building landing pages for <#{label}> is over")
     end
 
     def Building_device_platform(label, date)
@@ -412,6 +406,28 @@ module Flowing
       @logger.an_event.info("Building behaviour for <#{input_behaviour.label}> is over")
     end
 
+    private
+    def convert_to_landing_page(traffic_source_type_flow, landing_page_type_flow, label, date_building, pages)
+
+      traffic_source_file = Flow.new(INPUT, traffic_source_type_flow, label, date_building, 1) #input
+      raise IOError, "input flow <#{traffic_source_file.basename}> is missing" unless traffic_source_file.exist? #input
+
+      landing_pages_file = Flow.new(TMP, landing_page_type_flow, label, date_building) #output
+
+      traffic_source_file.volumes.each { |volume|
+        @logger.an_event.info "Loading vol <#{volume.vol}> of #{traffic_source_file.basename} input file"
+        pob = ProgressBar.create(:length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
+        volume.foreach(EOFLINE) { |p|
+          source_page = Traffic_source.new(p)
+          landing_pages_file.write(source_page.to_landing_page) if source_page.is_in_pages(label, date_building, pages)
+          pob.increment
+        }
+        volume.archive
+      }
+
+      landing_pages_file.close
+      landing_pages_file.archive_previous
+    end
   end
 
 end
