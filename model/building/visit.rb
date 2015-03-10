@@ -28,6 +28,7 @@ module Building
          :keyword,
          :pages,
          :advert,
+         :referral_title,
          :index_page_results
 
     def initialize(first_page, duration)
@@ -40,8 +41,13 @@ module Building
       case @medium
         when "organic"
           @index_page_results = splitted_page[5].to_i
-        when "(none)"  , "referral"
+          @referral_title = "none"
+        when "referral"
           @index_page_results = "none"
+          @referral_title = splitted_page[5]
+        when "(none)"
+          @index_page_results = "none"
+          @referral_title = "none"
         else
           p "medium unknown : #{@medium}"
       end
@@ -82,6 +88,7 @@ module Building
       visit += "#{SEPARATOR2}#{@medium}" unless @medium.nil?
       visit += "#{SEPARATOR2}#{@keyword}" unless @keyword.nil?
       visit += "#{SEPARATOR2}#{@index_page_results}" unless  @index_page_results.nil?
+      visit += "#{SEPARATOR2}#{@referral_title}" unless  @referral_title.nil?
       visit += "#{SEPARATOR2}#{@advert}" unless @advert.nil?
       if !@pages.nil?
         pages = "#{SEPARATOR2}"
@@ -113,6 +120,7 @@ module Building
       @medium = splitted_visit[3]
       @keyword = splitted_visit[4]
       @index_page_results = splitted_visit[5]
+      @referral_title = splitted_visit[6]
       @pages = []
       splitted_visit[6].split(SEPARATOR3).each { |page| @pages << Page.new(page) }
     end
@@ -133,6 +141,7 @@ module Building
       @keyword = splitted_visit[5].strip
       @pages = []
       @index_page_results = splitted_visit[6]
+      @referral_title = splitted_visit[7]
       splitted_visit[7].strip.split(SEPARATOR3).each { |page|
         p = Page.new(page)
         p.set_properties(pages)
@@ -186,9 +195,10 @@ module Building
       @keyword = splitted_visit[14]
 
       @index_page_results = splitted_visit[15]
-      @advert = splitted_visit[16]
+      @referral_title = splitted_visit[16]
+      @advert = splitted_visit[17]
       @pages = []
-      splitted_visit[17].strip.split(SEPARATOR3).each { |page|
+      splitted_visit[18].strip.split(SEPARATOR3).each { |page|
         p = Page.new(page)
         splitted_page = page.split(SEPARATOR4)
         p.hostname=splitted_page[2]
@@ -217,6 +227,7 @@ module Building
        "medium" => @medium,
        "keyword" => @keyword,
        "index_page_results" => @index_page_results,
+       "referral_title" => @referral_title,
        "pages" => @pages,
        "advert" => @advert
       }.to_json(*a)
@@ -247,10 +258,7 @@ module Building
                                          :screen_resolution => @screen_resolution
                             }
                },
-               :referrer => {:referral_path => @referral_path,
-                             :source => @source,
-                             :medium => @medium,
-                             :keyword => @keyword
+               :referrer => {:medium => @medium
                },
                :landing => {:fqdn => @pages[0].hostname,
                             :page_path => @pages[0].page_path
@@ -263,21 +271,18 @@ module Building
 
       case visit[:referrer][:medium]
         when "(none)"
+          visit[:referrer][:source] = @source
+          visit[:visitor][:browser][:engine_search] = "google"
         when "referral"
           visit[:referrer][:duration] = DURATION_REFERRAL
+          visit[:referrer][:title] = @referral_title
+          visit[:referrer][:referral_path] = @referral_path
+          visit[:referrer][:source] = @source
+          visit[:visitor][:browser][:engine_search] = "google"
         when "organic"
+          visit[:visitor][:browser][:engine_search] = @source
+          visit[:referrer][:keyword] = [@keyword]
           visit[:referrer][:durations] = Array.new(@index_page_results.to_i).fill { Random.rand(MIN_DURATION_PAGE_ORGANIC..MAX_DURATION_PAGE_ORGANIC) }
-          #genere un tableau de mot clé pour pallier à l'échec des recherches et mieux simuler le comportement
-          #TODO le comportement est basic, il devra etre enrichi pour mieux simuler un comportement naturel et mettre en dernier ressort les mots du title
-          #TODO penser egalement à produire des search qui n'aboutissent jamais dans le engine bot en fonction dun poourcentage determiner par statupweb
-          #supprimer les not provide retourner par google
-          if visit[:referrer][:keyword] != "(not set)" and
-              visit[:referrer][:keyword] != "" and
-              visit[:referrer][:keyword] != "(not provided)"
-            visit[:referrer][:keyword] = [visit[:referrer][:keyword], @pages[0].title]
-          else
-            visit[:referrer][:keyword] = [@pages[0].title]
-          end
 
       end
       visit

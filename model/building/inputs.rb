@@ -56,6 +56,7 @@ module Flowing
          :source,
          :medium,
          :keyword,
+         :referral_title, # titre de la page web du referral (referral)
          :index_page_results #numero de page dans laquelle a été trouvé les mot cle (organic)
 
 
@@ -68,15 +69,27 @@ module Flowing
       @source = splitted_page[3]
       @medium = splitted_page[4]
       @keyword = splitted_page[5]
-      if @medium =="organic"
-        @index_page_results =  splitted_page[6]
+      case @medium
+        when "organic"
+          @index_page_results = splitted_page[6]
+        when "referral"
+          @referral_title = splitted_page[6]
+        when "(none)"
       end
+
     end
 
     def to_landing_page(*a)
       s = "#{@id_uri}#{SEPARATOR2}#{@referral_path}#{SEPARATOR2}#{@source}#{SEPARATOR2}#{@medium}#{SEPARATOR2}#{@keyword}"
-      s += "#{EOFLINE}" unless @medium =="organic"
-      s += "#{SEPARATOR2}#{@index_page_results}#{EOFLINE}" if @medium =="organic"
+      case @medium
+        when "organic"
+          s += "#{SEPARATOR2}#{@index_page_results}#{EOFLINE}"
+        when "referral"
+          s += "#{SEPARATOR2}#{@referral_title}#{EOFLINE}"
+        when "(none)"
+          s += "#{EOFLINE}"
+      end
+
       s
     end
 
@@ -226,8 +239,8 @@ module Flowing
           }
           volume.archive
         }
-       # TODO supprimer l'archivage du volume ZERO de scraping-website ssi ce volume n'est plus poussé par scraperbot
-       #  on archive le volume 0 de input flow website
+                                                                    # TODO supprimer l'archivage du volume ZERO de scraping-website ssi ce volume n'est plus poussé par scraperbot
+                                                                    #  on archive le volume 0 de input flow website
         scraping_website.vol = 0
         scraping_website.archive
         matrix_file.close

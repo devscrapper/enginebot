@@ -26,6 +26,23 @@ class Flow
   #----------------------------------------------------------------------------------------------------------------
 
   #----------------------------------------------------------------------------------------------------------------
+  # self.last(dir, opts)
+  #----------------------------------------------------------------------------------------------------------------
+  # fournit le flow le plus récent présent dans le <dir> et qui satisfait les options
+  #----------------------------------------------------------------------------------------------------------------
+  # input :
+  # un répertoire, ne doit pas être nil
+  # :typeflow : un type de flow : si est absent alors n'intervient pas dans la recherche
+  # :label : un label : si est absent alors n'intervient pas dans la recherche
+  # :date : une date : si est absent alors n'intervient pas dans la recherche
+  # :ext : une extension de fichier : si est absent alors n'intervient pas dans la recherche
+  #----------------------------------------------------------------------------------------------------------------
+  def self.last(dir, opts)
+    arr = Flow.list(dir, opts)
+    raise FlowException, "none flow #{opts} exist in #{dir}" if arr.empty?
+    arr[0].last
+  end
+  #----------------------------------------------------------------------------------------------------------------
   # self.list(dir, opts)
   #----------------------------------------------------------------------------------------------------------------
   # fournit la liste des flow présent dans le <dir> et qui satisfont les options
@@ -304,6 +321,7 @@ class Flow
         p.increment
       }
     }
+    close
     array
   end
 
@@ -314,6 +332,7 @@ class Flow
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
     raise FlowException, "eofline not define" if eofline.nil?
     hsh = {}
+
     p = ProgressBar.create(:title => "Loading #{basename} file", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => total_lines(eofline), :format => '%t, %c/%C, %a|%w|')
     volumes.each { |flow|
       IO.foreach(flow.absolute_path, eofline, encoding: "BOM|UTF-8:-") { |line|
@@ -321,6 +340,7 @@ class Flow
         p.increment
       }
     }
+    close
     hsh
   end
 
@@ -498,6 +518,15 @@ class Flow
     @descriptor.readlines(eofline)
   end
 
+  def rename_ext(new_ext)
+    raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
+    close
+    absolute_path_old = absolute_path
+    @ext = new_ext
+    File.rename(absolute_path_old, absolute_path)
+    @logger.an_event.debug "rename ext flow <#{basename}>" if $debugging
+  end
+
   def rewind
     #retourn au debut du fichier
     raise FlowException, "Flow <#{absolute_path}> not exist" unless exist?
@@ -595,7 +624,7 @@ class Flow
   end
 
   def write(data)
-    open("w:UTF-8") if @descriptor.nil?
+    open("w+:BOM|UTF-8:-") if @descriptor.nil?
     @descriptor.write(data); @logger.an_event.debug "write data <#{data}> to flow <#{basename}>" if $debugging
   end
 
@@ -614,4 +643,5 @@ class Flow
     @descriptor = File.open(absolute_path, option); @logger.an_event.debug "open <#{option}> flow <#{absolute_path}>" if $debugging
     @descriptor.sync = true
   end
+
 end
