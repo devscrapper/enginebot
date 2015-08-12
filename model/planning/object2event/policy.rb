@@ -43,10 +43,10 @@ module Planning
 
       #Si demande suppression de la policy alors absence de periodicity et de business_building_objectives
       if @count_weeks.nil? and @monday_start.nil?
+        [Event.new(key,
+                  "Building_objectives"),
         Event.new(key,
-                  "Building_objectives")
-        Event.new(key,
-                  "Building_matrix_and_pages")
+                  "Building_matrix_and_pages")]
 
       else
         periodicity_building_objectives = IceCube::Schedule.new(@monday_start + BUILDING_OBJECTIVES_DAY + BUILDING_OBJECTIVES_HOUR,
