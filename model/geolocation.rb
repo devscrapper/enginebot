@@ -13,7 +13,7 @@ class Geolocation
         input_flow_servers[:servers].each_value { |input_flow_server|
           begin
             geo_file_source = "geolocations_#{$staging}.txt"
-            geolocations_flow = Flow.from_basename(OUTPUT, "geolocations_#{$staging}_#{Date.today.strftime("%Y-%m-%d")}_#{Time.now.hour}.txt")
+            geolocations_flow = Flow.from_basename(OUTPUT, "geolocations_none_#{$staging}_#{Date.today.strftime("%Y-%m-%d")}_#{Time.now.hour}.txt")
 
             raise "flow <#{geo_file_source}> not exist" unless File.exist?(File.join(TMP, geo_file_source))
 

@@ -1,7 +1,0 @@
-Internet Explorer;9.0;Windows;7;32-bit;1366x768;No;5091;
-Internet Explorer;8.0;Windows;XP;32-bit;1024x768;No;3292;
-Internet Explorer;9.0;Windows;7;32-bit;1600x900;No;3270;
-Chrome;23.0.1271.97;Windows;7;32-bit;1366x768;No;2539;
-Internet Explorer;8.0;Windows;XP;32-bit;1280x1024;No;2529;
-Internet Explorer;9.0;Windows;7;32-bit;1920x1080;No;2063;
-Firefox;19.0;Windows;7;24-bit;1366x768;No;1637;

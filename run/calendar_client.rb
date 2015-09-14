@@ -28,24 +28,25 @@ module MyKeyboardHandler
       when "r"
         @events = Events.new()
       when "d"
+        p data
         case data.split[1]
           when "a"
             p "delete all objects"
             (0..@events.size - 1).each { |event|
-              query = {"cmd" => "delete", "object" => "Website", "data" => {"website_id" => @events[event].key["website_id"].to_i}} unless @events[event].key["website_id"].nil?
-              query = {"cmd" => "delete", "object" => "Policy", "data" => {"policy_id" => @events[event].key["policy_id"].to_i}} unless @events[event].key["policy_id"].nil?
+              query = {"cmd" => "delete", "object" => "Rank", "data" => {"policy_id" => @events[event].key["policy_id"].to_i}} unless @events[event].key["policy_id"].nil?
+              query = {"cmd" => "delete", "object" => "Traffic", "data" => {"policy_id" => @events[event].key["policy_id"].to_i}} unless @events[event].key["policy_id"].nil?
               p "delete cmd <#{@events[event].cmd}> for #{@events[event].business["label"]}"
               Information.new(query).send_local(@calendar_server_port)
             }
-          when "w"
+          when "t"
             data[4..data.size - 1].split.each { |website_id|
-              query = {"cmd" => "delete", "object" => "Website", "data" => {"website_id" => website_id.to_i}}
-              p "delete Website #{website_id}"
+              query = {"cmd" => "delete", "object" => "Traffic", "data" => {"policy_id" => website_id.to_i}}
+              p "delete Traffic #{website_id}"
               Information.new(query).send_local(@calendar_server_port)
             }
-          when "p"
+          when "r"
             data[4..data.size - 0].split.each { |policy_id|
-              query = {"cmd" => "delete", "object" => "Policy", "data" => {"policy_id" => policy_id.to_i}}
+              query = {"cmd" => "delete", "object" => "Rank", "data" => {"policy_id" => policy_id.to_i}}
               p "delete Policy #{policy_id}"
               Information.new(query).send_local(@calendar_server_port)
             }
@@ -112,7 +113,7 @@ module MyKeyboardHandler
     display
   end
 
-  def display_events()
+  def display_events
     p "events during a #{@period} from #{@start_date}:#{@start_hour}H : " if @period == "hour"
     p "events during a #{@period} from #{@start_date} : " unless @period == "hour"
     events = @events.on_hour(@start_date, @start_hour) if @period == "hour"
@@ -130,7 +131,7 @@ module MyKeyboardHandler
     p "--------------------------------------------------------------------------------------------------------------"
     @events.display_objective
     p "--------------------------------------------------------------------------------------------------------------"
-    p "d [w|p] 1 2 ... -> delete many object[website|policy]"
+    p "d [t|r] 1 2 ... -> delete many object[traffic|rank]"
     p "d a -> delete all objects"
     p "**************************************************************************************************************"
     display_events

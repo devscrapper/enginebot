@@ -75,14 +75,14 @@ module Planning
     def add(event)
       event.each { |evt| @events << evt } if event.is_a?(Array)
       @events << event unless event.is_a?(Array)
-      @logger.an_event.info "save event <#{event.cmd}> for <#{event.business["label"]}> to repository"
+      @logger.an_event.info "save event <#{event.cmd}> for <#{event.business["website_label"]}> to repository"
     end
 
     def delete(event)
       @events.each_index { |i|
         @events.delete_at(i) if @events[i].key == event.key and @events[i].cmd == event.cmd
       }
-      @logger.an_event.info "event <#{event.cmd}> for <#{event.business["label"]}> deleted from repository"
+      @logger.an_event.info "event <#{event.cmd}> for <#{event.business["website_label"]}> deleted from repository"
     end
 
 
@@ -120,7 +120,7 @@ module Planning
     def display_cmd()
       i = 1
       @events.each { |evt|
-        p "#{i} -> website : #{evt.business["label"]}, cmd #{evt.cmd}, key : #{evt.key}"
+        p "#{i} -> website : #{evt.business["website_label"]}, cmd #{evt.cmd}, key : #{evt.key}"
         i +=1
       }
     end
@@ -128,21 +128,21 @@ module Planning
     def display_website()
       p "websites : "
       websites = {}
-      @events.each { |evt| websites[evt.key["website_id"]] = evt.business["label"] unless evt.key["website_id"].nil? }
+      @events.each { |evt| websites[evt.key["website_id"]] = evt.business["website_label"] unless evt.key["website_id"].nil? }
       websites.each_pair { |key, value| p "#{key} -> website : #{value}" }
     end
 
     def display_policy()
       p "policies : "
       policies = {}
-      @events.each { |evt| policies[evt.key["policy_id"]] = evt.business["label"] unless evt.key["policy_id"].nil? }
+      @events.each { |evt| policies[evt.key["policy_id"]] = evt.business["website_label"] unless evt.key["policy_id"].nil? }
       policies.each_pair { |key, value| p "#{key} -> website : #{value}" }
     end
 
     def display_objective()
       p "objectives : "
       objectives = {}
-      @events.each { |evt| objectives[evt.key["objective_id"]] = evt.business["label"] unless evt.key["objective_id"].nil? }
+      @events.each { |evt| objectives[evt.key["objective_id"]] = evt.business["website_label"] unless evt.key["objective_id"].nil? }
       objectives.each_pair { |key, value| p "#{key} -> objective : #{value}" }
     end
   end

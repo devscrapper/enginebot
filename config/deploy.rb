@@ -42,7 +42,7 @@
 # 4 cap machine:reboot
 #----------------------------------------------------------------------------------------------------------------------
 # ordre de lancement des commandes deploy : next deploy
-# 1 cap deploy:gem       #installe les nouveaux gem si besoin
+# 1 cap deploy:gem_list       #installe les nouveaux gem si besoin
 # 2 cap deploy:update    # deploie les sources
 # 3 cap deploy:restart     # demarre les serveurs
 #----------------------------------------------------------------------------------------------------------------------
@@ -271,7 +271,7 @@ def gemlist(file)
     case line
       when /gem (.*)/
         if catch_gem
-          gemlist << /gem '(?<name>.*)', '(~> )*(?<version>\d+\.\d+\.\d+)'/.match(line)
+          gemlist << /gem '(?<name>.*)', '(~> )*(?<version>\d+\.\d+(\.\d+)*)'/.match(line)
         end
       when /.*:development.*/
         catch_gem = false

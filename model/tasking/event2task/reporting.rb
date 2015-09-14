@@ -1,20 +1,20 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
 
-require_relative '../flow'
-require_relative '../../lib/mail_sender'
+require_relative '../../flow'
+require_relative '../../../lib/mail_sender'
 require 'pathname'
 
 
-module Building
+module Tasking
   class Reporting
-    TMP = File.dirname(__FILE__) + "/../../tmp"
+
 
     #statistics
     attr_reader :label,
+                :policy_type,
                 :date_building,
                 :hours, #repartition horaire du nombre de visit pour la journée courante
-                :return_visitor_count,
                 :device_platforms, # nombre de visite par (browser, browser_version, os, os_version, screen_resolution)
                 :direct_count,
                 :referral_count, # nombre de visite par medium (referral)
@@ -29,7 +29,6 @@ module Building
                 :advertisers
     #objectives
     attr_reader :hours_obj,
-                :return_visitor_rate_obj,
                 :device_platforms_obj, # nombre de visite par (browser, browser_version, os, os_version, screen_resolution)
                 :direct_medium_percent_obj,
                 :organic_medium_percent_obj,
@@ -43,15 +42,15 @@ module Building
                 :advertisers_obj,
                 :advertising_percent_obj
 
-    def initialize (label, date_building)
+    def initialize (label, date_building,policy_type)
       begin
-        data = YAML::load(Flow.new(TMP, "reporting-visits", label, date_building, nil, ".yml").read)
+        data = YAML::load(Flow.new(TMP, "reporting-visits", policy_type, label, date_building, nil, ".yml").read)
       rescue Exception => e
         @label = label
         @date_building = date_building
+        @policy_type = policy_type
         #statitics
         @hours = Array.new(24, 0)
-        @return_visitor_count = 0
         @device_platforms = {}
         @referral_count = 0
         @direct_count = 0
@@ -66,7 +65,6 @@ module Building
         @advertisers = []
         #objectives
         @hours_obj = Array.new(24, 0)
-        @return_visitor_rate_obj = 0
         @direct_medium_percent_obj = 0
         @organic_medium_percent_obj = 0
         @referral_medium_percent_obj = 0
@@ -82,9 +80,9 @@ module Building
       else
         @label = label
         @date_building = date_building
+        @policy_type = policy_type
         #statistics
         @hours = data.hours
-        @return_visitor_count = data.return_visitor_count
         @direct_count = data.direct_count
         @referral_count = data.referral_count
         @organic_count = data.organic_count
@@ -99,7 +97,6 @@ module Building
         @min_pages = data.min_pages
         #objectives
         @hours_obj = data.hours_obj
-        @return_visitor_rate_obj = data.return_visitor_rate_obj
         @direct_medium_percent_obj = data.direct_medium_percent_obj
         @organic_medium_percent_obj = data.organic_medium_percent_obj
         @referral_medium_percent_obj = data.referral_medium_percent_obj
@@ -119,7 +116,7 @@ module Building
 
     def archive
       #archive les anciens reporting et laisse le dernier du site
-      Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml").archive_previous
+      Flow.new(TMP, "reporting-visits", @policy_type, @label, @date_building, nil, ".yml").archive_previous
     end
 
     def device_platform_obj(device_platform, count_visits)
@@ -139,22 +136,19 @@ module Building
     end
 
     def planification_obj(hourly_distribution)
-      @hours_obj = hourly_distribution.split(Visits::SEPARATOR2).map { |h| h.to_i }
+      @hours_obj = hourly_distribution.split(Visits::SEPARATOR2) #.map { |h| h.to_i }
     end
 
-    def return_visitor_obj(return_visitor_rate)
-      @return_visitor_rate_obj = return_visitor_rate
-    end
 
-    def to_file
+    def to_file (title)
       begin
-        reporting_file = Flow.new(TMP, "reporting-visits", @label, @date_building, nil, ".yml") #output
+        reporting_file = Flow.new(TMP, "reporting-visits", @policy_type, @label, @date_building, nil, ".yml") #output
         reporting_file.write(self.to_yaml)
         reporting_file.close
       rescue Exception => e
-        $stderr << "reporting not save to file #{reporting_file.basename} : #{e.message}" << "\n"
+        $stderr << "Reporting #{title} not save to file #{reporting_file.basename} : #{e.message}" << "\n"
       else
-        $stdout << "reporting save to file #{reporting_file.basename}" << "\n"
+        $stdout << "Reporting #{title} save to file #{reporting_file.basename}" << "\n"
       end
     end
 
@@ -163,7 +157,6 @@ module Building
 <HTML><HEAD><style>.dimension {text-align:right;} .value {text-align:center;} </style></HEAD><BODY><table><tr><th class='dimension'>Dimension</th><th class='value'>Objective</th><th class='value'>Statistic</th></tr>
 #{dimension_html("Visit count", @visit_count_obj, @visit_count)}
       #{dimension_html("Visit bounce rate", @visit_bounce_rate_obj, (@visit_bounce_count * 100/ @visit_count).round(0))}
-      #{dimension_html("Return visitor rate", @return_visitor_rate_obj, (@return_visitor_count * 100/ @visit_count).round(0))}
       #{dimension_html("Direct medium percent", @direct_medium_percent_obj, (@direct_count * 100/ @visit_count).round(0))}
       #{dimension_html("Referral medium percent", @referral_medium_percent_obj, (@referral_count * 100/ @visit_count).round(0))}
       #{dimension_html("organic medium percent", @organic_medium_percent_obj, (@organic_count * 100/ @visit_count).round(0))}
@@ -185,17 +178,16 @@ module Building
         MailSender.new("visits@building.fr", "olinouane@gmail.com", "reporting", to_html).send_html
       rescue Exception => e
         $stderr << "reporting mail not send to olinouane@gmail.com : #{e.message}" << "\n"
-        raise
       else
         $stdout << "reporting mail send to olinouane@gmail.com" << "\n"
       end
     end
 
     def to_s
-      <<-_end_of_string_
+      begin
+    t =   <<-_end_of_string_
 #{dimension_s("Visit count", @visit_count_obj, @visit_count)}
       #{dimension_s("Visit bounce rate", @visit_bounce_rate_obj, (@visit_bounce_count * 100/ @visit_count).round(0))}
-      #{dimension_s("Return visitor rate", @return_visitor_rate_obj, (@return_visitor_count * 100/ @visit_count).round(0))}
       #{dimension_s("Direct medium percent", @direct_medium_percent_obj, (@direct_count * 100/ @visit_count).round(0))}
       #{dimension_s("Referral medium percent", @referral_medium_percent_obj, (@referral_count * 100/ @visit_count).round(0))}
       #{dimension_s("organic medium percent", @organic_medium_percent_obj, (@organic_count * 100/ @visit_count).round(0))}
@@ -208,16 +200,19 @@ module Building
       #{24.times.collect { |h| dimension_s("#{h}:00-#{h+1}:00", @hours_obj[h], @hours[h]) }.join}
       #{device_platforms_display_s}
       _end_of_string_
+      rescue Exception => e
+        $stderr << e.message
+        $stderr << e.backtrace
+      end
+       t
     end
 
     def visit(visit)
-      #TODO return_visitor_rate == 0. pas bon ?
       #TODO page views per visit count	!= de l'obj : 2	199
       #TODO avg time on site != de l'obj
       #TODO Min page != de l'obj
       begin
         @hours[visit.start_date_time.hour] += 1
-        @return_visitor_count += visit.return_visitor == true ? 1 : 0
 
         @device_platforms[visit.operating_system] = {} if @device_platforms[visit.operating_system].nil?
         @device_platforms[visit.operating_system][visit.operating_system_version] = {} if @device_platforms[visit.operating_system][visit.operating_system_version].nil?
@@ -226,7 +221,6 @@ module Building
         @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version][visit.screen_resolution] = 0 if  @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version][visit.screen_resolution].nil?
         @device_platforms[visit.operating_system][visit.operating_system_version][visit.browser][visit.browser_version][visit.screen_resolution] += 1
 
-        @return_visitor_count +=1 if visit.return_visitor == "true"
 
         case visit.advert
           when "none"
@@ -248,8 +242,8 @@ module Building
         @page_views_per_visit_count += visit.pages.size
 
         visit.pages.each { |page|
-          @time_on_site_count += page.delay_from_start.to_i
-          @min_durations = page.delay_from_start.to_i if @min_durations > page.delay_from_start.to_i
+          @time_on_site_count += page.delay.to_i
+          @min_durations = page.delay.to_i if @min_durations > page.delay.to_i
         }
         @min_pages = visit.pages.size if @min_pages > visit.pages.size
       rescue Exception => e
@@ -292,14 +286,14 @@ module Building
     end
 
     def dimension_html(title, objective, statistic)
-      #mise ne forme html d'une dimension (count_visit, return_visitor, ....) pour présenter dans un tableau.
+      #mise ne forme html d'une dimension (count_visit, ....) pour présenter dans un tableau.
       <<-_end_of_html_
 <tr><td class='dimension'>#{title}</td><td class='value'>#{objective}</td><td class='value'>#{statistic}</td></tr>
       _end_of_html_
     end
 
     def dimension_s(title, objective, statistic)
-      #mise ne forme string d'une dimension (count_visit, return_visitor, ....) pour présenter dans un tableau.
+      #mise ne forme string d'une dimension (count_visit, ....) pour présenter dans un tableau.
       <<-_end_of_string_
 #{title}\t\t\t\t#{objective}\t\t#{statistic}
       _end_of_string_

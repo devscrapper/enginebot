@@ -1,5 +1,5 @@
-require 'rubygems' # if you use RubyGems
-require 'eventmachine'
+require_relative "event"
+require_relative "events"
 
 module Planning
   class CalendarConnection < EventMachine::Connection

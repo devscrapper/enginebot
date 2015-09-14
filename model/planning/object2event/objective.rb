@@ -1,4 +1,4 @@
-require_relative '../../../model/planning/event'
+require_relative '../event'
 
 module Planning
 
@@ -15,7 +15,7 @@ module Planning
     END_PUBLISHING_VISITS_HOUR = 21 * IceCube::ONE_HOUR #heure d'arret est 9h du soir du lendemain
     # si le décalage du publishnig change, il faut penser à corriger en conséquence le décalage dans la méthode model/building/visits.rb/Publishing_visits_by_hour()
     attr :count_visits,
-         :label,
+         :website_label,
          :building_date,
          :visit_bounce_rate,
          :page_views_per_visit,
@@ -23,42 +23,40 @@ module Planning
          :min_durations,
          :min_pages,
          :hourly_distribution,
-         :return_visitor_rate,
          :direct_medium_percent,
          :organic_medium_percent,
          :referral_medium_percent,
          :advertising_percent,
          :advertisers,
-         :url_root
+         :periodicity,
+         :objective_id
 
 
     def initialize(data)
+      @objective_id = data["objective_id"]
       @count_visits = data["count_visits"]
       @building_date = data["building_date"].to_s
-      @label = data["label"]
+      @website_label = data["website_label"]
       @visit_bounce_rate = data["visit_bounce_rate"]
       @page_views_per_visit = data["page_views_per_visit"]
       @avg_time_on_site = data["avg_time_on_site"]
       @min_durations= data["min_durations"]
       @min_pages = data["min_pages"]
       @hourly_distribution = data["hourly_distribution"]
-      @return_visitor_rate = data["return_visitor_rate"]
       @direct_medium_percent=data["direct_medium_percent"]
       @organic_medium_percent=data["organic_medium_percent"]
       @referral_medium_percent= data["referral_medium_percent"]
       @advertising_percent= data["advertising_percent"]
       @advertisers = data["advertisers"]
       @periodicity = data["periodicity"]
-      @url_root = data["url_root"]
     end
 
     def to_event
       date_objective = IceCube::Schedule.from_yaml(@periodicity).start_time
-      key = {"building_date" => @building_date,
-             "label" => @label
-      }
+      key = {"objective_id" => @objective_id}
+
       business = {
-          "label" => @label,
+          "website_label" => @website_label,
           "count_visits" => @count_visits
       }
 
@@ -72,7 +70,7 @@ module Planning
 
 
       business = {
-          "label" => @label,
+          "website_label" => @website_label,
           "count_visits" => @count_visits,
           "direct_medium_percent" => @direct_medium_percent,
           "organic_medium_percent" => @organic_medium_percent,
@@ -91,7 +89,7 @@ module Planning
 
 
       business = {
-          "label" => @label,
+          "website_label" => @website_label,
           "count_visits" => @count_visits,
           "visit_bounce_rate" => @visit_bounce_rate,
           "page_views_per_visit" => @page_views_per_visit,
@@ -99,7 +97,6 @@ module Planning
           "min_durations" => @min_durations,
           "min_pages" => @min_pages,
           "hourly_distribution" => @hourly_distribution,
-          "return_visitor_rate" => @return_visitor_rate,
           "advertisers" => @advertisers,
           "advertising_percent" => @advertising_percent
       }
@@ -113,7 +110,7 @@ module Planning
                                         business)
 
       business = {
-          "label" => @label}
+          "website_label" => @website_label}
 
 
       periodicity = IceCube::Schedule.new(date_objective + START_PUBLISHING_VISITS_DAY + START_PUBLISHING_VISITS_HOUR,

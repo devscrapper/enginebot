@@ -37,7 +37,7 @@ module Planning
       }.to_json(*a)
     end
 
-    def to_display()
+    def to_display
 
     end
 
@@ -51,12 +51,12 @@ module Planning
     def execute(toto)
       begin
         data = {
-            "label" => @business["label"],
+            "website_label" => @business["website_label"],
             "date_building" => @key["building_date"] || Date.today,
             "data" => @business}
         Task.new(@cmd, data).execute
       rescue Exception => e
-        raise EventException, "cannot execute event <#{@cmd}> for <#{@business["label"]}> because #{e}"
+        raise EventException, "cannot execute event <#{@cmd}> for <#{@business["website_label"]}> because #{e}"
       end
     end
   end
