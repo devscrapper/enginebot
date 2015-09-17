@@ -60,7 +60,7 @@ module Tasking
         case first_page.split(SEPARATOR1)[5]
           when "organic"
             @landing_page_scheme,
-            @landing_page_hostname,
+                @landing_page_hostname,
                 @landing_page_path,
                 @referral_path,
                 @source,
@@ -75,7 +75,7 @@ module Tasking
             @referral_index_page_results = "none"
           when "referral"
             @landing_page_scheme,
-            @landing_page_hostname,
+                @landing_page_hostname,
                 @landing_page_path,
                 @referral_path,
                 @source,
@@ -89,7 +89,7 @@ module Tasking
             @organic_index_page_results = "none"
           when "(none)"
             @landing_page_scheme,
-            @landing_page_hostname,
+                @landing_page_hostname,
                 @landing_page_path,
                 @referral_path,
                 @source,
@@ -235,28 +235,51 @@ module Tasking
   end
 
   class Published_visit < Final_visit
-    #TODO meo ces données dans statupweb
-    MIN_COUNT_PAGE_ADVERTISER = 10 # nombre de page min consultées chez l'advertiser : fourni par statupweb
-    MAX_COUNT_PAGE_ADVERTISER = 15 # nombre de page max consultées chez l'advertiser : fourni par statupweb
-    MIN_DURATION_PAGE_ADVERTISER = 60 # durée de lecture min d'une page max consultées chez l'advertiser : fourni par statupweb
-    MAX_DURATION_PAGE_ADVERTISER = 120 # durée de lecture max d'une page max consultées chez l'advertiser : fourni par statupweb
-    PERCENT_LOCAL_PAGE_ADVERTISER = 80 # pourcentage de page consultées localement à l'advertiser fournit par statupweb
-    DURATION_REFERRAL = 20 # durée de lecture du referral : fourni par statupweb
-    MIN_COUNT_PAGE_ORGANIC = 4 #nombre min de page de resultat du moteur de recherche consultées : fourni par statupweb
-    MAX_COUNT_PAGE_ORGANIC = 6 #nombre min de page de resultat du moteur de recherche consultées : fourni par statupweb
-    MIN_DURATION_PAGE_ORGANIC = 10 #durée de lecture min d'une page de resultat fourni par le moteur de recherche : fourni par statupweb
-    MAX_DURATION_PAGE_ORGANIC = 30 #durée de lecture max d'une page de resultat fourni par le moteur de recherche : fourni par statupweb
 
-    MIN_DURATION_SURF = 5 # temps en seconde min de lecture d'une page d'un site consulté avant d'atterrir sur le website
-    MAX_DURATION_SURF = 10 # temps en seconde min de lecture d'une page d'un site consulté avant d'atterrir sur le website
+    attr :min_count_page_advertiser,
+         :max_count_page_advertiser,
+         :min_duration_page_advertiser,
+         :max_duration_page_advertiser,
+         :percent_local_page_advertiser,
+         :duration_referral,
+         :min_count_page_organic,
+         :max_count_page_organic,
+         :min_duration_page_organic,
+         :max_duration_page_organic,
+         :min_duration,
+         :max_duration
 
-    def initialize(visit)
+    def initialize(visit,
+                   min_count_page_advertiser=nil,
+                   max_count_page_advertiser=nil,
+                   min_duration_page_advertiser=nil,
+                   max_duration_page_advertiser=nil,
+                   percent_local_page_advertiser=nil,
+                   duration_referral=nil,
+                   min_count_page_organic=nil,
+                   max_count_page_organic=nil,
+                   min_duration_page_organic=nil,
+                   max_duration_page_organic=nil,
+                   min_duration=nil,
+                   max_duration=nil)
       super(visit)
+      @min_count_page_advertiser = min_count_page_advertiser
+      @max_count_page_advertiser = max_count_page_advertiser
+      @min_duration_page_advertiser = min_duration_page_advertiser
+      @max_duration_page_advertiser = max_duration_page_advertiser
+      @percent_local_page_advertiser = percent_local_page_advertiser
+      @duration_referral = duration_referral
+      @min_count_page_organic = min_count_page_organic
+      @max_count_page_organic = max_count_page_organic
+      @min_duration_page_organic = min_duration_page_organic
+      @max_duration_page_organic = max_duration_page_organic
+      @min_duration = min_duration
+      @max_duration = max_duration
     end
 
     def to_file
       require 'uuid'
-      advertiser_durations_size = Random.rand(MIN_COUNT_PAGE_ADVERTISER..MAX_COUNT_PAGE_ADVERTISER) # calculé par engine_bot
+      advertiser_durations_size = Random.rand(@min_count_page_advertiser..@max_count_page_advertiser) # calculé par engine_bot
 
       visit = {:visit => {:id => @id_visit,
                           :start_date_time => @start_date_time,
@@ -269,8 +292,8 @@ module Tasking
                           :referrer => {:medium => @medium
                           },
                           :advert => @type.to_sym != :advert ? {:advertising => :none} : {:advertising => @advert.to_sym,
-                                                                                          :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(MIN_DURATION_PAGE_ADVERTISER..MAX_DURATION_PAGE_ADVERTISER) }, #calculé par engine_bot
-                                                                                                          :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * PERCENT_LOCAL_PAGE_ADVERTISER/100).round(0))} #calculé par engine_bot
+                                                                                          :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
+                                                                                                          :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))} #calculé par engine_bot
                           }
       },
                :website => {:label => @label,
@@ -298,24 +321,24 @@ module Tasking
 
         when "referral"
           visit[:visit][:referrer][:medium] = :referral
-          visit[:visit][:referrer][:duration] = DURATION_REFERRAL
-          visit[:visit][:referrer][:random_search] = {:min => MIN_DURATION_PAGE_ORGANIC, :max => MAX_DURATION_PAGE_ORGANIC}
-          visit[:visit][:referrer][:random_surf] = {:min => MIN_DURATION_SURF, :max => MAX_DURATION_SURF}
+          visit[:visit][:referrer][:duration] = @duration_referral
+          visit[:visit][:referrer][:random_search] = {:min => @min_duration_page_organic, :max => @max_duration_page_organic}
+          visit[:visit][:referrer][:random_surf] = {:min => @min_duration, :max => @max_duration}
           visit[:visit][:referrer][:keyword] = @referral_kw
-          visit[:visit][:referrer][:durations] = Array.new(@referral_index_page_results.to_i).fill { Random.rand(MIN_DURATION_PAGE_ORGANIC..MAX_DURATION_PAGE_ORGANIC) }
+          visit[:visit][:referrer][:durations] = Array.new(@referral_index_page_results.to_i).fill { Random.rand(@min_duration_page_organic..@max_duration_page_organic) }
           visit[:visit][:referrer][:referral_path] = @referral_path
           visit[:visit][:referrer][:referral_hostname] = @source
-          visit[:visit][:referrer][:duration] = DURATION_REFERRAL
+          visit[:visit][:referrer][:duration] = @duration_referral
           visit[:visit][:referrer][:referral_uri_search] = @referral_uri_search
           visit[:visitor][:browser][:engine_search] = @referral_search_engine.to_sym
 
         when "organic"
           visit[:visit][:referrer][:medium] = :organic
-          visit[:visit][:referrer][:random_search] = {:min => MIN_DURATION_PAGE_ORGANIC, :max => MAX_DURATION_PAGE_ORGANIC}
-          visit[:visit][:referrer][:random_surf] = {:min => MIN_DURATION_SURF, :max => MAX_DURATION_SURF}
+          visit[:visit][:referrer][:random_search] = {:min => @min_duration_page_organic, :max => @max_duration_page_organic}
+          visit[:visit][:referrer][:random_surf] = {:min => @min_duration, :max => @max_duration}
           visit[:visit][:referrer][:keyword] = @keyword
           visit[:visitor][:browser][:engine_search] = @source.to_sym
-          visit[:visit][:referrer][:durations] = Array.new(@organic_index_page_results.to_i).fill { Random.rand(MIN_DURATION_PAGE_ORGANIC..MAX_DURATION_PAGE_ORGANIC) }
+          visit[:visit][:referrer][:durations] = Array.new(@organic_index_page_results.to_i).fill { Random.rand(@min_duration_page_organic..@max_duration_page_organic) }
 
       end
       visit

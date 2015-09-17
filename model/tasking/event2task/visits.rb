@@ -194,10 +194,10 @@ module Tasking
 
 
         Task.new("Extending_visits", {"website_id" => @website_id,
-                                                    "policy_id" => @policy_id,
-                                                    "policy_type" => @policy_type,
-                                                    "website_label" => @website_label,
-                                                    "date_building" => @date_building}).execute()
+                                      "policy_id" => @policy_id,
+                                      "policy_type" => @policy_type,
+                                      "website_label" => @website_label,
+                                      "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.error ("Building planification of visit for  <#{@policy_type}> <#{@website_label}> <#{@date_building}> is over =>  #{e.message}")
       else
@@ -265,10 +265,10 @@ module Tasking
         device_platform_file.close
 
         Task.new("Reporting_visits", {"website_id" => @website_id,
-                                                    "policy_id" => @policy_id,
-                                                    "policy_type" => @policy_type,
-                                                    "website_label" => @website_label,
-                                                    "date_building" => @date_building}).execute()
+                                      "policy_id" => @policy_id,
+                                      "policy_type" => @policy_type,
+                                      "website_label" => @website_label,
+                                      "date_building" => @date_building}).execute()
       rescue Exception => e
         @logger.an_event.error("Extending visits for <#{@policy_type}> #{@website_label} <#{@date_building}>is over =>  #{e.message}")
       else
@@ -322,7 +322,19 @@ module Tasking
 #--------------------------------------------------------------------------------------------------------------
 #
 # --------------------------------------------------------------------------------------------------------------
-    def Publishing_visits_by_hour(day=nil)
+    def Publishing_visits_by_hour(min_count_page_advertiser,
+                                  max_count_page_advertiser,
+                                  min_duration_page_advertiser,
+                                  max_duration_page_advertiser,
+                                  percent_local_page_advertiser,
+                                  duration_referral,
+                                  min_count_page_organic,
+                                  max_count_page_organic,
+                                  min_duration_page_organic,
+                                  max_duration_page_organic,
+                                  min_duration,
+                                  max_duration,
+                                  day=nil)
       # le déclenchement de la publication est réalisée 2 heures avant l'heure d'exécution proprement dite des visits
       # de 22:00 à j-1 pour j à 00:00
       # à
@@ -355,7 +367,19 @@ module Tasking
         p = ProgressBar.create(:title => "Publishing #{final_visits_file.basename}", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => final_visits_file.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
         final_visits_file.foreach(EOFLINE) { |visit|
           begin
-            v = Published_visit.new(visit)
+            v = Published_visit.new(visit,
+                                    min_count_page_advertiser,
+                                    max_count_page_advertiser,
+                                    min_duration_page_advertiser,
+                                    max_duration_page_advertiser,
+                                    percent_local_page_advertiser,
+                                    duration_referral,
+                                    min_count_page_organic,
+                                    max_count_page_organic,
+                                    min_duration_page_organic,
+                                    max_duration_page_organic,
+                                    min_duration,
+                                    max_duration)
             if day.nil?
               start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
             else

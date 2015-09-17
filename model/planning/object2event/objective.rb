@@ -29,8 +29,23 @@ module Planning
          :advertising_percent,
          :advertisers,
          :periodicity,
-         :objective_id
-
+         :objective_id,
+         :website_id,
+         :policy_id,
+         :policy_type,
+         :min_count_page_advertiser,
+         :max_count_page_advertiser,
+         :min_duration_page_advertiser,
+         :max_duration_page_advertiser,
+         :percent_local_page_advertiser,
+         :duration_referral,
+         :min_count_page_organic,
+         :max_count_page_organic,
+         :min_duration_page_organic,
+         :max_duration_page_organic,
+         :min_duration,
+         :max_duration
+    #TODO ajouter website id policy id policy type
 
     def initialize(data)
       @objective_id = data["objective_id"]
@@ -49,6 +64,18 @@ module Planning
       @advertising_percent= data["advertising_percent"]
       @advertisers = data["advertisers"]
       @periodicity = data["periodicity"]
+      @min_count_page_advertiser = data["min_count_page_advertiser"]
+      @max_count_page_advertiser = data["max_count_page_advertiser"]
+      @min_duration_page_advertiser = data["min_duration_page_advertiser"]
+      @max_duration_page_advertiser = data["max_duration_page_advertiser"]
+      @percent_local_page_advertiser = data["percent_local_page_advertiser"]
+      @duration_referral = data["duration_referral"]
+      @min_count_page_organic = data["min_count_page_organic"]
+      @max_count_page_organic = data["max_count_page_organic"]
+      @min_duration_page_organic = data["min_duration_page_organic"]
+      @max_duration_page_organic = data["max_duration_page_organic"]
+      @min_duration = data["min_duration"]
+      @max_duration = data["max_duration"]
     end
 
     def to_event
@@ -110,7 +137,20 @@ module Planning
                                         business)
 
       business = {
-          "website_label" => @website_label}
+          "website_label" => @website_label,
+          "min_count_page_advertiser" => @min_count_page_advertiser,
+          "max_count_page_advertiser" => @max_count_page_advertiser,
+          "min_duration_page_advertiser" => @min_duration_page_advertiser,
+          "max_duration_page_advertiser" => @max_duration_page_advertiser,
+          "percent_local_page_advertiser" => @percent_local_page_advertiser,
+          "duration_referral" => @duration_referral,
+          "min_count_page_organic" => @min_count_page_organic,
+          "max_count_page_organic" => @max_count_page_organic,
+          "min_duration_page_organic" => @min_duration_page_organic,
+          "max_duration_page_organic" => @max_duration_page_organic,
+          "min_duration" => @min_duration,
+          "max_duration" => @max_duration
+      }
 
 
       periodicity = IceCube::Schedule.new(date_objective + START_PUBLISHING_VISITS_DAY + START_PUBLISHING_VISITS_HOUR,

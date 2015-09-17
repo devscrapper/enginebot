@@ -14,7 +14,7 @@ $calendar_server_port = 9104
 $scraperbot_calendar_server_port = 9154
 $scraperbot_calendar_server_ip = "localhost"
 # ces variables permettent d'utiliser les serveurs task pour tester si == true, sinon en direct
-TASK_SERVER = false
+TASK_SERVER = true
 LOG = Pathname.new(File.join(File.dirname(__FILE__), '..', 'log')).realpath
 JDD = Pathname.new(File.join(File.dirname(__FILE__), '..', 'jdd')).realpath
 INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input'))
@@ -22,6 +22,30 @@ TMP = Pathname.new(File.join(File.dirname(__FILE__), '..', 'tmp'))
 OUTPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'output'))
 ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive'))
 CRON = "58 16 * * 1-7" # mm hh
+MIN_COUNT_PAGE_ADVERTISER = 10 # nombre de page min consultées chez l'advertiser : fourni par statupweb
+MAX_COUNT_PAGE_ADVERTISER = 15 # nombre de page max consultées chez l'advertiser : fourni par statupweb
+
+MIN_DURATION_PAGE_ADVERTISER = 60 # durée de lecture min d'une page max consultées chez l'advertiser : fourni par statupweb
+MAX_DURATION_PAGE_ADVERTISER = 120 # durée de lecture max d'une page max consultées chez l'advertiser : fourni par statupweb
+
+PERCENT_LOCAL_PAGE_ADVERTISER = 80 # pourcentage de page consultées localement à l'advertiser fournit par statupweb
+
+DURATION_REFERRAL = 20 # durée de lecture du referral : fourni par statupweb
+
+MIN_COUNT_PAGE_ORGANIC = 4 #nombre min de page de resultat du moteur de recherche consultées : fourni par statupweb
+MAX_COUNT_PAGE_ORGANIC = 6 #nombre min de page de resultat du moteur de recherche consultées : fourni par statupweb
+
+MIN_DURATION_PAGE_ORGANIC = 10 #durée de lecture min d'une page de resultat fourni par le moteur de recherche : fourni par statupweb
+MAX_DURATION_PAGE_ORGANIC = 30 #durée de lecture max d'une page de resultat fourni par le moteur de recherche : fourni par statupweb
+
+MIN_DURATION_SURF = 5 # temps en seconde min de lecture d'une page d'un site consulté avant d'atterrir sur le website
+MAX_DURATION_SURF = 10 # temps en seconde min de lecture d'une page d'un site consulté avant d'atterrir sur le website
+
+MIN_DURATION_WEBSITE = 10 #temps en seconde min de lecture d'une page du website
+
+MIN_PAGES_WEBSITE = 2 #nombre min de page consulter sur le website
+
+MAX_DURATION_SCRAPING = 7 # nombre de jour allouer au scraping de website et organic pour policy traffic
 #------------------------------------------------------------------------------------------------------------------
 #creation du scheduler
 #------------------------------------------------------------------------------------------------------------------
@@ -127,7 +151,21 @@ datas = [
      :min_pages => 2,
      :hourly_distribution => "21|60|7|60|11|62|80|15|32|79|100|87|88|73|108|85|79|69|55|48|49|52|48|22",
      :advertisers => ["adsense"],
-     :advertising_percent => 1
+     :advertising_percent => 1,
+     :min_count_page_advertiser => MIN_COUNT_PAGE_ADVERTISER,
+     :max_count_page_advertiser => MAX_COUNT_PAGE_ADVERTISER,
+     :min_duration_page_advertiser => MIN_DURATION_PAGE_ADVERTISER,
+     :max_duration_page_advertiser => MAX_DURATION_PAGE_ADVERTISER,
+     :percent_local_page_advertiser => PERCENT_LOCAL_PAGE_ADVERTISER,
+     :duration_referral => DURATION_REFERRAL,
+     :min_count_page_organic => MIN_COUNT_PAGE_ORGANIC,
+     :max_count_page_organic => MAX_COUNT_PAGE_ORGANIC,
+     :min_duration_page_organic => MIN_DURATION_PAGE_ORGANIC,
+     :max_duration_page_organic => MAX_DURATION_PAGE_ORGANIC,
+     :min_duration => MIN_DURATION_SURF,
+     :max_duration => MAX_DURATION_SURF,
+     :min_duration_website => MIN_DURATION_WEBSITE,
+     :min_pages_website => MIN_PAGES_WEBSITE
     },
     {:website_id => 1, :policy_id => 2, :policy_type => "rank",
      :direct_medium_percent => 0,
@@ -140,18 +178,32 @@ datas = [
      :avg_time_on_site => 120,
      :min_durations => 20,
      :min_pages => 2,
-     :hourly_distribution => "20|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0" ,
+     :hourly_distribution => "20|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0",
      :advertisers => ["none"],
-     :advertising_percent => 0
+     :advertising_percent => 0,
+     :min_count_page_advertiser => MIN_COUNT_PAGE_ADVERTISER,
+     :max_count_page_advertiser => MAX_COUNT_PAGE_ADVERTISER,
+     :min_duration_page_advertiser => MIN_DURATION_PAGE_ADVERTISER,
+     :max_duration_page_advertiser => MAX_DURATION_PAGE_ADVERTISER,
+     :percent_local_page_advertiser => PERCENT_LOCAL_PAGE_ADVERTISER,
+     :duration_referral => DURATION_REFERRAL,
+     :min_count_page_organic => MIN_COUNT_PAGE_ORGANIC,
+     :max_count_page_organic => MAX_COUNT_PAGE_ORGANIC,
+     :min_duration_page_organic => MIN_DURATION_PAGE_ORGANIC,
+     :max_duration_page_organic => MAX_DURATION_PAGE_ORGANIC,
+     :min_duration => MIN_DURATION_SURF,
+     :max_duration => MAX_DURATION_SURF,
+     :min_duration_website => MIN_DURATION_WEBSITE,
+     :min_pages_website => MIN_PAGES_WEBSITE
     }
 ]
 
 
- cleaning
+cleaning
 
 datas.each { |data|
- deploying(label, today, data[:policy_type])
- building_inputs(label, today, data[:policy_type])
+  deploying(label, today, data[:policy_type])
+  building_inputs(label, today, data[:policy_type])
   if TASK_SERVER
     #------------------------------------------------------------------------------------------------------------------
     # TASK_SERVER
@@ -168,9 +220,20 @@ datas.each { |data|
                                          "direct_medium_percent" => data[:direct_medium_percent],
                                          "organic_medium_percent" => data[:organic_medium_percent],
                                          "referral_medium_percent" => data[:referral_medium_percent],
-                                         "advertising_percent" =>  data[:advertising_percent], #advertising_percent
-                                         "advertisers" =>  data[:advertisers],
-                                         "url_root" => "http://www.epilation-laser-definitive.info/"}).execute
+                                         "advertising_percent" => data[:advertising_percent], #advertising_percent
+                                         "advertisers" => data[:advertisers],
+                                         "min_count_page_advertiser" => data[:min_count_page_advertiser],
+                                         "max_count_page_advertiser" => data[:max_count_page_advertiser],
+                                         "min_duration_page_advertiser" => data[:min_duration_page_advertiser],
+                                         "max_duration_page_advertiser" => data[:max_duration_page_advertiser],
+                                         "percent_local_page_advertiser" => data[:percent_local_page_advertiser],
+                                         "duration_referral" => data[:duration_referral],
+                                         "min_count_page_organic" => data[:min_count_page_organic],
+                                         "max_count_page_organic" => data[:max_count_page_organic],
+                                         "min_duration_page_organic" => data[:min_duration_page_organic],
+                                         "max_duration_page_organic" => data[:max_duration_page_organic],
+                                         "min_duration" => data[:min_duration],
+                                         "max_duration" => data[:max_duration]}).execute
       when "rank"
         Task.new("Building_objectives", {"website_id" => data[:website_id],
                                          "policy_id" => data[:policy_id],
@@ -178,9 +241,20 @@ datas.each { |data|
                                          "website_label" => label,
                                          "date_building" => today,
                                          "count_visits_per_day" => data[:count_visits_per_day],
-                                         "advertising_percent" =>  data[:advertising_percent], #advertising_percent
-                                         "advertisers" =>  data[:advertisers],
-                                         "url_root" => "http://www.epilation-laser-definitive.info/"}).execute
+                                         "advertising_percent" => data[:advertising_percent], #advertising_percent
+                                         "advertisers" => data[:advertisers],
+                                         "min_count_page_advertiser" => data[:min_count_page_advertiser],
+                                         "max_count_page_advertiser" => data[:max_count_page_advertiser],
+                                         "min_duration_page_advertiser" => data[:min_duration_page_advertiser],
+                                         "max_duration_page_advertiser" => data[:max_duration_page_advertiser],
+                                         "percent_local_page_advertiser" => data[:percent_local_page_advertiser],
+                                         "duration_referral" => data[:duration_referral],
+                                         "min_count_page_organic" => data[:min_count_page_organic],
+                                         "max_count_page_organic" => data[:max_count_page_organic],
+                                         "min_duration_page_organic" => data[:min_duration_page_organic],
+                                         "max_duration_page_organic" => data[:max_duration_page_organic],
+                                         "min_duration" => data[:min_duration],
+                                         "max_duration" => data[:max_duration]}).execute
 
     end
 
@@ -227,17 +301,29 @@ datas.each { |data|
 
 
     # comme le déclenchement avec le serveur est asynchrone, pour attendre que les fichiers final- soit à jour
-    sleep 5 ; $stdout << "sleeping for publishing #{data[:policy_type]}\n"
+    sleep 5; $stdout << "sleeping for publishing #{data[:policy_type]}\n"
     while !Flow.new(TMP, "final-visits", data[:policy_type], label, today).volume_exist?(24)
       sleep 5
     end
 
     Task.new("Publishing_visits", {"website_id" => data[:website_id],
-                                 "policy_id" => data[:policy_id],
-                                 "policy_type" => data[:policy_type],
-                                 "website_label" => label,
-                                 "date_building" => today,
-                                 }).execute
+                                   "policy_id" => data[:policy_id],
+                                   "policy_type" => data[:policy_type],
+                                   "website_label" => label,
+                                   "date_building" => today,
+                                   "min_count_page_advertiser" => data[:min_count_page_advertiser],
+                                   "max_count_page_advertiser" => data[:max_count_page_advertiser],
+                                   "min_duration_page_advertiser" => data[:min_duration_page_advertiser],
+                                   "max_duration_page_advertiser" => data[:max_duration_page_advertiser],
+                                   "percent_local_page_advertiser" => data[:percent_local_page_advertiser],
+                                   "duration_referral" => data[:duration_referral],
+                                   "min_count_page_organic" => data[:min_count_page_organic],
+                                   "max_count_page_organic" => data[:max_count_page_organic],
+                                   "min_duration_page_organic" => data[:min_duration_page_organic],
+                                   "max_duration_page_organic" => data[:max_duration_page_organic],
+                                   "min_duration" => data[:min_duration],
+                                   "max_duration" => data[:max_duration]
+                                }).execute
     #    Visits.new(label, today, data[:policy_type]).Publishing_visits_by_hour(Date.today)
   else
     #------------------------------------------------------------------------------------------------------------------
@@ -257,14 +343,40 @@ datas.each { |data|
                                                                        data[:referral_medium_percent],
                                                                        1,
                                                                        ["adsense"],
-                                                                       "http://www.epilation-laser-definitive.info/")
+                                                                       data[:min_count_page_advertiser],
+                                                                       data[:max_count_page_advertiser],
+                                                                       data[:min_duration_page_advertiser],
+                                                                       data[:max_duration_page_advertiser],
+                                                                       data[:percent_local_page_advertiser],
+                                                                       data[:duration_referral],
+                                                                       data[:min_count_page_organic],
+                                                                       data[:max_count_page_organic],
+                                                                       data[:min_duration_page_organic],
+                                                                       data[:max_duration_page_organic],
+                                                                       data[:min_duration],
+                                                                       data[:max_duration],
+                                                                       data[:min_duration_website],
+                                                                       data[:min_pages_website])
       when "rank"
         Objectives.new(label,
                        today,
                        data[:policy_id],
                        data[:website_id],
                        data[:policy_type]).Building_objectives_rank(data[:count_visits_per_day],
-                                                                    "http://centre.epilation-laser-definitive.info/11685.htm")
+                                                                    data[:min_count_page_advertiser],
+                                                                    data[:max_count_page_advertiser],
+                                                                    data[:min_duration_page_advertiser],
+                                                                    data[:max_duration_page_advertiser],
+                                                                    data[:percent_local_page_advertiser],
+                                                                    data[:duration_referral],
+                                                                    data[:min_count_page_organic],
+                                                                    data[:max_count_page_organic],
+                                                                    data[:min_duration_page_organic],
+                                                                    data[:max_duration_page_organic],
+                                                                    data[:min_duration],
+                                                                    data[:max_duration],
+                                                                    data[:min_duration_website],
+                                                                    data[:min_pages_website])
     end
 
     Chosens.new(label, today, data[:policy_type]).Choosing_landing_pages(data[:direct_medium_percent],
@@ -284,7 +396,19 @@ datas.each { |data|
     Visits.new(label, today, data[:policy_type]).Building_planification(data[:hourly_distribution], data[:count_visits])
     Visits.new(label, today, data[:policy_type]).Extending_visits(data[:count_visits], 1, ["adsense"])
     Visits.new(label, today, data[:policy_type]).Reporting_visits
-    Visits.new(label, today, data[:policy_type]).Publishing_visits_by_hour(Date.today)
+    Visits.new(label, today, data[:policy_type]).Publishing_visits_by_hour(data[:min_count_page_advertiser],
+                                                                           data[:max_count_page_advertiser],
+                                                                           data[:min_duration_page_advertiser],
+                                                                           data[:max_duration_page_advertiser],
+                                                                           data[:percent_local_page_advertiser],
+                                                                           data[:duration_referral],
+                                                                           data[:min_count_page_organic],
+                                                                           data[:max_count_page_organic],
+                                                                           data[:min_duration_page_organic],
+                                                                           data[:max_duration_page_organic],
+                                                                           data[:min_duration],
+                                                                           data[:max_duration],
+                                                                           Date.today)
   end
 
 

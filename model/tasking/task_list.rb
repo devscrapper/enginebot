@@ -23,71 +23,66 @@ module Tasking
     # INPUT
     #--------------------------------------------------------------------------------------
     def Building_landing_pages_direct
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        Inputs.new(website_label, date_building, policy_type).Building_landing_pages(:direct)
+      execute(__method__) {
+        Inputs.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"]).Building_landing_pages(:direct)
       }
     end
 
     def Building_landing_pages_organic
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        Inputs.new(website_label, date_building, policy_type).Building_landing_pages(:organic)
+      execute(__method__) {
+        Inputs.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"]).Building_landing_pages(:organic)
       }
     end
 
     def Building_landing_pages_referral
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        Inputs.new(website_label, date_building, policy_type).Building_landing_pages(:referral)
+      execute(__method__) {
+        Inputs.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"]).Building_landing_pages(:referral)
       }
     end
 
 
     def Building_objectives
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
 
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        case policy_type
+      execute(__method__) {
+        case @data["policy_type"]
           when "traffic"
-            Objectives.new(website_label,
-                           date_building,
-                           policy_id,
-                           website_id,
-                           policy_type).Building_objectives_traffic(is_nil_or_empty? { @data["change_count_visits_percent"] }.to_i,
-                                                                    is_nil_or_empty? { @data["change_bounce_visits_percent"] }.to_i,
-                                                                    is_nil_or_empty? { @data["direct_medium_percent"] }.to_i,
-                                                                    is_nil_or_empty? { @data["organic_medium_percent"] }.to_i,
-                                                                    is_nil_or_empty? { @data["referral_medium_percent"] }.to_i,
-                                                                    is_nil_or_empty? { @data["advertising_percent"] }.to_i,
-                                                                    is_nil_or_empty? { @data["advertisers"] },
-                                                                    is_nil_or_empty? { @data["url_root"] })
+            Objectives.new(@data["website_label"],
+                           @data["date_building"],
+                           @data["policy_id"],
+                           @data["website_id"],
+                           @data["policy_type"]).Building_objectives_traffic(is_nil_or_empty? { @data["change_count_visits_percent"] }.to_i,
+                                                                             is_nil_or_empty? { @data["change_bounce_visits_percent"] }.to_i,
+                                                                             is_nil_or_empty? { @data["direct_medium_percent"] }.to_i,
+                                                                             is_nil_or_empty? { @data["organic_medium_percent"] }.to_i,
+                                                                             is_nil_or_empty? { @data["referral_medium_percent"] }.to_i,
+                                                                             is_nil_or_empty? { @data["advertising_percent"] }.to_i,
+                                                                             is_nil_or_empty? { @data["advertisers"] },
+                                                                             is_nil_or_empty? { @data["min_count_page_advertiser"] },
+                                                                             is_nil_or_empty? { @data["max_count_page_advertiser"] },
+                                                                             is_nil_or_empty? { @data["min_duration_page_advertiser"] },
+                                                                             is_nil_or_empty? { @data["max_duration_page_advertiser"] },
+                                                                             is_nil_or_empty? { @data["percent_local_page_advertiser"] },
+                                                                             is_nil_or_empty? { @data["duration_referral"] },
+                                                                             is_nil_or_empty? { @data["min_count_page_organic"] },
+                                                                             is_nil_or_empty? { @data["max_count_page_organic"] },
+                                                                             is_nil_or_empty? { @data["min_duration_page_organic"] },
+                                                                             is_nil_or_empty? { @data["max_duration_page_organic"] },
+                                                                             is_nil_or_empty? { @data["min_duration"] },
+                                                                             is_nil_or_empty? { @data["max_duration"] },
+                                                                             is_nil_or_empty? { @data["min_duration_website"] },
+                                                                             is_nil_or_empty? { @data["min_pages_website"] })
           when "rank"
-            Objectives.new(website_label,
-                           date_building,
-                           policy_id,
-                           website_id,
-                           policy_type).Building_objectives_rank(is_nil_or_empty? { @data["count_visits_per_day"] }.to_i,
-                                                                 is_nil_or_empty? { @data["url_root"] })
+            Objectives.new(@data["website_label"],
+                           @data["date_building"],
+                           @data["policy_id"],
+                           @data["website_id"],
+                           @data["policy_type"]).Building_objectives_rank(is_nil_or_empty? { @data["count_visits_per_day"] }.to_i)
         end
       }
 
@@ -98,76 +93,58 @@ module Tasking
     # CHOSEN
     #--------------------------------------------------------------------------------------
     def Choosing_landing_pages
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        Chosens.new(website_label, date_building, policy_type).Choosing_landing_pages(is_nil_or_empty? { @data["direct_medium_percent"] }.to_i,
-                                                                                      is_nil_or_empty? { @data["organic_medium_percent"] }.to_i,
-                                                                                      is_nil_or_empty? { @data["referral_medium_percent"] }.to_i,
-                                                                                      is_nil_or_empty? { @data["count_visits"] }.to_i) }
+      execute(__method__) {
+        Chosens.new(@data["website_label"],
+                    @data["date_building"],
+                    @data["policy_type"]).Choosing_landing_pages(is_nil_or_empty? { @data["direct_medium_percent"] }.to_i,
+                                                                 is_nil_or_empty? { @data["organic_medium_percent"] }.to_i,
+                                                                 is_nil_or_empty? { @data["referral_medium_percent"] }.to_i,
+                                                                 is_nil_or_empty? { @data["count_visits"] }.to_i) }
     end
 
     def Choosing_device_platform
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        Chosens.new(website_label, date_building, policy_type).Choosing_device_platform(is_nil_or_empty? { @data["count_visits"] }.to_i) }
+      execute(__method__) {
+        Chosens.new(@data["website_label"],
+                    @data["date_building"],
+                    @data["policy_type"]).Choosing_device_platform(is_nil_or_empty? { @data["count_visits"] }.to_i) }
     end
 
     #--------------------------------------------------------------------------------------
     # VISIT
     #--------------------------------------------------------------------------------------
     def Building_visits
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        objective_file = Flow.new(TMP, "objective", policy_type, website_label, date_building, 1, ".yml")
+      execute(__method__) {
+        objective_file = Flow.new(TMP, "objective", @data["policy_type"], @data["website_label"], @data["date_building"], 1, ".yml")
         objective_file.write(YAML::dump @data)
         objective_file.close
 
-        Visits.new(website_label, date_building, policy_type, website_id, policy_id).Building_visits(is_nil_or_empty? { @data["count_visits"] }.to_i,
-                                                                                             is_nil_or_empty? { @data["visit_bounce_rate"] }.to_f,
-                                                                                             is_nil_or_empty? { @data["page_views_per_visit"] }.to_f,
-                                                                                             is_nil_or_empty? { @data["avg_time_on_site"] }.to_f,
-                                                                                             is_nil_or_empty? { @data["min_durations"] }.to_i,
-                                                                                             is_nil_or_empty? { @data["min_pages"] }.to_i) }
+        Visits.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"],
+                   @data["website_id"],
+                   @data["policy_id"]).Building_visits(is_nil_or_empty? { @data["count_visits"] }.to_i,
+                                                       is_nil_or_empty? { @data["visit_bounce_rate"] }.to_f,
+                                                       is_nil_or_empty? { @data["page_views_per_visit"] }.to_f,
+                                                       is_nil_or_empty? { @data["avg_time_on_site"] }.to_f,
+                                                       is_nil_or_empty? { @data["min_durations"] }.to_i,
+                                                       is_nil_or_empty? { @data["min_pages"] }.to_i) }
     end
 
     def Building_planification
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
+      execute(__method__) {
+        objective = YAML::load Flow.new(TMP, "objective", @data["policy_type"], @data["website_label"], @data["date_building"], 1, ".yml").read
 
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        objective = YAML::load Flow.new(TMP, "objective", policy_type, website_label, date_building, 1, ".yml").read
-
-        Visits.new(website_label, date_building, policy_type, website_id, policy_id).Building_planification(is_nil_or_empty? { objective["hourly_distribution"] },
-                                                                                                    is_nil_or_empty? { objective["count_visits"] }.to_i) }
+        Visits.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"],
+                   @data["website_id"],
+                   @data["policy_id"]).Building_planification(is_nil_or_empty? { objective["hourly_distribution"] },
+                                                              is_nil_or_empty? { objective["count_visits"] }.to_i) }
     end
 
     def Extending_visits
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        objective_file = Flow.new(TMP, "objective", policy_type, website_label, date_building, 1, ".yml")
+      execute(__method__) {
+        objective_file = Flow.new(TMP, "objective", @data["policy_type"], @data["website_label"], @data["date_building"], 1, ".yml")
         objective = YAML::load objective_file.read
         objective_file.close
         begin
@@ -175,31 +152,41 @@ module Tasking
         rescue Exception => e
           @logger.an_event.warn e
         end
-        Visits.new(website_label, date_building, policy_type, website_id, policy_id).Extending_visits(is_nil_or_empty? { objective["count_visits"] }.to_i,
-                                                                                              is_nil_or_empty? { objective["advertising_percent"].to_i },
-                                                                                              is_nil_or_empty? { objective["advertisers"] }) }
+        Visits.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"],
+                   @data["website_id"],
+                   @data["policy_id"]).Extending_visits(is_nil_or_empty? { objective["count_visits"] }.to_i,
+                                                        is_nil_or_empty? { objective["advertising_percent"].to_i },
+                                                        is_nil_or_empty? { objective["advertisers"] }) }
     end
 
     def Reporting_visits
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        Visits.new(website_label, date_building, policy_type, website_id, policy_id).Reporting_visits }
+      execute(__method__) {
+        Visits.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"],
+                   @data["website_id"], @data["policy_id"]).Reporting_visits }
     end
 
     def Publishing_visits
-      website_label = @data["website_label"]
-      date_building = @data["date_building"]
-      website_id = @data["website_id"]
-      policy_id = @data["policy_id"]
-      policy_type = @data["policy_type"]
-
-      execute(__method__, website_label, date_building, website_id, policy_id, policy_type) {
-        Visits.new(website_label, date_building, policy_type, website_id, policy_id).Publishing_visits_by_hour
+      execute(__method__) {
+        Visits.new(@data["website_label"],
+                   @data["date_building"],
+                   @data["policy_type"],
+                   @data["website_id"],
+                   @data["policy_id"]).Publishing_visits_by_hour(@data["min_count_page_advertiser"],
+                                                                 @data["max_count_page_advertiser"],
+                                                                 @data["min_duration_page_advertiser"],
+                                                                 @data["max_duration_page_advertiser"],
+                                                                 @data["percent_local_page_advertiser"],
+                                                                 @data["duration_referral"],
+                                                                 @data["min_count_page_organic"],
+                                                                 @data["max_count_page_organic"],
+                                                                 @data["min_duration_page_organic"],
+                                                                 @data["max_duration_page_organic"],
+                                                                 @data["min_duration"],
+                                                                 @data["max_duration"])
       }
     end
 
@@ -208,18 +195,18 @@ module Tasking
     #--------------------------------------------------------------------------------------
 
     private
-    def execute(task, website_label, date, website_id, policy_id, policy_type, objective_id = nil, &block)
-      info = ["policy_type : #{policy_type}",
-              " policy_id : #{policy_id}",
-              " website_label : #{website_label}",
-              " website_id : #{website_id}",
-              " date : #{date}"]
-      info << " objective_id : #{objective_id}" unless objective_id.nil?
+    def execute(task, &block)
+      info = ["policy_type : #{@data["policy_type"]}",
+              " policy_id : #{@data["policy_id"]}",
+              " website_label : #{@data["website_label"]}",
+              " website_id : #{@data["website_id"]}",
+              " date : #{@data["date_building"]}"]
+      info << " objective_id : #{@data["objective_id"]}" unless @data["objective_id"].nil?
 
       @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is starting"
       begin
 
-        yield(website_label, date)
+        yield
 
       rescue Exception => e
         @logger.an_event.error "task <#{task}> for <#{info.join(",")}> is over => #{e.message}"

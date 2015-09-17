@@ -46,7 +46,22 @@ module Tasking
                                     organic_medium_percent,
                                     referral_medium_percent,
                                     advertising_percent,
-                                    advertisers, url_root)
+                                    advertisers,
+                                    min_count_page_advertiser,
+                                    max_count_page_advertiser,
+                                    min_duration_page_advertiser,
+                                    max_duration_page_advertiser,
+                                    percent_local_page_advertiser,
+                                    duration_referral,
+                                    min_count_page_organic,
+                                    max_count_page_organic,
+                                    min_duration_page_organic,
+                                    max_duration_page_organic,
+                                    min_duration,
+                                    max_duration,
+                                    min_duration_website,
+                                    min_pages_website
+    )
 
       @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> <#{@date_building}> is starting"
       @logger.an_event.debug "change_count_visits_percent #{change_count_visits_percent}"
@@ -59,7 +74,20 @@ module Tasking
       @logger.an_event.debug "policy_id #{@policy_id}"
       @logger.an_event.debug "website_id #{@website_id}"
       @logger.an_event.debug "policy_type #{@policy_type}"
-      @logger.an_event.debug "url_root #{url_root}"
+      @logger.an_event.debug "min_count_page_advertiser #{min_count_page_advertiser}"
+      @logger.an_event.debug "max_count_page_advertiser #{max_count_page_advertiser}"
+      @logger.an_event.debug "min_duration_page_advertiser #{min_duration_page_advertiser}"
+      @logger.an_event.debug "max_duration_page_advertiser #{max_duration_page_advertiser}"
+      @logger.an_event.debug "percent_local_page_advertiser #{percent_local_page_advertiser}"
+      @logger.an_event.debug "duration_referral #{duration_referral}"
+      @logger.an_event.debug "min_count_page_organic #{min_count_page_organic}"
+      @logger.an_event.debug "max_count_page_organic #{max_count_page_organic}"
+      @logger.an_event.debug "min_duration_page_organic #{min_duration_page_organic}"
+      @logger.an_event.debug "max_duration_page_organic #{max_duration_page_organic}"
+      @logger.an_event.debug "min_duration #{min_duration}"
+      @logger.an_event.debug "max_duration #{max_duration}"
+      @logger.an_event.debug "min_duration_website #{min_duration_website}"
+      @logger.an_event.debug "min_pages_website #{min_pages_website}"
 
       Building_objectives { |day, splitted_behaviour, splitted_hourly_daily_distribution|
         Objective.new(@website_label, day,
@@ -67,8 +95,8 @@ module Tasking
                       (splitted_behaviour[2].to_f * (change_bounce_visits_percent.to_f / 100)).round(2),
                       splitted_behaviour[3].to_f.round(2),
                       splitted_behaviour[4].to_f.round(2),
-                      10, #min_durations  #TODO à variabiliser un jour ?
-                      2, #min_pages #TODO à variabiliser un jour ?
+                      min_duration_website,
+                      min_pages_website,
                       direct_medium_percent,
                       referral_medium_percent,
                       organic_medium_percent,
@@ -78,18 +106,42 @@ module Tasking
                       @policy_id,
                       @website_id,
                       @policy_type,
-                      url_root)
+                      min_count_page_advertiser,
+                      max_count_page_advertiser,
+                      min_duration_page_advertiser,
+                      max_duration_page_advertiser,
+                      percent_local_page_advertiser,
+                      duration_referral,
+                      min_count_page_organic,
+                      max_count_page_organic,
+                      min_duration_page_organic,
+                      max_duration_page_organic,
+                      min_duration,
+                      max_duration)
       }
     end
 
-    def Building_objectives_rank(count_visits_per_day, url_root)
+    def Building_objectives_rank(count_visits_per_day,
+                                 min_count_page_advertiser,
+                                 max_count_page_advertiser,
+                                 min_duration_page_advertiser,
+                                 max_duration_page_advertiser,
+                                 percent_local_page_advertiser,
+                                 duration_referral,
+                                 min_count_page_organic,
+                                 max_count_page_organic,
+                                 min_duration_page_organic,
+                                 max_duration_page_organic,
+                                 min_duration,
+                                 max_duration,
+                                 min_duration_website,
+                                 min_pages_website)
 
       @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> <#{@date_building}> is starting"
       @logger.an_event.debug "count_visits_per_day #{count_visits_per_day}"
       @logger.an_event.debug "policy_id #{@policy_id}"
       @logger.an_event.debug "website_id #{@website_id}"
       @logger.an_event.debug "policy_type #{@policy_type}"
-      @logger.an_event.debug "url_root #{url_root}"
 
 
       Building_objectives { |day, splitted_behaviour, splitted_hourly_daily_distribution|
@@ -98,8 +150,8 @@ module Tasking
                       0, #visit_bounce_rate
                       splitted_behaviour[3].to_f.round(2), #avg_time_on_site
                       splitted_behaviour[4].to_f.round(2), #page_views_per_visit
-                      10, #min_durations  #TODO à variabiliser un jour ?
-                      2, #min_pages #TODO à variabiliser un jour ?
+                      min_duration_website, #min_durations
+                      min_pages_website, #min_pages
                       0, #direct_medium_percent
                       0, #referral_medium_percent
                       100, #organic_medium_percent
@@ -109,7 +161,18 @@ module Tasking
                       @policy_id,
                       @website_id,
                       @policy_type,
-                      url_root)
+                      min_count_page_advertiser,
+                      max_count_page_advertiser,
+                      min_duration_page_advertiser,
+                      max_duration_page_advertiser,
+                      percent_local_page_advertiser,
+                      duration_referral,
+                      min_count_page_organic,
+                      max_count_page_organic,
+                      min_duration_page_organic,
+                      max_duration_page_organic,
+                      min_duration,
+                      max_duration)
       }
 
     end

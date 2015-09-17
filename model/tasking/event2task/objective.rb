@@ -25,7 +25,18 @@ module Tasking
          :periodicity,
          :policy_id, :website_id, :policy_type,
          :objective_id,
-         :url_root
+         :min_count_page_advertiser,
+         :max_count_page_advertiser,
+         :min_duration_page_advertiser,
+         :max_duration_page_advertiser,
+         :percent_local_page_advertiser,
+         :duration_referral,
+         :min_count_page_organic,
+         :max_count_page_organic,
+         :min_duration_page_organic,
+         :max_duration_page_organic,
+         :min_duration,
+         :max_duration
 
     def initialize(website_label, date,
                    count_visits =nil,
@@ -40,7 +51,19 @@ module Tasking
                    advertising_percent=nil,
                    advertisers = nil,
                    hourly_distribution=nil,
-                   policy_id, website_id, policy_type, url_root)
+                   policy_id, website_id, policy_type,
+                   min_count_page_advertiser,
+                   max_count_page_advertiser,
+                   min_duration_page_advertiser,
+                   max_duration_page_advertiser,
+                   percent_local_page_advertiser,
+                   duration_referral,
+                   min_count_page_organic,
+                   max_count_page_organic,
+                   min_duration_page_organic,
+                   max_duration_page_organic,
+                   min_duration,
+                   max_duration)
       @objective_id = UUID.generate(:compact)
       @date = date
       @website_label = website_label
@@ -61,7 +84,18 @@ module Tasking
       @policy_id = policy_id
       @policy_type = policy_type
       @website_id = website_id
-      @url_root = url_root
+      @min_count_page_advertiser = min_count_page_advertiser
+      @max_count_page_advertiser = max_count_page_advertiser
+      @min_duration_page_advertiser = min_duration_page_advertiser
+      @max_duration_page_advertiser = max_duration_page_advertiser
+      @percent_local_page_advertiser = percent_local_page_advertiser
+      @duration_referral = duration_referral
+      @min_count_page_organic = min_count_page_organic
+      @max_count_page_organic = max_count_page_organic
+      @min_duration_page_organic = min_duration_page_organic
+      @max_duration_page_organic = max_duration_page_organic
+      @min_duration = min_duration
+      @max_duration = max_duration
     end
 
     def send_to_scraperbot
@@ -97,14 +131,23 @@ module Tasking
                         "min_pages" => @min_pages,
                         "hourly_distribution" => @hourly_distribution,
                         "advertisers" => @advertisers,
-                        "hourly_distribution" => @hourly_distribution,
                         "advertising_percent" => @advertising_percent,
                         "periodicity" => @periodicity,
+                        "min_count_page_advertiser" => @min_count_page_advertiser,
+                        "max_count_page_advertiser" => @max_count_page_advertiser,
+                        "min_duration_page_advertiser" => @min_duration_page_advertiser,
+                        "max_duration_page_advertiser" => @max_duration_page_advertiser,
+                        "percent_local_page_advertiser" => @percent_local_page_advertiser,
+                        "duration_referral" => @duration_referral,
+                        "min_count_page_organic" => @min_count_page_organic,
+                        "max_count_page_organic" => @max_count_page_organic,
+                        "min_duration_page_organic" => @min_duration_page_organic,
+                        "max_duration_page_organic" => @max_duration_page_organic,
+                        "min_duration" => @min_duration,
+                        "max_duration" => @max_duration
                        },
                        "localhost", $calendar_server_port)
     end
-
-
 
 
     def send_to_calendar(data, hostname, where_port)

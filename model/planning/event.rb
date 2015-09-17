@@ -52,8 +52,7 @@ module Planning
       begin
         data = {
             "website_label" => @business["website_label"],
-            "date_building" => @key["building_date"] || Date.today,
-            "data" => @business}
+            "date_building" => @key["building_date"] || Date.today}.merge(@business)
         Task.new(@cmd, data).execute
       rescue Exception => e
         raise EventException, "cannot execute event <#{@cmd}> for <#{@business["website_label"]}> because #{e}"
