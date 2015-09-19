@@ -39,12 +39,13 @@ module Tasking
     #landing_page file :       hostname;page_path;(not set);(direct);(none);(not set)
 
     def initialize(page)
-      @scheme,
+      not_use,
+          @scheme,
           @hostname,
           @landing_page_path,
           @title = page.split(SEPARATOR1)
 
-      raise "traffic source direct malformed" if @hostname.nil? or @landing_page_path.nil? or @title.nil?
+      raise "traffic source direct malformed" if @scheme.nil? or @hostname.nil? or @landing_page_path.nil? or @title.nil?
 
       @referral_path = NOT_SET
       @source = DIRECT
@@ -60,9 +61,9 @@ module Tasking
 
     def initialize(page)
       # from scraper_bot :
-      # [uri.hostname, uri.path, "(not set)", engine, "organic", kw, index]
-
-      @hostname,
+      # [uri.scheme, uri.hostname, uri.path, "(not set)", engine, "organic", kw, index]
+      @scheme,
+          @hostname,
           @landing_page_path,
           not_use,
           @source,
@@ -73,7 +74,7 @@ module Tasking
       @referral_path = NOT_SET
       @medium = ORGANIC
 
-      raise "traffic source organic malformed" if @hostname.nil? or @landing_page_path.nil? or @source.nil? or @keyword.nil? or @index_page_results.nil?
+      raise "traffic source organic malformed" if @scheme.nil? or @hostname.nil? or @landing_page_path.nil? or @source.nil? or @keyword.nil? or @index_page_results.nil?
     end
 
     #landing_page file :       hostname;landing_page_path;(not set);@source;organic;@keyword;1
@@ -91,7 +92,8 @@ module Tasking
 
 
     def initialize(page)
-      @hostname,
+      @scheme,
+          @hostname,
           @landing_page_path,
           @referral_path,
           @source,
@@ -106,7 +108,7 @@ module Tasking
       @medium = REFERRAL
       @keyword = NOT_SET
 
-      raise "traffic source referral malformed" if @hostname.nil? or @landing_page_path.nil? or @source.nil? or \
+      raise "traffic source referral malformed" if @scheme.nil? or @hostname.nil? or @landing_page_path.nil? or @source.nil? or \
       @referral_title.nil? or @referral_kw.nil? or @referral_uri_search.nil? or @referral_search_engine.nil? or \
       @referral_index_page_results.nil? or @referral_path.nil?
     end

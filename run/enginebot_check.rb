@@ -233,7 +233,9 @@ datas.each { |data|
                                          "min_duration_page_organic" => data[:min_duration_page_organic],
                                          "max_duration_page_organic" => data[:max_duration_page_organic],
                                          "min_duration" => data[:min_duration],
-                                         "max_duration" => data[:max_duration]}).execute
+                                         "max_duration" => data[:max_duration],
+                                         "min_duration_website" => data[:min_duration_website],
+                                         "min_pages_website" => data[:min_pages_website]}).execute
       when "rank"
         Task.new("Building_objectives", {"website_id" => data[:website_id],
                                          "policy_id" => data[:policy_id],
@@ -254,7 +256,9 @@ datas.each { |data|
                                          "min_duration_page_organic" => data[:min_duration_page_organic],
                                          "max_duration_page_organic" => data[:max_duration_page_organic],
                                          "min_duration" => data[:min_duration],
-                                         "max_duration" => data[:max_duration]}).execute
+                                         "max_duration" => data[:max_duration],
+                                         "min_duration_website" => data[:min_duration_website],
+                                         "min_pages_website" => data[:min_pages_website]}).execute
 
     end
 
