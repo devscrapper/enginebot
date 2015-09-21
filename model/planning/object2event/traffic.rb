@@ -31,14 +31,14 @@ module Planning
       #Si demande suppression de la policy alors absence de periodicity et de business_building_objectives
       if @count_weeks.nil? and @monday_start.nil?
         [
-            Event.new(key, "Building_objectives"),
-            Event.new(key, "Building_landing_pages_direct"),
-            Event.new(key, "Building_landing_pages_organic"),
-            Event.new(key, "Building_landing_pages_referral"),
-            Event.new(key, "Choosing_device_platform"),
-            Event.new(key, "Choosing_landing_pages"),
-            Event.new(key, "Building_visits"),
-            Event.new(key, "Publishing_visits")
+            Event.new(key, "Building_objectives", nil, {"website_label" => @website_label}),
+            Event.new(key, "Building_landing_pages_direct", nil, {"website_label" => @website_label}),
+            Event.new(key, "Building_landing_pages_organic", nil, {"website_label" => @website_label}),
+            Event.new(key, "Building_landing_pages_referral", nil, {"website_label" => @website_label}),
+            Event.new(key, "Choosing_device_platform", nil, {"website_label" => @website_label}),
+            Event.new(key, "Choosing_landing_pages", nil, {"website_label" => @website_label}),
+            Event.new(key, "Building_visits", nil, {"website_label" => @website_label}),
+            Event.new(key, "Publishing_visits", nil, {"website_label" => @website_label})
         ]
 
 

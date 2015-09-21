@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'rubygems' # if you use RubyGems
 require 'json'
 require_relative 'event'
@@ -15,7 +16,7 @@ module Planning
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       @events = Array.new
       begin
-        JSON.parse(File.read(EVENTS_FILE)).each { |evt|
+        JSON.parse(File.read(EVENTS_FILE,{:encoding =>"BOM|UTF-8:-"})).each { |evt|
           @events << Event.new(evt["key"], evt["cmd"], evt["periodicity"], evt["business"]) unless IceCube::Schedule.from_yaml(evt["periodicity"]).next_occurrence.nil?
         }
         @logger.an_event.info "repository events is loaded"
@@ -46,7 +47,7 @@ module Planning
 
     def save()
       begin
-        events_file = File.open(EVENTS_FILE, "w")
+        events_file = File.open(EVENTS_FILE, "w+:BOM|UTF-8:-")
         events_file.sync = true
         events_file.write(JSON.pretty_generate(@events))
         events_file.close
