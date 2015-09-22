@@ -62,7 +62,6 @@ module Planning
         @logger.an_event.debug "events #{events}"
         @sem.synchronize {
           events.each { |e|
-            @logger.an_event.info e
             @events.delete(e)
           }
           @events.save

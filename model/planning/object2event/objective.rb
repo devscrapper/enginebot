@@ -45,9 +45,11 @@ module Planning
          :max_duration_page_organic,
          :min_duration,
          :max_duration
-    #TODO ajouter website id policy id policy type
+
 
     def initialize(data)
+      @policy_id = data["policy_id"]
+      @policy_type = data["policy_type"]
       @objective_id = data["objective_id"]
       @count_visits = data["count_visits"]
       @building_date = data["building_date"].to_s
@@ -80,9 +82,13 @@ module Planning
 
     def to_event
       date_objective = IceCube::Schedule.from_yaml(@periodicity).start_time
-      key = {"objective_id" => @objective_id}
+      key = {
+          "policy_id" => @policy_id,
+          "building_date" => @building_date
+      }
 
       business = {
+          "objective_id" => @objective_id,
           "website_label" => @website_label,
           "count_visits" => @count_visits
       }
@@ -97,6 +103,7 @@ module Planning
 
 
       business = {
+          "objective_id" => @objective_id,
           "website_label" => @website_label,
           "count_visits" => @count_visits,
           "direct_medium_percent" => @direct_medium_percent,
@@ -116,6 +123,7 @@ module Planning
 
 
       business = {
+          "objective_id" => @objective_id,
           "website_label" => @website_label,
           "count_visits" => @count_visits,
           "visit_bounce_rate" => @visit_bounce_rate,
@@ -137,6 +145,7 @@ module Planning
                                         business)
 
       business = {
+          "objective_id" => @objective_id,
           "website_label" => @website_label,
           "min_count_page_advertiser" => @min_count_page_advertiser,
           "max_count_page_advertiser" => @max_count_page_advertiser,

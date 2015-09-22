@@ -47,6 +47,7 @@ module Tasking
                                     referral_medium_percent,
                                     advertising_percent,
                                     advertisers,
+                                    url_root,
                                     min_count_page_advertiser,
                                     max_count_page_advertiser,
                                     min_duration_page_advertiser,
@@ -74,6 +75,7 @@ module Tasking
       @logger.an_event.debug "policy_id #{@policy_id}"
       @logger.an_event.debug "website_id #{@website_id}"
       @logger.an_event.debug "policy_type #{@policy_type}"
+      @logger.an_event.debug "url_root #{url_root}"
       @logger.an_event.debug "min_count_page_advertiser #{min_count_page_advertiser}"
       @logger.an_event.debug "max_count_page_advertiser #{max_count_page_advertiser}"
       @logger.an_event.debug "min_duration_page_advertiser #{min_duration_page_advertiser}"
@@ -102,6 +104,7 @@ module Tasking
                       organic_medium_percent,
                       advertising_percent,
                       advertisers,
+                      url_root,
                       splitted_hourly_daily_distribution[1],
                       @policy_id,
                       @website_id,
@@ -122,6 +125,7 @@ module Tasking
     end
 
     def Building_objectives_rank(count_visits_per_day,
+                                 url_root,
                                  min_count_page_advertiser,
                                  max_count_page_advertiser,
                                  min_duration_page_advertiser,
@@ -142,7 +146,7 @@ module Tasking
       @logger.an_event.debug "policy_id #{@policy_id}"
       @logger.an_event.debug "website_id #{@website_id}"
       @logger.an_event.debug "policy_type #{@policy_type}"
-
+      @logger.an_event.debug "url_root #{url_root}"
 
       Building_objectives { |day, splitted_behaviour, splitted_hourly_daily_distribution|
         Objective.new(@website_label, day,
@@ -157,6 +161,7 @@ module Tasking
                       100, #organic_medium_percent
                       0, #advertising_percent
                       "none", #advertisers
+                      url_root,
                       splitted_hourly_daily_distribution[1], #hour
                       @policy_id,
                       @website_id,

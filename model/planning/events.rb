@@ -80,10 +80,8 @@ module Planning
     end
 
     def delete(event)
-      @events.each_index { |i|
-        @events.delete_at(i) if @events[i].key == event.key and @events[i].cmd == event.cmd
-      }
-      @logger.an_event.info "event <#{event.cmd}> for <#{event.business["website_label"]}> deleted from repository"
+      @events.delete_if {|e| e.key["policy_id"] == event.key["policy_id"] and e.cmd == event.cmd}
+      @logger.an_event.info "event #{event.cmd} for #{event.business["website_label"]} deleted from repository"
     end
 
 

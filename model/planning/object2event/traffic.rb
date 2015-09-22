@@ -60,6 +60,7 @@ module Planning
             "count_weeks" => @count_weeks,
             "website_id" => @website_id,
             "policy_id" => @policy_id,
+            "url_root" => @url_root,
             "min_count_page_advertiser" => @min_count_page_advertiser,
             "max_count_page_advertiser" => @max_count_page_advertiser,
             "min_duration_page_advertiser" => @min_duration_page_advertiser,

@@ -63,6 +63,7 @@ module Tasking
                                                                              is_nil_or_empty? { @data["referral_medium_percent"] }.to_i,
                                                                              is_nil_or_empty? { @data["advertising_percent"] }.to_i,
                                                                              is_nil_or_empty? { @data["advertisers"] },
+                                                                             is_nil_or_empty? { @data["url_root"] },
                                                                              is_nil_or_empty? { @data["min_count_page_advertiser"] },
                                                                              is_nil_or_empty? { @data["max_count_page_advertiser"] },
                                                                              is_nil_or_empty? { @data["min_duration_page_advertiser"] },
@@ -82,7 +83,22 @@ module Tasking
                            @data["date_building"],
                            @data["policy_id"],
                            @data["website_id"],
-                           @data["policy_type"]).Building_objectives_rank(is_nil_or_empty? { @data["count_visits_per_day"] }.to_i)
+                           @data["policy_type"]).Building_objectives_rank(is_nil_or_empty? { @data["count_visits_per_day"] }.to_i,
+                                                                          is_nil_or_empty? { @data["url_root"] },
+                                                                          is_nil_or_empty? { @data["min_count_page_advertiser"] },
+                                                                          is_nil_or_empty? { @data["max_count_page_advertiser"] },
+                                                                          is_nil_or_empty? { @data["min_duration_page_advertiser"] },
+                                                                          is_nil_or_empty? { @data["max_duration_page_advertiser"] },
+                                                                          is_nil_or_empty? { @data["percent_local_page_advertiser"] },
+                                                                          is_nil_or_empty? { @data["duration_referral"] },
+                                                                          is_nil_or_empty? { @data["min_count_page_organic"] },
+                                                                          is_nil_or_empty? { @data["max_count_page_organic"] },
+                                                                          is_nil_or_empty? { @data["min_duration_page_organic"] },
+                                                                          is_nil_or_empty? { @data["max_duration_page_organic"] },
+                                                                          is_nil_or_empty? { @data["min_duration"] },
+                                                                          is_nil_or_empty? { @data["max_duration"] },
+                                                                          is_nil_or_empty? { @data["min_duration_website"] },
+                                                                          is_nil_or_empty? { @data["min_pages_website"] })
         end
       }
 

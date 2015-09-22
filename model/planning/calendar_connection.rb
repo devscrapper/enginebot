@@ -16,7 +16,7 @@ module Planning
       @logger.an_event.debug "data receive <#{param}>"
       close_connection
       begin
-        Thread.new {
+
           begin
             data = YAML::load param
             context = []
@@ -48,7 +48,7 @@ module Planning
             @logger.an_event.error "cannot execute cmd  <#{cmd}>"
             @logger.an_event.debug e
           end
-        }
+
       rescue Exception => e
         @logger.an_event.error "cannot thread cmd"
         @logger.an_event.debug e

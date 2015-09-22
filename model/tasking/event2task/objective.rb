@@ -21,6 +21,7 @@ module Tasking
          :organic_medium_percent,
          :advertising_percent,
          :advertisers,
+         :url_root,
          :hourly_distribution,
          :periodicity,
          :policy_id, :website_id, :policy_type,
@@ -50,6 +51,7 @@ module Tasking
                    organic_medium_percent=nil,
                    advertising_percent=nil,
                    advertisers = nil,
+                   url_root = nil,
                    hourly_distribution=nil,
                    policy_id, website_id, policy_type,
                    min_count_page_advertiser,
@@ -78,6 +80,7 @@ module Tasking
       @organic_medium_percent=organic_medium_percent
       @advertising_percent=advertising_percent
       @advertisers = advertisers
+      @url_root = url_root
       @periodicity =IceCube::Schedule.new(Time.local(@date.year, @date.month, @date.day),
                                           :end_time => Time.local(@date.year, @date.month, @date.day)).to_yaml
       @hourly_distribution=translate_to_count_visits_target(hourly_distribution, count_visits)

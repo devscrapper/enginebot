@@ -11,6 +11,7 @@ module Planning
          :policy_id,
          :count_weeks,
          :monday_start,
+         :url_root,
          :min_count_page_advertiser,
          :max_count_page_advertiser,
          :min_duration_page_advertiser,
@@ -32,6 +33,7 @@ module Planning
       @count_weeks = data[:count_weeks]
       @website_id = data[:website_id]
       @policy_id = data[:policy_id]
+      @url_root = data[:url_root]
       @min_count_page_advertiser = data[:min_count_page_advertiser]
       @max_count_page_advertiser = data[:max_count_page_advertiser]
       @min_duration_page_advertiser = data[:min_duration_page_advertiser]
