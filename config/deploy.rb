@@ -42,15 +42,16 @@
 # 4 cap machine:reboot
 #----------------------------------------------------------------------------------------------------------------------
 # ordre de lancement des commandes deploy : next deploy
-# 1 cap deploy:gem_list       #installe les nouveaux gem si besoin
+# 1 cap deploy:gem_list  #installe les nouveaux gem si besoin
 # 2 cap deploy:update    # deploie les sources
-# 3 cap deploy:restart     # demarre les serveurs
+# 3 cap deploy:restart   # demarre les serveurs
 #----------------------------------------------------------------------------------------------------------------------
 #on n'utilise pas bundle pour déployer les gem=> on utilise les gem installés sous ruby : les gems system dans un gemset
 #----------------------------------------------------------------------------------------------------------------------
 
 
 require 'pathname'
+
 #----------------------------------------------------------------------------------------------------------------------
 # proprietes de l'application
 #----------------------------------------------------------------------------------------------------------------------
@@ -73,7 +74,6 @@ set :server_list, ["authentification_#{application}",
 #----------------------------------------------------------------------------------------------------------------------
 # param rvm
 #----------------------------------------------------------------------------------------------------------------------
-
 require "rvm/capistrano" #  permet aussi d'installer rvm et ruby
 require "rvm/capistrano/alias_and_wrapp"
 require "rvm/capistrano/gem_install_uninstall"
@@ -89,8 +89,8 @@ set :rvm_install_with_sudo, true
 # param extraction git
 #----------------------------------------------------------------------------------------------------------------------
 
-ENV["path"] += ";d:\\\portableGit\\bin" # acces au git local à la machine qui execute ce script
-set :repository, "file:///../referentiel/src/#{application}/.git"
+ENV["path"] += ";d:\\\personnel\\portableGit\\bin" # acces au git local à la machine qui execute ce script
+set :repository, "file://d:/personnel/referentiel/src/#{application}/.git"
 set :scm, "git"
 set :copy_dir, "d:\\temp" # reperoitr temporaire de d'extracion des fichiers du git pour les zipper
 set :branch, "master" # version à déployer
@@ -101,8 +101,8 @@ set :branch, "master" # version à déployer
 
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
-#set :server_name, "olgadays.synology.me:22" #adresse du server de destination hors reseau local
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
+#set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
 set :password, "Brembo01"
@@ -111,37 +111,23 @@ set :use_sudo, true
 set :staging, "test"
 role :app, server_name
 
+
 before 'rvm:install_rvm', 'avant:install_rvm'
 before 'rvm:install_ruby', 'rvm:create_gemset' #, 'avant:install_ruby'
 after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
 after "deploy:update", "apres:update", "deploy:start" , "deploy:status"
-before "deploy:update","deploy:stop" , "log:delete"
+#before "deploy:update" , "deploy:stop", "log:delete"
 
 
 #----------------------------------------------------------------------------------------------------------------------
 # task list : log
 #----------------------------------------------------------------------------------------------------------------------
 namespace :log do
+
   task :down, :roles => :app do
-   capture("ls #{File.join(current_path, 'log', '*.*')}").split(/\r\n/).each{|log_file|
-     get log_file, File.join(File.dirname(__FILE__), '..', 'log', File.basename(log_file))
-   }
-  end
-
-  task :delete, :roles => :app do
-    run "rm #{File.join(current_path, 'log', '*')}"
-  end
-
-end
-
-#----------------------------------------------------------------------------------------------------------------------
-# task list : log
-#----------------------------------------------------------------------------------------------------------------------
-namespace :tmp do
-  task :down, :roles => :app do
-    capture("ls #{File.join(current_path, 'tmp', '*.*')}").split(/\r\n/).each{|log_file|
-      get log_file, File.join(File.dirname(__FILE__), '..', 'tmp', File.basename(log_file))
+    capture("ls #{File.join(current_path, 'log', '*.*')}").split(/\r\n/).each { |log_file|
+      get log_file, File.join(File.dirname(__FILE__), '..', 'log', File.basename(log_file))
     }
   end
 
@@ -150,6 +136,7 @@ namespace :tmp do
   end
 
 end
+
 #----------------------------------------------------------------------------------------------------------------------
 # task list : machine
 #----------------------------------------------------------------------------------------------------------------------
@@ -179,13 +166,13 @@ namespace :deploy do
     server_list.each { |server| run "#{sudo} initctl stop #{server}" }
   end
 
-  task :status, :roles => :app, :except => {:no_release => true} do
+    task :status, :roles => :app, :except => {:no_release => true} do
     server_list.each { |server| run "#{sudo} initctl status #{server}" }
   end
 
   task :restart, :roles => :app, :except => {:no_release => true} do
-    stop
-    start
+	stop
+	start
   end
 
   task :first, :roles => :app do
@@ -198,7 +185,7 @@ namespace :deploy do
 
   task :gem_list, :roles => :app do
     #installation des gem dans le gesmset
-    gemlist(Pathname.new(File.join(File.dirname(__FILE__), '..', 'Gemfile')).realpath).each { |parse|
+    gemlist(File.expand_path(File.join("..", "..", "Gemfile"), __FILE__)).each { |parse|
       run_without_rvm("#{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem query -I #{parse[:name].strip} -v #{parse[:version].strip} ; if [  $? -eq 0 ] ; then #{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem install #{parse[:name].strip} -v #{parse[:version].strip} -N ; else echo \"gem #{parse[:name].strip} #{parse[:version].strip} already installed\" ; fi")
     }
   end
