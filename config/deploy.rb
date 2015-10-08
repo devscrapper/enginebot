@@ -50,8 +50,6 @@
 #----------------------------------------------------------------------------------------------------------------------
 
 
-require 'pathname'
-
 #----------------------------------------------------------------------------------------------------------------------
 # proprietes de l'application
 #----------------------------------------------------------------------------------------------------------------------
@@ -59,11 +57,12 @@ require 'pathname'
 set :application, "enginebot" # nom application (github)
 set :ftp_server_port, 9102 # port d"ecoute du serveur ftp"
 set :shared_children, ["archive",
-                  "data",
-                  "log",
-                  "tmp",
-                  "input",
-                  "output"] # répertoire partagé entre chaque release
+                       "data",
+                       "jdd",
+                       "log",
+                       "tmp",
+                       "input",
+                       "output"] # répertoire partagé entre chaque release
 set :server_list, ["authentification_#{application}",
                    "calendar_#{application}",
                    "ftpd_#{application}",
@@ -102,7 +101,7 @@ set :branch, "master" # version à déployer
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
-#set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
+set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
 set :password, "Brembo01"
@@ -116,7 +115,7 @@ before 'rvm:install_rvm', 'avant:install_rvm'
 before 'rvm:install_ruby', 'rvm:create_gemset' #, 'avant:install_ruby'
 after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
-after "deploy:update", "apres:update", "deploy:start" , "deploy:status"
+after "deploy:update", "apres:update", "deploy:start", "deploy:status"
 #before "deploy:update" , "deploy:stop", "log:delete"
 
 
@@ -166,13 +165,13 @@ namespace :deploy do
     server_list.each { |server| run "#{sudo} initctl stop #{server}" }
   end
 
-    task :status, :roles => :app, :except => {:no_release => true} do
+  task :status, :roles => :app, :except => {:no_release => true} do
     server_list.each { |server| run "#{sudo} initctl status #{server}" }
   end
 
   task :restart, :roles => :app, :except => {:no_release => true} do
-	stop
-	start
+    stop
+    start
   end
 
   task :first, :roles => :app do
