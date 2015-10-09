@@ -1,14 +1,12 @@
 require_relative 'flow'
-require 'pathname'
 require 'rufus-scheduler'
 require 'yaml'
 require 'eventmachine'
 require_relative 'communication'
 
 class Scheduler
-  OUTPUT = Pathname(File.join(File.dirname(__FILE__), '..', 'output')).realpath
-  TMP = Pathname(File.join(File.dirname(__FILE__), '..', 'tmp')).realpath
-
+  OUTPUT = File.expand_path(File.join("..", "..", "output"), __FILE__)
+  TMP = File.expand_path(File.join("..", "..", "tmp"), __FILE__)
 
   attr :os,
        :version,

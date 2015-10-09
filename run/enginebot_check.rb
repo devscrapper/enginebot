@@ -5,7 +5,7 @@ require_relative '../model/tasking/event2task/visits'
 require_relative '../model/tasking/event2task/objectives'
 require_relative '../model/flow'
 require 'rufus-scheduler'
-require 'pathname'
+
 include Flowing
 include Tasking
 $debugging = true
@@ -15,12 +15,13 @@ $scraperbot_calendar_server_port = 9154
 $scraperbot_calendar_server_ip = "localhost"
 # ces variables permettent d'utiliser les serveurs task pour tester si == true, sinon en direct
 TASK_SERVER = true
-LOG = Pathname.new(File.join(File.dirname(__FILE__), '..', 'log')).realpath
-JDD = Pathname.new(File.join(File.dirname(__FILE__), '..', 'jdd')).realpath
-INPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'input'))
-TMP = Pathname.new(File.join(File.dirname(__FILE__), '..', 'tmp'))
-OUTPUT = Pathname.new(File.join(File.dirname(__FILE__), '..', 'output'))
-ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive'))
+LOG = File.expand_path(File.join("..", "..", "log"), __FILE__)
+JDD = File.expand_path(File.join("..", "..", "jdd"), __FILE__)
+INPUT = File.expand_path(File.join("..", "..", "input"), __FILE__)
+TMP = File.expand_path(File.join("..", "..", "tmp"), __FILE__)
+OUTPUT = File.expand_path(File.join("..", "..", "output"), __FILE__)
+ARCHIVE = File.expand_path(File.join("..", "..", "archive"), __FILE__)
+
 CRON = "58 16 * * 1-7" # mm hh
 MIN_COUNT_PAGE_ADVERTISER = 10 # nombre de page min consultées chez l'advertiser : fourni par statupweb
 MAX_COUNT_PAGE_ADVERTISER = 15 # nombre de page max consultées chez l'advertiser : fourni par statupweb
@@ -224,7 +225,7 @@ datas.each { |data|
                                          "referral_medium_percent" => data[:referral_medium_percent],
                                          "advertising_percent" => data[:advertising_percent], #advertising_percent
                                          "advertisers" => data[:advertisers],
-                                         "url_root" =>data[:url_root],
+                                         "url_root" => data[:url_root],
                                          "min_count_page_advertiser" => data[:min_count_page_advertiser],
                                          "max_count_page_advertiser" => data[:max_count_page_advertiser],
                                          "min_duration_page_advertiser" => data[:min_duration_page_advertiser],
@@ -248,7 +249,7 @@ datas.each { |data|
                                          "count_visits_per_day" => data[:count_visits_per_day],
                                          "advertising_percent" => data[:advertising_percent], #advertising_percent
                                          "advertisers" => data[:advertisers],
-                                         "url_root" =>data[:url_root],
+                                         "url_root" => data[:url_root],
                                          "min_count_page_advertiser" => data[:min_count_page_advertiser],
                                          "max_count_page_advertiser" => data[:max_count_page_advertiser],
                                          "min_duration_page_advertiser" => data[:min_duration_page_advertiser],
@@ -287,7 +288,8 @@ datas.each { |data|
     # comme le déclenchement avec le serveur est asynchrone, on temporise dans le fichier n'ets pas terminé
     $stdout << "sleeping for choosing #{data[:policy_type]}\n"
     sleep 5
-    while Flow.new(TMP, "chosen-landing-pages", data[:policy_type], label, today).count_lines(EOFLINE) < data[:count_visits].to_i
+    while !Flow.new(TMP, "chosen-landing-pages", data[:policy_type], label, today).exist? &&
+        Flow.new(TMP, "chosen-landing-pages", data[:policy_type], label, today).count_lines(EOFLINE) < data[:count_visits].to_i
       sleep 5
     end
 

@@ -3,7 +3,6 @@
 
 require_relative '../../flow'
 require_relative '../../../lib/mail_sender'
-require 'pathname'
 
 
 module Tasking

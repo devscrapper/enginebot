@@ -2,13 +2,15 @@
 require_relative '../lib/logging'
 require_relative '../model/authentification'
 require 'yaml'
-require 'pathname'
+
 class FTPDriver
-  OUTPUT = File.dirname(__FILE__) + "/../output"
-  ARCHIVE = Pathname.new(File.join(File.dirname(__FILE__), '..', 'archive')).realpath #localisation du repertoire d'archive
+  OUTPUT = File.expand_path(File.join("..", "..", "output"), __FILE__)
+  ARCHIVE = File.expand_path(File.join("..", "..", "archive"), __FILE__) #localisation du repertoire d'archive
+
   @@log_file = File.dirname(__FILE__) + "/../log/" + File.basename(__FILE__, ".rb") + ".log"
   PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
   ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
+
   attr :user, :pwd, :authentification_server_port, :envir, :logger, :debugging
 
   def initialize(driver_args=nil)

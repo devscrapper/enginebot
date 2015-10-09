@@ -1,12 +1,12 @@
 #charge un fichier parametre.yml et expose des methodes par paramètre du fichier
-require 'pathname'
 require 'yaml'
 class Parameter
 
   #----------------------------------------------------------------------------------------------------------------
   # constant
   #----------------------------------------------------------------------------------------------------------------
-  PARAMETER = Pathname(File.join(File.dirname(__FILE__), '..', 'parameter')).realpath
+
+  PARAMETER = File.expand_path(File.join("..", "..", "parameter"), __FILE__)
   ENVIRONMENT= File.join(PARAMETER, 'environment.yml')
 
   #----------------------------------------------------------------------------------------------------------------

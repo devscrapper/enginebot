@@ -101,7 +101,7 @@ set :branch, "master" # version à déployer
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
-set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
+#set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
 set :password, "Brembo01"
@@ -149,6 +149,12 @@ end
 # task list : deploy
 #----------------------------------------------------------------------------------------------------------------------
 namespace :deploy do
+  task :jdd do
+    Dir.foreach(File.join(File.dirname(__FILE__), '..', 'jdd')) { |file|
+      top.upload(File.join(File.dirname(__FILE__), '..', 'jdd', file),
+                 File.join(current_path, 'jdd', file)) if file != "." && file != '..'
+    }
+  end
   task :geo do
     top.upload(File.join(File.dirname(__FILE__), '..', 'tmp', "geolocations_#{staging}.txt"), File.join(current_path, 'tmp', "geolocations_#{staging}.txt"))
   end
