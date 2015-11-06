@@ -288,7 +288,7 @@ datas.each { |data|
     # comme le déclenchement avec le serveur est asynchrone, on temporise dans le fichier n'ets pas terminé
     $stdout << "sleeping for choosing #{data[:policy_type]}\n"
     sleep 5
-    while !Flow.new(TMP, "chosen-landing-pages", data[:policy_type], label, today).exist? &&
+    while !Flow.new(TMP, "chosen-landing-pages", data[:policy_type], label, today).exist? ||
         Flow.new(TMP, "chosen-landing-pages", data[:policy_type], label, today).count_lines(EOFLINE) < data[:count_visits].to_i
       sleep 5
     end

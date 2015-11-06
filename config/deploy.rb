@@ -149,14 +149,15 @@ end
 # task list : deploy
 #----------------------------------------------------------------------------------------------------------------------
 namespace :deploy do
-  task :jdd do
+  task :jdd do # deploy le jdd pour tester avec enginebot_check
     Dir.foreach(File.join(File.dirname(__FILE__), '..', 'jdd')) { |file|
       top.upload(File.join(File.dirname(__FILE__), '..', 'jdd', file),
                  File.join(current_path, 'jdd', file)) if file != "." && file != '..'
     }
   end
+
   task :geo do
-    top.upload(File.join(File.dirname(__FILE__), '..', 'tmp', "geolocations_#{staging}.txt"), File.join(current_path, 'tmp', "geolocations_#{staging}.txt"))
+    # top.upload(File.join(File.dirname(__FILE__), '..', 'tmp', "geolocations_#{staging}.txt"), File.join(current_path, 'tmp', "geolocations_#{staging}.txt"))
   end
 
   task :all_param do
@@ -168,7 +169,13 @@ namespace :deploy do
   end
 
   task :stop, :roles => :app, :except => {:no_release => true} do
-    server_list.each { |server| run "#{sudo} initctl stop #{server}" }
+    server_list.each { |server|
+      begin
+        run "#{sudo} initctl stop #{server}"
+      rescue Exception => e
+        p "#{server} not stop : #{e.message}"
+      end
+    }
   end
 
   task :status, :roles => :app, :except => {:no_release => true} do
@@ -196,6 +203,21 @@ namespace :deploy do
   end
 end
 
+#----------------------------------------------------------------------------------------------------------------------
+# task list : data :
+#----------------------------------------------------------------------------------------------------------------------
+namespace :data do
+  task :clear do
+    ['archive', 'data', 'output', 'tmp'].each { |dir|
+      begin
+        run "rm #{File.join(current_path, dir, '*')} "
+      rescue Exception => e
+         p "#{dir} not clear : #{e.message}"
+      end
+    }
+  end
+
+end
 #----------------------------------------------------------------------------------------------------------------------
 # task list : avant :
 #----------------------------------------------------------------------------------------------------------------------

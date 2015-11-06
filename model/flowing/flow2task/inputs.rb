@@ -37,10 +37,10 @@ module Flowing
       @logger.an_event.debug("Building device platform for <#{@policy_type}> <#{@label}> <#{@date}> is starting")
       begin
         device_plugin = Flow.new(INPUT, "scraping-device-platform-plugin", @policy_type, @label, @date, 1) #input
-        raise IOError, "input flow <#{device_plugin.basename}> is missing" unless device_plugin.exist?
+        raise IOError, "input flow <#{device_plugin.absolute_path}> is missing" unless device_plugin.exist?
 
         device_resolution = Flow.new(INPUT, "scraping-device-platform-resolution", @policy_type, @label, @date, 1) #input
-        raise IOError, "input flow <#{device_resolution.basename}> is missing" unless device_resolution.exist?
+        raise IOError, "input flow <#{device_resolution.absolute_path}> is missing" unless device_resolution.exist?
 
         device_plugins = device_plugin.load_to_array(EOFLINE, Device_plugin).sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
         device_resolutions = device_resolution.load_to_array(EOFLINE, Device_resolution).sort_by! { |a| [a.browser, a.browser_version, a.os, a.os_version] }
