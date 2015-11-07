@@ -38,15 +38,15 @@ module Flowing
     end
 
     def scraping_device_platform_plugin
-      execute { Inputs.new(@input_flow.policy, @input_flow.label, @input_flow.date).Building_device_platform } if @last_volume
+      execute { Inputs.new(@input_flow.label, @input_flow.date,@input_flow.policy).Building_device_platform } if @last_volume
     end
 
     def scraping_device_platform_resolution
-      execute { Inputs.new(@input_flow.policy, @input_flow.label, @input_flow.date).Building_device_platform } if @last_volume
+      execute { Inputs.new(@input_flow.label, @input_flow.date,@input_flow.policy).Building_device_platform } if @last_volume
     end
 
     def scraping_hourly_daily_distribution
-      execute { Inputs.new(@input_flow.policy, @input_flow.label, @input_flow.date).Building_hourly_daily_distribution(@input_flow) } if @last_volume
+      execute { Inputs.new(@input_flow.label, @input_flow.date,@input_flow.policy).Building_hourly_daily_distribution(@input_flow) } if @last_volume
     end
 
     def scraping_behaviour

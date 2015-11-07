@@ -113,12 +113,12 @@ end
 def building_inputs(label, today, policy)
 
   @input_flow = Flow.from_basename(INPUT, "scraping-hourly-daily-distribution_#{policy}_#{label}_2013-04-21_1.txt")
-  Flowing::Inputs.new(policy, label, today).Building_hourly_daily_distribution(@input_flow)
+  Flowing::Inputs.new(label, today, policy).Building_hourly_daily_distribution(@input_flow)
 
   @input_flow = Flow.from_basename(INPUT, "scraping-behaviour_#{policy}_#{label}_2013-04-21_1.txt")
-  Flowing::Inputs.new(policy, label, today).Building_behaviour(@input_flow)
+  Flowing::Inputs.new(label, today, policy).Building_behaviour(@input_flow)
 
-  Flowing::Inputs.new(policy, label, today).Building_device_platform
+  Flowing::Inputs.new(label, today, policy).Building_device_platform
 
   if policy == "traffic"
     Inputs.new(label, today, policy).Building_landing_pages(:direct)
