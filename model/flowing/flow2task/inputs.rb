@@ -23,7 +23,7 @@ module Flowing
     attr :policy_type,
          :label, :date
 
-    def initialize(label, date, policy)
+    def initialize(policy, label, date)
       @policy_type = policy
       @label = label
       @date = date
