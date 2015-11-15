@@ -50,7 +50,7 @@ module Flowing
     end
 
     def scraping_behaviour
-      execute { Inputs.new(@input_flow.policy, @input_flow.label, @input_flow.date).Building_behaviour(@input_flow) } if @last_volume
+      execute { Inputs.new(@input_flow.label, @input_flow.date, @input_flow.policy).Building_behaviour(@input_flow) } if @last_volume
     end
 
     private
