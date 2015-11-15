@@ -61,7 +61,10 @@ module Tasking
     def convert_to_landing_page(traffic_source_type_flow, medium, &bloc)
 
       landing_page_type_flow = "landing-pages-#{medium.to_s}"
-      traffic_source_file = Flow.new(INPUT, traffic_source_type_flow, @policy_type, @label, @date_building, 1) #input
+      traffic_source_file = Flow.last(INPUT, {:type_flow => traffic_source_type_flow,
+                                           :label => @label,
+                                           :policy => @policy_type}).last #input
+      @logger.an_event.debug "traffic source type flow : #{traffic_source_file.basename}"
       raise IOError, "input flow <#{traffic_source_file.basename}> is missing" unless traffic_source_file.exist? #input
 
       landing_pages_file = Flow.new(TMP, landing_page_type_flow, @policy_type, @label, @date_building) #output
