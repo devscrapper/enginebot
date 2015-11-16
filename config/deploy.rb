@@ -116,7 +116,7 @@ before 'rvm:install_ruby', 'rvm:create_gemset' #, 'avant:install_ruby'
 after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
 after "deploy:update", "apres:update", "deploy:start", "deploy:status"
-#before "deploy:update" , "deploy:stop", "log:delete"
+before "deploy:update" , "deploy:stop", "log:delete"
 
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ end
 #----------------------------------------------------------------------------------------------------------------------
 namespace :data do
   task :clear do
-    ['archive', 'data', 'output', 'tmp'].each { |dir|
+    ['archive', 'data', 'output', 'tmp', 'input'].each { |dir|
       begin
         run "rm #{File.join(current_path, dir, '*')} "
       rescue Exception => e

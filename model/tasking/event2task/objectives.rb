@@ -190,7 +190,9 @@ module Tasking
         hourly_daily_distribution_file = Flow.new(TMP, "hourly-daily-distribution", @policy_type, @website_label, @date_building).last #input
         raise IOError, "tmp flow hourly-daily-distribution <#{@policy_type}> <#{@website_label}>  for <#{@date_building}> is missing" if hourly_daily_distribution_file.nil?
 
-        behaviour_file = Flow.new(TMP, "behaviour", @policy_type, @website_label, @date_building).last
+        behaviour_file = Flow.last(TMP, {:type_flow => "behaviour",
+                                         :policy => @policy_type,
+                                         :label => @website_label})
         raise IOError, "tmp flow behaviour <#{@policy_type}> <#{@website_label}> for <#{@date_building}> is missing" if behaviour_file.nil?
 
         behaviour_file_size = behaviour_file.count_lines(EOFLINE2)
@@ -222,9 +224,9 @@ module Tasking
           day = day.next_day(1)
         }
       rescue Exception => e
-        @logger.an_event.error "Building objectives for <#{@policy_type}> <#{@website_label}> at date <#{day}> is over => #{e.message}"
+        @logger.an_event.error "Building objectives for <#{@policy_type}> <#{@website_label}> at date <#{@date_building}> is over => #{e.message}"
       else
-        @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> at date <#{day}> is over"
+        @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> at date <#{@date_building}> is over"
       end
 
     end
