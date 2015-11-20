@@ -48,9 +48,9 @@ module Planning
           @events.save
         }
       rescue Exception => e
-        @logger.an_event.error "cannot save object <#{object}> into repository"
-
         @logger.an_event.debug e
+        raise "cannot save object #{object} into repository"
+
       end
 
     end
@@ -67,8 +67,9 @@ module Planning
           @events.save
         }
       rescue Exception => e
-        @logger.an_event.error "cannot delete object <#{object}> from repository"
         @logger.an_event.debug e
+        raise "cannot delete object #{object} from repository"
+
       end
     end
 
