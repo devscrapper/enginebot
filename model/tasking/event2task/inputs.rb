@@ -81,7 +81,6 @@ module Tasking
           landing_pages_file.write(source_page.to_s)
           pob.increment
         }
-        volume.archive
       }
 
       landing_pages_file.close
