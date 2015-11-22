@@ -66,25 +66,30 @@ module Tasking
       Flow.new(TMP, "chosen-landing-pages", @policy_type, @label, @date_building).delete
       chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", @policy_type, @label, @date_building) #output
 
-      if direct_medium_percent > 0
-        direct_medium_count = (direct_medium_percent * count_visit / 100).to_i
+      if organic_medium_percent > 0
+        organic_medium_count = (direct_medium_percent * count_visit / 100).to_i
 
-        Choosing_landing_medium_in_mem("direct", direct_medium_count, chosen_landing_pages_file)
+        Choosing_landing_medium_in_mem("organic", organic_medium_count, chosen_landing_pages_file)
       else
-        direct_medium_count = 0
+        organic_medium_count = 0
       end
 
-      if referral_medium_percent > 0
+      landing_pages_referral_file = Flow.new(TMP, "landing-pages-referral", @policy_type, @label, @date_building).last
+      if referral_medium_percent == 0 or landing_pages_referral_file.size == 0
+        referral_medium_count = 0
+
+      else
+
         referral_medium_count = (referral_medium_percent * count_visit / 100).to_i
 
         Choosing_landing_medium_in_mem("referral", referral_medium_count, chosen_landing_pages_file)
-      else
-        referral_medium_count = 0
+
+
       end
 
+      direct_medium_count = count_visit - (organic_medium_count + referral_medium_count)
 
-      organic_medium_count = count_visit - (direct_medium_count + referral_medium_count)
-      Choosing_landing_medium_in_mem("organic", organic_medium_count, chosen_landing_pages_file) if organic_medium_count > 0
+      Choosing_landing_medium_in_mem("direct", direct_medium_count, chosen_landing_pages_file) if direct_medium_percent > 0
 
       chosen_landing_pages_file.close
       chosen_landing_pages_file.archive_previous
