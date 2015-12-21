@@ -3,7 +3,7 @@ require 'eventmachine'
 require 'ice_cube'
 require 'json'
 require_relative '../communication'
-require_relative '../../model/tasking/task'
+require_relative 'task'
 
 module Planning
   class Event
@@ -13,6 +13,10 @@ module Planning
     EXECUTE_ONE = "execute_one"
     SAVE = "save"
     DELETE = "delete"
+    #states
+    OVER = "over"
+    START = "start"
+    INIT = 'init'
 
     include Tasking
     attr :key,
@@ -20,18 +24,31 @@ module Planning
          :cmd,
          :business
 
+    attr_accessor :pre_tasks_over,
+                  :pre_tasks_running,
+                  :state,
+                  :pre_tasks
 
-    def initialize(key, cmd, periodicity=nil, business=nil)
+
+    def initialize(key, cmd, options={})
       @key = key
       @cmd = cmd
-      @periodicity = periodicity
-      @business = business
+      @state = options.fetch("state", INIT)
+      @pre_tasks_over = options.fetch("pre_tasks_over", [])
+      @pre_tasks_running = options.fetch("pre_tasks_running", [])
+      @pre_tasks = options.fetch("pre_tasks", [])
+      @periodicity = options.fetch("periodicity", "")
+      @business = options.fetch("business", {})
     end
 
     def to_json(*a)
       {
           "key" => @key,
           "cmd" => @cmd,
+          "state" => @state,
+          "pre_tasks_over" => @pre_tasks_over,
+          "pre_tasks_running" => @pre_tasks_running,
+          "pre_tasks" => @pre_tasks,
           "periodicity" => @periodicity,
           "business" => @business
       }.to_json(*a)
@@ -48,10 +65,10 @@ module Planning
       }.to_s(*a)
     end
 
-    def execute(toto)
+    def execute
       begin
         data = {
-            "website_label" => @business["website_label"],
+            'website_label' => @business['website_label'],
             "date_building" => @key["building_date"] || Date.today}.merge(@business)
         Task.new(@cmd, data).execute
       rescue Exception => e

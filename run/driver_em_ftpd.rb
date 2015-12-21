@@ -12,7 +12,7 @@ class FTPDriver
   ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
 
   attr :user, :pwd, :authentification_server_port, :envir, :logger, :debugging
-
+  #TODO à supprimer,
   def initialize(driver_args=nil)
     @envir = driver_args unless driver_args.nil?
     @envir = "production" if driver_args.nil?

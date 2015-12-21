@@ -1,0 +1,17 @@
+
+development:
+  :saas_host: 127.0.0.1
+  :saas_port: 9253
+  :debugging:  false
+  :time_out_saas_scrape: 60
+test:
+  :saas_host: 127.0.0.1
+  :saas_port: 9253
+  :debugging:  false
+  :time_out_saas_scrape: 60
+
+production:
+  :saas_host: 127.0.0.1
+  :saas_port: 9253
+  :debugging:  false
+  :time_out_saas_scrape: 60

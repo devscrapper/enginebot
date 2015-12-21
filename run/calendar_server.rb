@@ -4,7 +4,7 @@ require 'yaml'
 require 'rufus-scheduler'
 require_relative '../lib/logging'
 require_relative '../model/planning/calendar'
-require_relative '../model/planning/calendar_connection'
+require_relative '../model/planning/calendar_connection_http'
 
 
 #--------------------------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ begin
 rescue Exception => e
   $stderr << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"  << "\n"
 end
-
+  #TODO utiliser la librairie parameter
 begin
   params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
   listening_port = params[$staging]["listening_port"] unless params[$staging]["listening_port"].nil?
@@ -62,10 +62,12 @@ EventMachine.run {
       now = Time.now #
       start_date = Date.new(now.year, now.month, now.day)
       hour = now.hour
-      calendar.execute_all_at(start_date, hour)
+      min = now.min
+      calendar.execute_all_at(start_date, hour, min)
+      calendar.execute_all_which_pre_tasks_over_is_complet( start_date)
     rescue Exception => e
-      logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour}"
-      logger.a_log.debug e
+      logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
+
     end
   end
   logger.a_log.info "planning is running"

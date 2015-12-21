@@ -1,0 +1,29 @@
+
+development:
+  :semrush_user: info@lesclesdumidi.com
+  :semrush_pwd:  123456
+  :saas_host: 127.0.0.1
+  :saas_port: 9251
+  :debugging:  false
+  :time_out_saas_scrape: 300
+  :time_out_saas_suggest: 180
+  :time_out_saas_evaluate: 180
+test:
+  :semrush_user: info@lesclesdumidi.com
+  :semrush_pwd:  123456
+  :saas_host: localhost
+  :saas_port: 9251
+  :debugging:  false
+  :time_out_saas_scrape: 180
+  :time_out_saas_suggest: 180
+  :time_out_saas_evaluate: 180
+
+production:
+  :semrush_user: info@lesclesdumidi.com
+  :semrush_pwd: 123456
+  :saas_host: 192.168.1.88
+  :saas_port: 9251
+  :debugging: false
+  :time_out_saas_scrape: 180
+  :time_out_saas_suggest: 180
+  :time_out_saas_evaluate: 180

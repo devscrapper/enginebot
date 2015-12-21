@@ -2,15 +2,15 @@
 development:
   listening_port: 9104
   scrape_server_port: 9101
-  periodicity: "0 0 * * * * Europe/Paris"   #toutes les heures (pile) sur le fuseau hoare GMT+2
+  periodicity: "0 * * * * * Europe/Paris"   #toutes les minutes sur le fuseau hoare GMT+2
   debugging: true
 test:
   listening_port: 9104
   scrape_server_port: 9101
-  periodicity: "0 0 * * * * Europe/Paris"   #toutes les heures (pile) sur le fuseau hoare GMT+2
+  periodicity: "0 * * * * * Europe/Paris"   #toutes les minutes sur le fuseau hoare GMT+2
   debugging: true
 production:
   listening_port: 9104
   scrape_server_port: 9101
-  periodicity: "0 0 * * * * Europe/Paris"   #toutes les heures (pile) sur le fuseau hoare GMT+2
+  periodicity: "0 * * * * * Europe/Paris"   #toutes les minutes sur le fuseau hoare GMT+2
   debugging: false

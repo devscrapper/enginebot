@@ -41,9 +41,11 @@ module Tasking
                          "data" => @data}).send_local(@tasks_server_port)
 
       rescue Exception => e
-        raise StandardError, "ask execution task <#{@cmd}> to tasks server over => #{e}"
+        raise StandardError, "ask execution task <#{@cmd}> to tasks server over => #{e.message}"
+
       else
-        @logger.an_event.debug "ask execution task <#{@cmd}> to tasks server over"
+        @logger.an_event.debug "ask execution task <#{@cmd}> to tasks server"
+
       end
     end
   end

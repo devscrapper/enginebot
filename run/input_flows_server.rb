@@ -2,44 +2,37 @@
 # encoding: UTF-8
 require 'yaml'
 require_relative '../lib/logging'
+require_relative '../lib/parameter'
 require_relative '../model/flowing/flow_connection'
 
 
 #--------------------------------------------------------------------------------------------------------------------
 # INIT
 #--------------------------------------------------------------------------------------------------------------------
-PARAMETERS = File.dirname(__FILE__) + "/../parameter/" + File.basename(__FILE__, ".rb") + ".yml"
-ENVIRONMENT= File.dirname(__FILE__) + "/../parameter/environment.yml"
-listening_port = 9105 # port d'ecoute
-task_server_port = 9101
-$staging = "production"
-$debugging = false
-#--------------------------------------------------------------------------------------------------------------------
-# INPUT
-#--------------------------------------------------------------------------------------------------------------------
-begin
-  environment = YAML::load(File.open(ENVIRONMENT), "r:UTF-8")
-  $staging = environment["staging"] unless environment["staging"].nil?
-rescue Exception => e
-  $stderr << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"    << "\n"
-end
 
 begin
-  params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
-  listening_port = params[$staging]["listening_port"] unless params[$staging]["listening_port"].nil?
-  task_server_port = params[$staging]["task_server_port"] unless params[$staging]["task_server_port"].nil?
-
-  $debugging = params[$staging]["debugging"] unless params[$staging]["debugging"].nil?
+  parameters = Parameter.new(__FILE__)
 rescue Exception => e
-  $stderr << "loading parameters file #{PARAMETERS} failed : #{e.message}"  << "\n"
+  $stderr << e.message  << "\n"
+else
+  $staging = parameters.environment
+  $debugging = parameters.debugging
+  listening_port = parameters.listening_port
+  calendar_server_port = parameters.calendar_server_port
+
+  if listening_port.nil? or
+      calendar_server_port.nil?  or
+      $debugging.nil? or
+      $staging.nil?
+    $stderr << "some parameters not define"  << "\n"
+    exit(1)
+  end
 end
-
-logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
-
+  logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
 
 logger.a_log.info "parameters of input flows server :"
 logger.a_log.info "listening port : #{listening_port}"
-logger.a_log.info "task server port : #{task_server_port}"
+logger.a_log.info "calendar server port : #{calendar_server_port}"
 logger.a_log.info "debugging : #{$debugging}"
 logger.a_log.info "staging : #{$staging}"
 
@@ -52,7 +45,7 @@ EventMachine.run {
   Signal.trap("TERM") { EventMachine.stop }
 
   logger.a_log.info "input flows server is starting"
-  EventMachine.start_server "0.0.0.0", listening_port, FlowConnection, logger
+  EventMachine.start_server "0.0.0.0", listening_port, FlowConnection, logger, calendar_server_port
 }
 logger.a_log.info "input flows server stopped"
 

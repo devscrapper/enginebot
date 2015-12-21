@@ -6,11 +6,29 @@ module Planning
     BUILDING_OBJECTIVES_HOUR = 12 * IceCube::ONE_HOUR #heure de démarrage est 12h du matin
     BUILDING_MATRIX_AND_PAGES_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
     BUILDING_MATRIX_AND_PAGES_HOUR = 0 * IceCube::ONE_HOUR #heure de démarrage est 0h du matin
+
+    TRAFFIC_SOURCE_KEYWORDS_DAY = 0 * IceCube::ONE_DAY # jour d'entegistrement de l'event
+    TRAFFIC_SOURCE_KEYWORDS_HOUR = 0 * IceCube::ONE_HOUR # heure d'enregistrement
+    TRAFFIC_SOURCE_KEYWORDS_MIN = 15 * IceCube::ONE_MINUTE # min d'enregistrement + 15mn
+
+    HOURLY_DAILY_DISTRIBUTION_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
+    HOURLY_DAILY_DISTRIBUTION_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est minuit
+    HOURLY_DAILY_DISTRIBUTION_MIN = 30 * IceCube::ONE_MINUTE #min denregistrement + 30mn
+    BEHAVIOUR_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
+    BEHAVIOUR_HOUR = 3 * IceCube::ONE_HOUR #heure de démarrage est 1h du matin
+    DEVICE_PLATFORM_PLUGIN_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
+    DEVICE_PLATFORM_PLUGIN_HOUR = 1 * IceCube::ONE_HOUR #heure de démarrage est minuit
+    DEVICE_PLATFORM_PLUGIN_MIN = 30 * IceCube::ONE_MINUTE #min denregistrement + 30mn
+    DEVICE_PLATFORM_RESOLUTION_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
+    DEVICE_PLATFORM_RESOLUTION_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est 1h du matin
+
     attr :website_label,
          :website_id,
          :policy_id,
+         :policy_type,
          :count_weeks,
          :monday_start,
+         :registering_time,
          :url_root,
          :min_count_page_advertiser,
          :max_count_page_advertiser,
@@ -25,11 +43,23 @@ module Planning
          :min_duration,
          :max_duration,
          :min_duration_website,
-         :min_pages_website
+         :min_pages_website,
+         :hourly_daily_distribution,
+         :percent_new_visit,
+         :visit_bounce_rate,
+         :avg_time_on_site,
+         :page_views_per_visit,
+         :statistic_type,
+         :max_duration_scraping,
+         :key,
+         :events,
+         :registering_time
 
     def initialize(data)
       @website_label = data[:website_label]
-      @monday_start = Time.local(data[:monday_start].year, data[:monday_start].month, data[:monday_start].day) unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
+      d = Date.parse(data[:monday_start])
+      @monday_start = Time.local(d.year, d.month, d.day) # iceCube a besoin d'un Time et pas d'un Date
+      @registering_time = Time.local(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min)
       @count_weeks = data[:count_weeks]
       @website_id = data[:website_id]
       @policy_id = data[:policy_id]
@@ -48,10 +78,140 @@ module Planning
       @max_duration = data[:max_duration]
       @min_duration_website = data[:min_duration_website]
       @min_pages_website = data[:min_pages_website]
+      @statistics_type = data[:statistics_type]
+      @max_duration_scraping = data[:max_duration_scraping]
+      if @statistics_type == :custom
+        @hourly_daily_distribution = data[:hourly_daily_distribution]
+        @percent_new_visit = data[:percent_new_visit]
+        @visit_bounce_rate = data[:visit_bounce_rate]
+        @avg_time_on_site = data[:avg_time_on_site]
+        @page_views_per_visit = data[:page_views_per_visit]
+      end
+
+      @key = {"policy_id" => @policy_id}
+      @events = []
+      @registering_time = Time.local(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min)
     end
 
+    def to_event
+
+      #Si demande suppression de la website alors absence de business
+      if @website_label.nil?
+        @events += [
+            Event.new(@key, "Scraping_device_platform_plugin"),
+            Event.new(@key, "Scraping_device_platform_resolution"),
+            Event.new(@key, "Scraping_hourly_daily_distribution"),
+            Event.new(@key, "Scraping_behaviour")
+        ]
+
+      else
 
 
+        periodicity_hourly_daily_distribution = IceCube::Schedule.new(@monday_start + HOURLY_DAILY_DISTRIBUTION_DAY + HOURLY_DAILY_DISTRIBUTION_HOUR + HOURLY_DAILY_DISTRIBUTION_MIN,
+                                                                      :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_hourly_daily_distribution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+
+        periodicity_behaviour = IceCube::Schedule.new(@monday_start + BEHAVIOUR_DAY + BEHAVIOUR_HOUR,
+                                                      :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+
+        periodicity_device_platform_plugin = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_PLUGIN_DAY + DEVICE_PLATFORM_PLUGIN_HOUR + DEVICE_PLATFORM_PLUGIN_MIN,
+                                                                   :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_device_platform_plugin.add_recurrence_rule IceCube::Rule.daily.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+
+        periodicity_device_platform_resolution = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_RESOLUTION_DAY + DEVICE_PLATFORM_RESOLUTION_HOUR,
+                                                                       :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_device_platform_resolution.add_recurrence_rule IceCube::Rule.daily.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+
+        business = {
+            "policy_type" => @policy_type,
+            "policy_id" => @policy_id,
+            "website_label" => @website_label,
+            "website_id" => @website_id,
+            "statistic_type" => @statistics_type
+        }
+
+        business.merge!({"profil_id_ga" => @profil_id_ga}) if @statistics_type == :ga
+
+        @events += [
+            Event.new(@key,
+                      "Scraping_device_platform_plugin",
+                      {
+                          "periodicity" => periodicity_device_platform_plugin.to_yaml,
+                          "business" => {
+                              "policy_type" => @policy_type,
+                              "policy_id" => @policy_id,
+                              "website_label" => @website_label,
+                              "website_id" => @website_id,
+                              "statistic_type" => @statistics_type
+                          }
+                      }),
+            Event.new(@key,
+                      "Scraping_device_platform_resolution",
+                      {
+                          "periodicity" => periodicity_device_platform_resolution.to_yaml,
+                          "business" => {
+                              "policy_type" => @policy_type,
+                              "policy_id" => @policy_id,
+                              "website_label" => @website_label,
+                              "website_id" => @website_id,
+                              "statistic_type" => @statistics_type
+                          }
+                      }),
+            Event.new(@key,
+                      "Scraping_hourly_daily_distribution",
+                      {
+                          "periodicity" => periodicity_hourly_daily_distribution.to_yaml,
+                          "business" => @statistics_type == :custom ?
+                              {
+
+                                  "policy_type" => @policy_type,
+                                  "policy_id" => @policy_id,
+                                  "website_label" => @website_label,
+                                  "website_id" => @website_id,
+                                  "statistic_type" => @statistics_type,
+                                  "hourly_daily_distribution" => @hourly_daily_distribution
+                              }
+                          :
+                              {
+                                  "policy_type" => @policy_type,
+                                  "policy_id" => @policy_id,
+                                  "website_label" => @website_label,
+                                  "website_id" => @website_id,
+                                  "statistic_type" => @statistics_type
+                              }
+                      }),
+            Event.new(@key,
+                      "Scraping_behaviour",
+                      {
+                          "periodicity" => periodicity_behaviour.to_yaml,
+                          "business" => @statistics_type == :custom ?
+                              {
+
+                                  "policy_type" => @policy_type,
+                                  "policy_id" => @policy_id,
+                                  "website_label" => @website_label,
+                                  "website_id" => @website_id,
+                                  "statistic_type" => @statistics_type,
+                                  "percent_new_visit" => @percent_new_visit,
+                                  "visit_bounce_rate" => @visit_bounce_rate,
+                                  "avg_time_on_site" => @avg_time_on_site,
+                                  "page_views_per_visit" => @page_views_per_visit
+                              }
+                          :
+                              {
+                                  "policy_type" => @policy_type,
+                                  "policy_id" => @policy_id,
+                                  "website_label" => @website_label,
+                                  "website_id" => @website_id,
+                                  "statistic_type" => @statistics_type
+                              }
+                      })
+
+        ]
+      end
+
+    end
   end
 
 end

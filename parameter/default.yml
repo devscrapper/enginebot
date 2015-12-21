@@ -1,0 +1,42 @@
+
+development:
+  :devices: [
+  [Windows, 7, Chrome, 39.0.2139.3],
+  [Windows, 7, Chrome, 23.0.1271.97],
+  [Windows, 7, Internet Explorer, 11.0],
+  [Windows, 7, Internet Explorer, 9.0],
+  [Windows, 7, Firefox, 24.0],
+  [Windows, 7, Firefox, 19.0]
+  ]
+  :distribution: [
+  [0, 9], [1, 4], [2, 2], [3, 1], [4, 0], [5, 2], [6, 5], [7, 8], [8, 15], [9, 25], [10, 20], [11, 19],[12, 30], [13, 35], [14, 20], [15, 15], [16, 10], [17, 18], [18, 28], [19, 40], [20, 23], [21, 27], [22, 40], [23, 27]
+  ]
+
+test:
+  :devices: [
+  [Windows, 7, Chrome, 39.0.2139.3],
+  [Windows, 7, Chrome, 23.0.1271.97],
+  [Windows, 7, Internet Explorer, 11.0],
+  [Windows, 7, Internet Explorer, 9.0],
+  [Windows, 7, Firefox, 24.0],
+  [Windows, 7, Firefox, 19.0]
+  ]
+  :distribution: [
+  [0, 9], [1, 4], [2, 2], [3, 1], [4, 0], [5, 2], [6, 5], [7, 8], [8, 15], [9, 25], [10, 20], [11, 19],[12, 30], [13, 35], [14, 20], [15, 15], [16, 10], [17, 18], [18, 28], [19, 40], [20, 23], [21, 27], [22, 40], [23, 27]
+  ]
+
+production:
+  :devices: [
+  [Windows, 7, Chrome, 39.0.2139.3],
+  [Windows, 7, Chrome, 23.0.1271.97],
+  [Windows, 7, Internet Explorer, 11.0],
+  [Windows, 7, Internet Explorer, 9.0],
+  [Windows, 7, Firefox, 24.0],
+  [Windows, 7, Firefox, 19.0]
+  ]
+  :distribution: [
+  [0, 9], [1, 4], [2, 2], [3, 1], [4, 0], [5, 2], [6, 5], [7, 8], [8, 15], [9, 25], [10, 20], [11, 19],[12, 30], [13, 35], [14, 20], [15, 15], [16, 10], [17, 18], [18, 28], [19, 40], [20, 23], [21, 27], [22, 40], [23, 27]
+  ]
+
+
+

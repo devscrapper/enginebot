@@ -26,7 +26,7 @@ module MyKeyboardHandler
           if !@events[id.to_i - 1].nil?
             evt = @events[id.to_i - 1]
             p "execute #{evt.cmd} for #{evt.key["label"]}"
-            @events.execute_one(Event.new(evt.key, evt.cmd), @scrape_server_port)
+            @events.execute_one(Event.new(evt.key, evt.cmd))
           else
             p "action <#{id}> unknown"
           end

@@ -1,13 +1,11 @@
 
 development:
-  listening_port: 9105
-  task_server_port: 9101
-  pages_in_mem: true
-  debugging:  true
+  :listening_port: 9105
+  :calendar_server_port: 9104
+  :debugging:  true
 test:
-  listening_port: 9105
-  task_server_port: 9101
-  pages_in_mem: true
-  debugging:  false
+  :listening_port: 9105
+  :calendar_server_port: 9104
+  :debugging:  false
 
 production:

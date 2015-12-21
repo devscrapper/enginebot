@@ -3,6 +3,9 @@ require_relative "events"
 
 module Planning
   class CalendarConnection < EventMachine::Connection
+    include EM::P::ObjectProtocol
+
+
     attr :calendar, # repository events
          :logger
 
@@ -12,26 +15,23 @@ module Planning
       @logger = logger
     end
 
-    def receive_data param
-      @logger.an_event.debug "data receive <#{param}>"
-
+    def receive_object data
 
       begin
-        data = YAML::load param
+
         context = []
         object = data["object"]
         cmd = data["cmd"]
         data_cmd = data["data"]
         context << object << cmd
-        context << data_cmd["date"] unless data_cmd["date"].nil?
-        context << data_cmd["hour"] unless data_cmd["hour"].nil?
 
         @logger.ndc context
         @logger.an_event.debug "object <#{object}>"
         @logger.an_event.debug "cmd <#{cmd}>"
         @logger.an_event.debug "data cmd <#{data_cmd}>"
         @logger.an_event.debug "context <#{context}>"
-        case cmd
+
+          case cmd
           when Event::EXECUTE_ALL
             @calendar.execute_all(data_cmd)
           when Event::SAVE
@@ -40,23 +40,32 @@ module Planning
           when Event::DELETE
             @logger.an_event.info "delete events of the #{object} to repository"
             @calendar.delete_object(object, data_cmd)
+          when Event::START
+            task_name = object
+            @logger.an_event.info "event #{task_name} is started"
+            @calendar.event_is_start(task_name, data_cmd)
+          when Event::OVER
+            task_name = object
+            @logger.an_event.info "event #{task_name} is over"
+            @calendar.event_is_over(task_name, data_cmd)
+            now = Time.now
+            @calendar.execute_all_which_pre_tasks_over_is_complet(task_name,Date.new(now.year, now.month, now.day))
           else
             @logger.an_event.error "cmd #{cmd} is unknown"
         end
       rescue Exception => e
-        @logger.an_event.error "cannot execute cmd  <#{cmd}>"
-        @logger.an_event.debug e
+        @logger.an_event.error "cannot execute cmd <#{cmd}> : #{e.message}"
+
         data = {:state => :ko, :error => e}
 
       else
         data = {:state => :ok}
 
       ensure
-        send_data(YAML::dump data)
-        close_connection_after_writing
+        send_object data
+         close_connection_after_writing
 
       end
-
 
     end
 

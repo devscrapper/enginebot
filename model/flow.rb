@@ -1,6 +1,5 @@
 require 'net/ftp'
 require_relative 'communication'
-require_relative '../lib/logging'
 require 'pathname'
 require 'ruby-progressbar'
 require_relative 'authentification'
@@ -41,6 +40,7 @@ class Flow
     raise StandardError, "none flow #{opts} exist in #{dir}" if arr.empty?
     arr[0].last
   end
+
   #----------------------------------------------------------------------------------------------------------------
   # self.list(dir, opts)
   #----------------------------------------------------------------------------------------------------------------
@@ -61,7 +61,7 @@ class Flow
     date = date.strftime("%Y-%m-%d") if date.is_a?(Date)
     date = "#{date.year}-#{date.month}-#{date.day}-#{date.hour}-#{date.min}-#{date.sec}" if date.is_a?(Time)
     ext = opts.getopt(:ext, ".*")
-    Dir.glob(File.join(dir, "#{type_flow}#{SEPARATOR}#{policy}#{SEPARATOR}#{label}#{SEPARATOR}#{date}#{ext}")).map { |file| Flow.from_absolute_path(file) }
+    Dir.glob(File.join(dir, "#{type_flow}#{Flow::SEPARATOR}#{policy}#{Flow::SEPARATOR}#{label}#{Flow::SEPARATOR}#{date}#{ext}")).map { |file| Flow.from_absolute_path(file) }
   end
 
   #----------------------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ class Flow
     #basename ne doit être nil
     ext = File.extname(basename)
     basename = File.basename(basename, ext)
-    type_flow, policy, label, date, vol = basename.split(SEPARATOR)
+    type_flow, policy, label, date, vol = basename.split(Flow::SEPARATOR)
 
     Flow.new(dir, type_flow, policy, label, date, vol, ext)
   end
@@ -116,7 +116,7 @@ class Flow
     # si rdir est un pathname alors on le transforme en string
     @dir = dir.to_s
     @type_flow = type_flow.gsub(FORBIDDEN_CHAR, "-") #le label ne doit pas contenir les caractères interdits
-    @policy =   policy.is_a?(Symbol) ? policy.to_s : policy
+    @policy = policy.is_a?(Symbol) ? policy.to_s : policy
     @label = label.gsub(FORBIDDEN_CHAR, "-") #le label ne doit pas contenir les caractères interdits
     @date = date
     @date = date.strftime("%Y-%m-%d") if date.is_a?(Date)
@@ -161,7 +161,6 @@ class Flow
   end
 
 
-
   def !=(flow)
     !(self == flow)
   end
@@ -201,8 +200,8 @@ class Flow
   end
 
   def basename
-    basename = @type_flow + SEPARATOR +  @policy + SEPARATOR + @label + SEPARATOR + @date
-    basename += SEPARATOR + @vol unless @vol.nil?
+    basename = [@type_flow, @policy, @label, @date].join(Flow::SEPARATOR)
+    basename += Flow::SEPARATOR + @vol unless @vol.nil?
     basename += @ext
     basename
   end
@@ -226,7 +225,7 @@ class Flow
     to_path = to if to.is_a?(String)
     unless to_path.nil?
       raise StandardError, "target <#{to_path}> not a directory" if File.ftype(to_path) != "directory"
-      raise StandardError, "target directory <#{to_path}> not exist" if  !Dir.exist?(to_path)
+      raise StandardError, "target directory <#{to_path}> not exist" if !Dir.exist?(to_path)
     end
     # un fichier est représenté par un Flow exclusivement
     to_path = to.absolute_path if to.is_a?(Flow)
@@ -261,7 +260,7 @@ class Flow
   # retourne nouveau flow qui pointe sur le fichier dupliqué
   def duplicate
     raise StandardError, "Flow <#{absolute_path}> not exist" unless exist?
-    dup_flow = Flow.new(@dir, "#{@type_flow}-dup", @policy , @label, @date, @vol, @ext)
+    dup_flow = Flow.new(@dir, "#{@type_flow}-dup", @policy, @label, @date, @vol, @ext)
     cp(dup_flow)
   end
 
@@ -302,7 +301,7 @@ class Flow
   end
 
   def last
-    arr = Flow.list(@dir, {:type_flow => @type_flow, :policy => @policy,  :label => @label, :ext => @ext})
+    arr = Flow.list(@dir, {:type_flow => @type_flow, :policy => @policy, :label => @label, :ext => @ext})
     newer = arr[0]
     arr.each { |flow|
       if flow > newer
@@ -365,16 +364,16 @@ class Flow
     #cree un nouveau volume pour le flow
     raise StandardError, "Flow <#{absolute_path}> has no first volume" if @vol.nil?
     close
-    Flow.new(@dir, @type_flow,@policy,  @label, @date, @vol.to_i + 1, @ext)
+    Flow.new(@dir, @type_flow, @policy, @label, @date, @vol.to_i + 1, @ext)
   end
 
 
   def push(authentification_server_port,
-      input_flows_server_ip,
-      input_flows_server_port,
-      ftp_server_port,
-      vol = nil,
-      last_volume = false)
+           input_flows_server_ip,
+           input_flows_server_port,
+           ftp_server_port,
+           vol = nil,
+           last_volume = false)
     # si le flow n'a pas de volume identifié (mono-volume) alors on l'envoie vers l'input flow server
     # si le flow a un flow identifié (multi-volume) alors
     #     si un volume a été spécififé alors on pousse ce volume
@@ -390,9 +389,8 @@ class Flow
                  true)
 
       rescue Exception => e
-         raise StandardError, "cannot push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
+        raise StandardError, "cannot push flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
       else
-
 
 
       end
@@ -411,12 +409,10 @@ class Flow
                             count_volumes == volume.vol.to_i)
 
 
-
           rescue Exception => e
 
             raise StandardError, "cannot push vol <#{volume.vol.to_i}> of flow <#{basename}> to input_flow server #{input_flows_server_ip}:#{input_flows_server_port} : #{e.message}"
           else
-
 
 
           end
@@ -438,7 +434,6 @@ class Flow
         else
 
 
-
         end
 
       end
@@ -446,10 +441,10 @@ class Flow
   end
 
   def push_vol(authentification_server_port,
-      input_flows_server_ip,
-      input_flows_server_port,
-      ftp_server_port,
-      last_volume = false)
+               input_flows_server_ip,
+               input_flows_server_port,
+               ftp_server_port,
+               last_volume = false)
     #pousse un volume vers un input flow server en applicquant le sécurité
     begin
 
@@ -524,7 +519,7 @@ class Flow
     absolute_path_old = absolute_path
     @ext = new_ext
     File.rename(absolute_path_old, absolute_path)
-    @logger.an_event.debug "rename ext flow <#{basename}>" if $debugging
+
   end
 
   def rewind
@@ -613,7 +608,7 @@ class Flow
 
   def volume_exist?(vol)
     # verifie l'existence d'un volume du flow sur le disque
-    Flow.new(@dir, @type_flow,@policy,  @label, @date, vol, @ext).exist?
+    Flow.new(@dir, @type_flow, @policy, @label, @date, vol, @ext).exist?
   end
 
   def volumes_exist?
@@ -633,9 +628,9 @@ class Flow
     File.zero?(absolute_path)
   end
 
-#---------------------------------------------------------------------------------------------
-# private
-#---------------------------------------------------------------------------------------------
+  #---------------------------------------------------------------------------------------------
+  # private
+  #---------------------------------------------------------------------------------------------
   private
   def open(option)
     @descriptor = File.open(absolute_path, option);

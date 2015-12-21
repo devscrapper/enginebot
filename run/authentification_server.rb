@@ -8,7 +8,7 @@ require 'yaml'
 require_relative '../lib/logging'
 require_relative '../model/authentification'
 
-
+  #TODO à supprimer
 module AuthentificationServer
   attr :logger
 

@@ -28,7 +28,7 @@ begin
 rescue Exception => e
   $stderr << "loading parameter file #{ENVIRONMENT} failed : #{e.message}"  << "\n"
 end
-
+    #TODO utiliser la librairie parameter
 begin
   params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
   listening_port = params[$staging]["listening_port"] unless params[$staging]["listening_port"].nil?
@@ -36,9 +36,7 @@ begin
   $statupweb_server_ip = params[$staging]["statupweb_server_ip"] unless params[$staging]["statupweb_server_ip"].nil?
   $statupweb_server_port = params[$staging]["statupweb_server_port"] unless params[$staging]["statupweb_server_port"].nil?
   $calendar_server_port = params[$staging]["calendar_server_port"] unless params[$staging]["calendar_server_port"].nil?
-  $scraperbot_calendar_server_port = params[$staging]["scraperbot_calendar_server_port"] unless params[$staging]["scraperbot_calendar_server_port"].nil?
-  $scraperbot_calendar_server_ip = params[$staging]["scraperbot_calendar_server_ip"] unless params[$staging]["scraperbot_calendar_server_ip"].nil?
-  $ftp_server_port = params[$staging]["ftp_server_port"] unless params[$staging]["ftp_server_port"].nil?
+   $ftp_server_port = params[$staging]["ftp_server_port"] unless params[$staging]["ftp_server_port"].nil?
 
   $debugging = params[$staging]["debugging"] unless params[$staging]["debugging"].nil?
 rescue Exception => e
@@ -54,8 +52,6 @@ logger.a_log.info "authentification server port : #{$authentification_server_por
 logger.a_log.info "statupweb server ip : #{$statupweb_server_ip}"
 logger.a_log.info "statupweb server port : #{$statupweb_server_port}"
 logger.a_log.info "calendar server port : #{$calendar_server_port}"
-logger.a_log.info "scraperbot calendar server ip : #{$scraperbot_calendar_server_ip}"
-logger.a_log.info "scraperbot calendar server port : #{$scraperbot_calendar_server_port}"
 logger.a_log.info "ftp server port : #{$ftp_server_port}"
 logger.a_log.info "debugging : #{$debugging}"
 logger.a_log.info "staging : #{$staging}"

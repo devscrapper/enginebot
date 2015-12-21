@@ -16,8 +16,15 @@ module Planning
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       @events = Array.new
       begin
-        JSON.parse(File.read(EVENTS_FILE,{:encoding =>"BOM|UTF-8:-"})).each { |evt|
-          @events << Event.new(evt["key"], evt["cmd"], evt["periodicity"], evt["business"]) unless IceCube::Schedule.from_yaml(evt["periodicity"]).next_occurrence.nil?
+        JSON.parse(File.read(EVENTS_FILE, {:encoding => "BOM|UTF-8:-"})).each { |evt|
+          @events << Event.new(evt["key"], evt["cmd"],
+                               {"state" => evt["state"],
+                                "pre_tasks_over" => evt["pre_tasks_over"],
+                                "pre_tasks_running" => evt["pre_tasks_running"],
+                                "pre_tasks" => evt["pre_tasks"],
+                                "periodicity" => evt["periodicity"],
+                                "business" => evt["business"]}) if !evt["pre_tasks"].empty? or
+              (!evt["periodicity"].empty? and !IceCube::Schedule.from_yaml(evt["periodicity"]).next_occurrence.nil?)
         }
         @logger.an_event.info "repository events is loaded"
         @logger.an_event.debug EVENTS_FILE
@@ -29,21 +36,158 @@ module Planning
       end
     end
 
-    def execute_all_at_time(date, hour, load_server_port)
+    def execute_all_at_time(date, hour, min)
+      raise ArgumentError, date if date.nil?
+      raise ArgumentError, hour if hour.nil?
+      raise ArgumentError, min if min.nil?
+      tasks = []
+
+      tasks += on_min(date, hour, min).keep_if { |evt, periodicity| evt.pre_tasks.empty?
+      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      unless tasks.empty?
+        tasks.each { |evt, periodicity|
+
+          begin
+            evt.execute
+
+          rescue Exception => e
+            raise "cannot ask execution task <#{evt.cmd}> : #{e.message}"
+
+          else
+            @logger.an_event.debug "asked execution task <#{evt.cmd}>"
+
+          end
+        }
+      else
+        @logger.an_event.info "none task event"
+
+      end
+    end
+
+    def execute_all_at_hour(date, hour)
       raise ArgumentError, date if date.nil?
       raise ArgumentError, hour if hour.nil?
       raise ArgumentError, load_server_port if load_server_port.nil?
 
-      on_hour(date, hour).each { |evt|
-        begin
-          evt[0].execute(load_server_port)
-          @logger.an_event.info "ask execution event <#{evt[0].cmd}>"
-        rescue Exception => e
-          @logger.an_event.error "cannot ask execution event <#{evt[0].cmd}>"
-          @logger.an_event.debug e
-        end
-      }
+      tasks = []
+
+      tasks += on_hour(date, hour).keep_if { |evt, periodicity| evt.pre_tasks.empty?
+      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      unless tasks.empty?
+        tasks.each { |evt, periodicity|
+
+          begin
+            evt.execute
+
+          rescue Exception => e
+            raise "cannot ask execution task <#{evt.cmd}> : #{e.message}"
+
+          else
+            @logger.an_event.debug "asked execution task <#{evt.cmd}>"
+
+          end
+        }
+      else
+        @logger.an_event.info "none task event"
+
+      end
     end
+
+    def execute_all_which_pre_tasks_over_is_complet(date)
+      raise ArgumentError, date if date.nil?
+
+      tasks = []
+
+      tasks += on_day(date).keep_if { |evt, periodicity|
+        evt.pre_tasks_running.empty? and
+            !evt.pre_tasks.empty? and
+            #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+            (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+
+      unless tasks.empty?
+        tasks.each { |evt, periodicity|
+          begin
+            if evt.state != Event::START
+              evt.execute
+            else
+              @logger.an_event.warn "task <#{evt.cmd}> already running"
+            end
+
+          rescue Exception => e
+            raise "cannot ask execution task <#{evt.cmd}> : #{e.message}"
+
+          else
+            @logger.an_event.info "asked execution task <#{evt.cmd}>"
+
+          end
+        }
+      else
+        @logger.an_event.info "none task event"
+
+      end
+    end
+
+    def all
+      tasks = []
+
+      tasks += @events.keep_if { |evt, periodicity| evt.pre_tasks.empty?
+      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks
+    end
+
+    def all_on_time(date, hour, min)
+      raise ArgumentError, date if date.nil?
+      raise ArgumentError, hour if hour.nil?
+      raise ArgumentError, min if min.nil?
+      tasks = []
+
+      tasks += on_min(date, hour, min).keep_if { |evt, periodicity| evt.pre_tasks.empty?
+      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks
+    end
+
+    def all_on_hour(date, hour)
+      raise ArgumentError, date if date.nil?
+      raise ArgumentError, hour if hour.nil?
+
+
+      tasks = []
+
+      tasks += on_hour(date, hour).keep_if { |evt, periodicity| evt.pre_tasks.empty?
+      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks
+    end
+
+    def all_on_date(date)
+      raise ArgumentError, date if date.nil?
+
+
+      tasks = []
+
+      tasks += on_day(date).keep_if { |evt, periodicity| evt.pre_tasks.empty?
+      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks
+    end
+
+    def all_which_pre_tasks_over_is_complet(date)
+      raise ArgumentError, date if date.nil?
+
+      tasks = []
+
+      tasks += on_day(date).keep_if { |evt, periodicity| evt.pre_tasks_running.empty? and
+          !evt.pre_tasks.empty? and
+          #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+          (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+
+      tasks
+    end
+
 
     def save()
       begin
@@ -80,20 +224,26 @@ module Planning
     end
 
     def delete(event)
-      @events.delete_if {|e| e.key["policy_id"] == event.key["policy_id"] and e.cmd == event.cmd}
+      @events.delete_if { |e| e.key["policy_id"] == event.key["policy_id"] and e.cmd == event.cmd }
       @logger.an_event.info "event #{event.cmd} for #{event.business["website_label"]} deleted from repository"
     end
 
 
-    def execute_one(event, load_server_port)
+    def execute_one(event)
       @events.each { |evt|
-        evt.execute(load_server_port) if evt.key == event.key and evt.cmd == event.cmd
+        evt.execute if evt.key == event.key and evt.cmd == event.cmd
       } unless @events.nil?
     end
 
     def on_hour(date, hour)
       start_time = Time.local(date.year, date.month, date.day, hour, 0, 0)
       on_period(start_time, start_time + IceCube::ONE_HOUR)
+
+    end
+
+    def on_min(date, hour, min)
+      start_time = Time.local(date.year, date.month, date.day, hour, min, 0)
+      on_period(start_time, start_time + IceCube::ONE_MINUTE)
     end
 
     def on_day(date)
@@ -143,6 +293,84 @@ module Planning
       objectives = {}
       @events.each { |evt| objectives[evt.key["objective_id"]] = evt.business["website_label"] unless evt.key["objective_id"].nil? }
       objectives.each_pair { |key, value| p "#{key} -> objective : #{value}" }
+    end
+
+    def pre_tasks_over(task_name, key)
+      # key = {"policy_id" => data_event["policy_id"]}
+
+      # ou bien
+
+      # key = {"website_label" => data_event["website_label"],
+      #        "policy_type" => data_event["policy_type"]}
+      # dans events.json
+      # {
+      #     "key" : {
+      #     "policy_id" : 6
+      # },
+      #     "cmd" : "Building_landing_pages_direct",
+      #     "periodicity" : "---\n:start_date: 2015-11-16 00:00:00.000000000 +01:00\n:end_time: 2015-11-24 00:00:00.000000000 +01:00\n:rrules:\n- :validations: {}\n  :rule_type: IceCube::DailyRule\n  :interval: 1\n:exrules: []\n:rtimes: []\n:extimes: []\n",
+      #     "business" : {
+      #     "website_label" : "epilation",
+      #     "website_id" : 1,
+      #     "policy_id" : 6,
+      #     "policy_type" : "traffic"
+      # }
+      # }
+
+      @events.each { |evt|
+        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or
+            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"])
+
+          # remarques : une commande ne peut pas être pre task d'elle même, donc les 2 actions sont exclusives
+          if (evt.cmd == task_name.to_s)
+            #qd une commande est terminée, on remet à l'etat initial les pre_task de la command
+            evt.pre_tasks_over = []
+            evt.state = Event::OVER
+          else
+            if evt.pre_tasks.include?(task_name.to_s)
+              # deplace les task terminées de task_running vers les task_over de chaque commande (task)
+              evt.pre_tasks_over << task_name.to_s
+              evt.pre_tasks_running.delete(task_name.to_s)
+            end
+          end
+        end
+      } unless @events.nil?
+    end
+
+    def pre_tasks_running(task_name, key)
+      # key = {"policy_id" => data_event["policy_id"]}
+
+      # ou bien
+
+      # key = {"website_label" => data_event["website_label"],
+      #        "policy_type" => data_event["policy_type"]}
+      # dans events.json
+      # {
+      #     "key" : {
+      #     "policy_id" : 6
+      # },
+      #     "cmd" : "Building_landing_pages_direct",
+      #     "periodicity" : "---\n:start_date: 2015-11-16 00:00:00.000000000 +01:00\n:end_time: 2015-11-24 00:00:00.000000000 +01:00\n:rrules:\n- :validations: {}\n  :rule_type: IceCube::DailyRule\n  :interval: 1\n:exrules: []\n:rtimes: []\n:extimes: []\n",
+      #     "business" : {
+      #     "website_label" : "epilation",
+      #     "website_id" : 1,
+      #     "policy_id" : 6,
+      #     "policy_type" : "traffic"
+      # }
+      # }
+
+      @events.each { |evt|
+        evt.state = Event::START if evt.cmd == task_name.to_s
+
+        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or
+            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"]) and
+                evt.pre_tasks.include?(task_name.to_s)
+
+          evt.pre_tasks_running << task_name.to_s
+
+        end
+      } unless @events.nil?
+
     end
   end
 end

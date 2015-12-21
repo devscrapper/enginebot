@@ -7,7 +7,7 @@ require_relative '../../../lib/mail_sender'
 
 module Tasking
   class Reporting
-
+    TMP = File.expand_path(File.join("..", "..","..", "..", "tmp"), __FILE__)
 
     #statistics
     attr_reader :label,
