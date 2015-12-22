@@ -5,7 +5,7 @@ require "em-http-request"
 
 require_relative '../../../../lib/logging'
 require_relative '../../../communication'
-
+require_relative '../../../flow'
 require_relative 'traffic_source'
 
 
@@ -90,7 +90,8 @@ module Tasking
            :push_file_spawn,
            :saas_host,
            :saas_port, #host et port du serveur de scraping en mode saas
-           :time_out #time out de la requet de scraping
+           :time_out, #time out de la requet de scraping
+           :calendar_server_port
 #--------------------------------------------------------------------------------------------------------------
 # scraping_device_platform_plugin
 #--------------------------------------------------------------------------------------------------------------
@@ -106,11 +107,12 @@ module Tasking
       def scraping_pages(url_root, count_page, max_duration, schemes, types)
 
 
-        @logger.an_event.info("Scraping pages for #{@website_label} for #{@date} is starting")
+        @logger.an_event.info("Scraping pages for #{@website_label} for #{@date_building} is starting")
         parameters = Parameter.new(__FILE__)
         @saas_host = parameters.saas_host.to_s
         @saas_port = parameters.saas_port.to_s
         @time_out = parameters.time_out_saas_scrape.to_i
+        @calendar_server_port = parameters.calendar_server_port
 
         @host = url_root
         @count_page = count_page
@@ -182,7 +184,7 @@ module Tasking
         url_saas += "&host=#{@host}"
         url_saas += "&schemes=#{@schemes.join(SEPARATOR1)}"
         url_saas += "&types=#{@types.join(SEPARATOR1)}"
-        url_saas += "&count=#{(@count_page > 0) ? @count_page - @idpage : @count_page}"    #limite le nombre de lien dès le saas
+        url_saas += "&count=#{(@count_page > 0) ? @count_page - @idpage : @count_page}" #limite le nombre de lien dès le saas
 
         @logger.an_event.debug "url link scraping saas #{url_saas}"
 
@@ -224,7 +226,16 @@ module Tasking
 
         http.errback {
           @ferror.write("url = #{url} try = #{count_try} Error = #{http.state}\n")
-          @logger.an_event.warn("url = #{url} try = #{count_try} Error = #{http.state}")
+          count_try += 1
+          urls << [url, count_try] if count_try < 4 # 3 essai max pour une url
+          if urls.size > 0 and
+              (@count_page > @nbpage or @count_page == 0) and
+              Time.now - @start_time < @max_duration
+
+            @run_spawn.notify urls
+          else
+
+          end
         }
       end
 
@@ -233,6 +244,23 @@ module Tasking
 
         @f.close
         @ferror.close
+
+        @query = {"website_label" => @website_label,
+                  "policy_type" => @policy_type,
+                  "date_building" => @date_building
+        }
+        begin
+
+          response = RestClient.patch "http://localhost:#{@calendar_server_port}/tasks/scraping_website/?state=over", @query.to_json, :content_type => :json, :accept => :json
+          if response.code != 200
+            @logger.an_event.error "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER => #{response.code}"
+          end
+
+        rescue Exception => e
+          @logger.an_event.error "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER => #{e.message}"
+        else
+          @logger.an_event.info "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} is OVER."
+        end
 
       end
 

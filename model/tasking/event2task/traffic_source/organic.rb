@@ -22,7 +22,7 @@ module Tasking
       SCRAPED = "scraped-organic" #dans TMP
       TRAFFIC_SOURCE = "scraping-traffic-source-organic" #dans OUTPUT
       WORDS_COUNT_MAX_IN_KEYWORD = 5 # nombre de mot max dans un mot clÃ©
-
+      SEPARATOR1 = "%SEP%"
       attr :max_duration, #durÃ©e d'exÃ©cution max que l'on laisse au scraping
            :hostname, # le hostname du site : sans https:// et /
            :url_root, # http://..../  est utilisÃ© exclusivement par evaluate

@@ -65,9 +65,9 @@ module Planning
 
     end
 
-    def execute_all_which_pre_tasks_over_is_complet(date)
+    def execute_all_which_pre_tasks_over_is_complet
       begin
-        tasks = all_which_pre_tasks_over_is_complet(date)
+        tasks = all_which_pre_tasks_over_is_complet
 
       rescue Exception => e
         raise "cannot list task to execute : #{e.message}"
@@ -121,9 +121,9 @@ module Planning
       @events.all_on_time(date, hour, min)
     end
 
-    def all_which_pre_tasks_over_is_complet(date)
+    def all_which_pre_tasks_over_is_complet
       @logger.an_event.info "list all jobs which pre task are over"
-      @events.all_which_pre_tasks_over_is_complet(date)
+      @events.all_which_pre_tasks_over_is_complet
     end
 
     def save_object(object, data_event)

@@ -23,8 +23,7 @@ module Planning
                                 "pre_tasks_running" => evt["pre_tasks_running"],
                                 "pre_tasks" => evt["pre_tasks"],
                                 "periodicity" => evt["periodicity"],
-                                "business" => evt["business"]}) if !evt["pre_tasks"].empty? or
-              (!evt["periodicity"].empty? and !IceCube::Schedule.from_yaml(evt["periodicity"]).next_occurrence.nil?)
+                                "business" => evt["business"]}) #if (!evt["periodicity"].empty? and !IceCube::Schedule.from_yaml(evt["periodicity"]).next_occurrence.nil?)
         }
         @logger.an_event.info "repository events is loaded"
         @logger.an_event.debug EVENTS_FILE
@@ -40,11 +39,8 @@ module Planning
       raise ArgumentError, date if date.nil?
       raise ArgumentError, hour if hour.nil?
       raise ArgumentError, min if min.nil?
-      tasks = []
+      tasks = on_min(date, hour, min)
 
-      tasks += on_min(date, hour, min).keep_if { |evt, periodicity| evt.pre_tasks.empty?
-      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
       unless tasks.empty?
         tasks.each { |evt, periodicity|
 
@@ -70,11 +66,8 @@ module Planning
       raise ArgumentError, hour if hour.nil?
       raise ArgumentError, load_server_port if load_server_port.nil?
 
-      tasks = []
+      tasks = on_hour(date, hour)
 
-      tasks += on_hour(date, hour).keep_if { |evt, periodicity| evt.pre_tasks.empty?
-      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
       unless tasks.empty?
         tasks.each { |evt, periodicity|
 
@@ -98,13 +91,7 @@ module Planning
     def execute_all_which_pre_tasks_over_is_complet(date)
       raise ArgumentError, date if date.nil?
 
-      tasks = []
-
-      tasks += on_day(date).keep_if { |evt, periodicity|
-        evt.pre_tasks_running.empty? and
-            !evt.pre_tasks.empty? and
-            #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-            (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks = all_which_pre_tasks_over_is_complet(date)
 
       unless tasks.empty?
         tasks.each { |evt, periodicity|
@@ -130,12 +117,7 @@ module Planning
     end
 
     def all
-      tasks = []
-
-      tasks += @events.keep_if { |evt, periodicity| evt.pre_tasks.empty?
-      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
-      tasks
+      @events.dup
     end
 
     def all_on_time(date, hour, min)
@@ -144,9 +126,7 @@ module Planning
       raise ArgumentError, min if min.nil?
       tasks = []
 
-      tasks += on_min(date, hour, min).keep_if { |evt, periodicity| evt.pre_tasks.empty?
-      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks += on_min(date, hour, min)
       tasks
     end
 
@@ -157,9 +137,8 @@ module Planning
 
       tasks = []
 
-      tasks += on_hour(date, hour).keep_if { |evt, periodicity| evt.pre_tasks.empty?
-      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks += on_hour(date, hour)
+
       tasks
     end
 
@@ -169,23 +148,19 @@ module Planning
 
       tasks = []
 
-      tasks += on_day(date).keep_if { |evt, periodicity| evt.pre_tasks.empty?
-      #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-      (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
+      tasks += on_day(date)
+
       tasks
     end
 
-    def all_which_pre_tasks_over_is_complet(date)
-      raise ArgumentError, date if date.nil?
+    def all_which_pre_tasks_over_is_complet
 
-      tasks = []
-
-      tasks += on_day(date).keep_if { |evt, periodicity| evt.pre_tasks_running.empty? and
-          !evt.pre_tasks.empty? and
-          #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
-          (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size }
-
-      tasks
+      @events.dup.keep_if { |evt, periodicity|
+        evt.pre_tasks_running.empty? and
+            !evt.pre_tasks.empty? and
+            #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+            (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size
+      }
     end
 
 
@@ -259,8 +234,10 @@ module Planning
     def on_period(start_time, end_time)
       selected_events = []
       @events.each { |evt|
-        occurences = IceCube::Schedule.from_yaml(evt.periodicity).occurrences_between(start_time, end_time - IceCube::ONE_SECOND) # end_time exclue
-        selected_events << [evt, occurences] unless occurences.empty?
+        unless evt.periodicity.empty?
+          occurences = IceCube::Schedule.from_yaml(evt.periodicity).occurrences_between(start_time, end_time - IceCube::ONE_SECOND) # end_time exclue
+          selected_events << [evt, occurences] unless occurences.empty?
+        end
       }
       selected_events
     end
@@ -372,5 +349,6 @@ module Planning
       } unless @events.nil?
 
     end
+
   end
 end

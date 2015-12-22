@@ -12,6 +12,7 @@ module Tasking
            :os,
            :os_version,
            :screen_resolution
+
       SEPARATOR1=";"
 
       def initialize(device)

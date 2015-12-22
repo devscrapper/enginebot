@@ -4,7 +4,7 @@ require 'pathname'
 require 'ruby-progressbar'
 require_relative '../../../../lib/logging'
 require_relative '../../../communication'
-require_relative 'flows'
+require_relative 'traffic_source_flow'
 
 
 #------------------------------------------------------------------------------------------
@@ -58,13 +58,13 @@ module Tasking
 
           case medium
             when :direct
-              convert_to_landing_page("scraping-website", medium) { |p| Direct.new(p) }
+              convert_to_landing_page("scraping-website", medium) { |p| Traffic_source_Direct.new(p) }
 
             when :referral
-              convert_to_landing_page("scraping-traffic-source-referral", medium) { |p| Referral.new(p) }
+              convert_to_landing_page("scraping-traffic-source-referral", medium) { |p| Traffic_source_Referral.new(p) }
 
             when :organic
-              convert_to_landing_page("scraping-traffic-source-organic", medium) { |p| Organic.new(p) }
+              convert_to_landing_page("scraping-traffic-source-organic", medium) { |p| Traffic_source_Organic.new(p) }
 
           end
 

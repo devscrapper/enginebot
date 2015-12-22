@@ -203,7 +203,7 @@ module Tasking
         TrafficSource::Direct.new(@data["website_label"],
                                   @data["date_building"],
                                   @data["policy_type"]).scraping_pages(@data["url_root"],
-                                                                       @data["count_page"],
+                                                                      10, # @data["count_page"],
                                                                        @data["max_duration"],
                                                                        @data["schemes"].split,
                                                                        @data["types"].split)
@@ -212,7 +212,7 @@ module Tasking
 
     def Evaluating_traffic_source_referral
 
-      execute(__method__) {#TODO executer dans un Defer
+      execute(__method__) {
         TrafficSource::Referral.new(@data["website_label"],
                                     @data["date_building"],
                                     @data["policy_type"]).evaluate(@data["count_max"]) }
@@ -220,7 +220,7 @@ module Tasking
 
     def Evaluating_traffic_source_organic
 
-      execute(__method__) {#TODO executer dans un Defer
+      execute(__method__) {
         # l'evaluation est identique pour Organic & Default
         TrafficSource::Organic.new(@data["website_label"],
                                    @data["date_building"],
@@ -383,7 +383,8 @@ module Tasking
 
           yield
 
-          send_over_to_calendar(task, info)
+          # scraping website utilise spawn => tout en asycnhrone => il enverra l'event de over à calendar
+          send_over_to_calendar(task, info)  if task != :Scraping_website
 
         rescue Error => e
           results = e

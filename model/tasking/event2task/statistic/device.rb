@@ -9,7 +9,7 @@ module Tasking
            :os,
            :os_version,
            :screen_resolution
-
+      SEPARATOR2=";"
 
       def initialize(plugin, resolution)
         @browser = plugin.browser

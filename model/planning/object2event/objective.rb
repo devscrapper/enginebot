@@ -170,13 +170,13 @@ module Planning
                         "pre_tasks" => ["Building_landing_pages_direct",
                                         "Building_landing_pages_organic",
                                         "Building_landing_pages_referral"],
-                        "periodicity" => IceCube::Schedule.new(@start_time +
-                                                                   CHOOSING_LANDING_PAGES_DAY +
-                                                                   CHOOSING_LANDING_PAGES_HOUR,
-                                                               :end_time => @start_time +
-                                                                   CHOOSING_LANDING_PAGES_DAY +
-                                                                   CHOOSING_LANDING_PAGES_HOUR +
-                                                                   @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                        # "periodicity" => IceCube::Schedule.new(@start_time +
+                        #                                            CHOOSING_LANDING_PAGES_DAY +
+                        #                                            CHOOSING_LANDING_PAGES_HOUR,
+                        #                                        :end_time => @start_time +
+                        #                                            CHOOSING_LANDING_PAGES_DAY +
+                        #                                            CHOOSING_LANDING_PAGES_HOUR +
+                        #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
                         "business" => {
                             "policy_id" => @policy_id,
                             "date_building" => @building_date,
@@ -194,13 +194,13 @@ module Planning
                     "Building_visits",
                     {
                         "pre_tasks" => ["Choosing_landing_pages"],
-                        "periodicity" => IceCube::Schedule.new(@start_time +
-                                                                   BUILDING_VISITS_DAY +
-                                                                   BUILDING_VISITS_HOUR,
-                                                               :end_time => @start_time +
-                                                                   BUILDING_VISITS_DAY +
-                                                                   BUILDING_VISITS_HOUR +
-                                                                   @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                        # "periodicity" => IceCube::Schedule.new(@start_time +
+                        #                                            BUILDING_VISITS_DAY +
+                        #                                            BUILDING_VISITS_HOUR,
+                        #                                        :end_time => @start_time +
+                        #                                            BUILDING_VISITS_DAY +
+                        #                                            BUILDING_VISITS_HOUR +
+                        #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
                         "business" => {
                             "objective_id" => @objective_id,
                             "website_label" => @website_label,
@@ -220,13 +220,13 @@ module Planning
                     "Building_planification",
                     {
                         "pre_tasks" => ["Building_visits"],
-                        "periodicity" => IceCube::Schedule.new(@start_time +
-                                                                   BUILDING_PLANIFICATION_DAY +
-                                                                   BUILDING_PLANIFICATION_HOUR,
-                                                               :end_time => @start_time +
-                                                                   BUILDING_PLANIFICATION_DAY +
-                                                                   BUILDING_PLANIFICATION_HOUR +
-                                                                   @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                        # "periodicity" => IceCube::Schedule.new(@start_time +
+                        #                                            BUILDING_PLANIFICATION_DAY +
+                        #                                            BUILDING_PLANIFICATION_HOUR,
+                        #                                        :end_time => @start_time +
+                        #                                            BUILDING_PLANIFICATION_DAY +
+                        #                                            BUILDING_PLANIFICATION_HOUR +
+                        #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
                         "business" => {
                             "objective_id" => @objective_id,
                             "website_label" => @website_label,
@@ -243,13 +243,13 @@ module Planning
                     {
                         "pre_tasks" => ["Building_planification",
                                         "Choosing_device_platform"],
-                        "periodicity" => IceCube::Schedule.new(@start_time +
-                                                                   EXTENDING_VISITS_DAY +
-                                                                   EXTENDING_VISITS_HOUR,
-                                                               :end_time => @start_time +
-                                                                   EXTENDING_VISITS_DAY +
-                                                                   EXTENDING_VISITS_HOUR +
-                                                                   @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                        # "periodicity" => IceCube::Schedule.new(@start_time +
+                        #                                            EXTENDING_VISITS_DAY +
+                        #                                            EXTENDING_VISITS_HOUR,
+                        #                                        :end_time => @start_time +
+                        #                                            EXTENDING_VISITS_DAY +
+                        #                                            EXTENDING_VISITS_HOUR +
+                        #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
                         "business" => {
                             "objective_id" => @objective_id,
                             "website_label" => @website_label,
@@ -273,7 +273,7 @@ module Planning
                            "Choosing_device_platform",
                            {
                                "pre_tasks" => ["Building_device_platform"],
-                               "periodicity" => periodicity.to_yaml,
+                               # "periodicity" => periodicity.to_yaml,
                                "business" => {
                                    "policy_id" => @policy_id,
                                    "date_building" => @building_date,

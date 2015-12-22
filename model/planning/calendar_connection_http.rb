@@ -130,7 +130,7 @@ class CalendarConnection < EM::HttpServer::Server
 
           when "PATCH"
             # pas de respect de http, car maj ne renvoient pas la ressource maj
-            @logger.an_event.info "update task #{ress_id} to repository"
+
             raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "query string"}) if @http_query_string.nil?
 
             query_values = Addressable::URI.parse("?#{@http_query_string}").query_values
@@ -143,9 +143,11 @@ class CalendarConnection < EM::HttpServer::Server
               when "tasks"
                 case query_values["state"]
                   when "start"
+                    @logger.an_event.info "update task #{ress_id} with START to repository"
                     @calendar.event_is_start(ress_id, @http_content)
 
                   when "over"
+                    @logger.an_event.info "update task #{ress_id} with OVER to repository"
                     @calendar.event_is_over(ress_id, @http_content)
                   else
                     raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => query_values["state"]})

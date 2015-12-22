@@ -1,11 +1,12 @@
 module Tasking
   module TrafficSource
-    class Flow
+    class TrafficSourceFlow
       NOT_SET = "(not set)"
       NONE = "(none)"
       DIRECT = "(direct)"
       ORGANIC = "organic"
       REFERRAL = "referral"
+      SEPARATOR = "%SEP%"
       attr :scheme,
            :hostname,
            :landing_page_path,
@@ -27,15 +28,14 @@ module Tasking
       end
 
       def to_s(*a)
-        to_file.join(Tasking::SEPARATOR1) + "#{EOFLINE}"
+        to_file.join(SEPARATOR) + "#{EOFLINE}"
       end
 
     end
 
-    class Traffic_source_direct < Flow
+    class Traffic_source_direct < TrafficSourceFlow
 
       attr_accessor :title
-
       #landing_page file :       hostname;page_path;(not set);(direct);(none);(not set)
 
       def initialize(page)
@@ -55,7 +55,7 @@ module Tasking
 
     end
 
-    class Traffic_source_organic < Flow
+    class Traffic_source_organic < TrafficSourceFlow
       attr :index_page_results #numero de page dans laquelle a été trouvé le landing page path pour ces mot cle (organic)
 
 
@@ -69,7 +69,7 @@ module Tasking
             @source,
             not_use,
             @keyword,
-            @index_page_results= page.split(SEPARATOR1)
+            @index_page_results= page.split(SEPARATOR)
 
         @referral_path = NOT_SET
         @medium = ORGANIC
@@ -83,7 +83,7 @@ module Tasking
       end
     end
 
-    class Traffic_source_referral < Flow
+    class Traffic_source_referral < TrafficSourceFlow
 
       attr :referral_kw, #mot cle pour atterrir sur le referral
            :referral_uri_search, # uri du referral trouver dans la page numero <index> des results de <engine>
@@ -103,7 +103,7 @@ module Tasking
             @referral_kw,
             @referral_uri_search,
             @referral_search_engine,
-            @referral_index_page_results = page.split(SEPARATOR2)
+            @referral_index_page_results = page.split(SEPARATOR)
 
         @medium = REFERRAL
         @keyword = NOT_SET

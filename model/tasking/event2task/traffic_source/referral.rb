@@ -25,7 +25,7 @@ module Tasking
       REPOSITORY = "repository-referral"
       SCRAPED = "scraped-referral"
       TRAFFIC_SOURCE = "scraping-traffic-source-referral"
-
+      SEPARATOR1 = "%SEP%"
       attr :hostname, # le hostname du site : sans https:// et /
            :url_root, # http://..../  est utilisÃ© exclusivement par evaluate
            :domain # hostname sans www
