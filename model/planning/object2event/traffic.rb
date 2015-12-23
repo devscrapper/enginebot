@@ -265,44 +265,6 @@ module Planning
                               "policy_id" => @policy_id,
                               "policy_type" => @policy_type
                           }
-                      }),
-
-            Event.new(@key,
-                      "Building_landing_pages_organic",
-                      {
-                          "pre_tasks" => ["Scraping_traffic_source_organic"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_DAY +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_DAY +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
-                          "business" => {
-                              "website_label" => @website_label,
-                              "website_id" => @website_id,
-                              "policy_id" => @policy_id,
-                              "policy_type" => @policy_type
-                          }
-                      }),
-
-            Event.new(@key,
-                      "Building_landing_pages_referral",
-                      {
-                          "pre_tasks" => ["Scraping_traffic_source_referral"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_DAY +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_DAY +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
-                          "business" => {
-                              "website_label" => @website_label,
-                              "website_id" => @website_id,
-                              "policy_id" => @policy_id,
-                              "policy_type" => @policy_type
-                          }
                       })
         ]
       end
