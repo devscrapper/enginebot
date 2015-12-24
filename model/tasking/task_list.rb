@@ -177,8 +177,8 @@ module Tasking
           when :traffic #TODO executer dans un Defer
             TrafficSource::Organic.new(@data["website_label"],
                                        @data["date_building"],
-                                       @data["policy_type"]).make_repository(@data["url_root"],
-                                                                             @data["max_duration"])
+                                       @data["policy_type"]).make_repository(@data["url_root"],   # 10mn de suggesting
+                                                                             $staging == "development" ? 10 /(24 * 60) : @data["max_duration"])
           when :rank
             #Si il y a de smot cl� param�trer dans la tache alors elle est issue dune policy Rank
             TrafficSource::Default.new(@data["website_label"], @data["date_building"], @data["policy_type"]).make_repository(@data["keywords"])
@@ -203,7 +203,7 @@ module Tasking
         TrafficSource::Direct.new(@data["website_label"],
                                   @data["date_building"],
                                   @data["policy_type"]).scraping_pages(@data["url_root"],
-                                                                      10, # @data["count_page"],
+                                                                       $staging == "development" ? 10 : @data["count_page"],
                                                                        @data["max_duration"],
                                                                        @data["schemes"].split,
                                                                        @data["types"].split)
@@ -384,7 +384,7 @@ module Tasking
           yield
 
           # scraping website utilise spawn => tout en asycnhrone => il enverra l'event de over à calendar
-          send_over_to_calendar(task, info)  if task != :Scraping_website
+          send_over_to_calendar(task, info) if task != :Scraping_website
 
         rescue Error => e
           results = e
@@ -466,7 +466,7 @@ module Tasking
       # @query = {"cmd" => "start"}
       # @query.merge!({"object" => task})
       # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
-      @query =  {"policy_id" => @data["policy_id"]}
+      @query = {"policy_id" => @data["policy_id"]}
       begin
         # response = Question.new(@query).ask_to("localhost", $calendar_server_port)
         response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=start", @query.to_json, :content_type => :json, :accept => :json

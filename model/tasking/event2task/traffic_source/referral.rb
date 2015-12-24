@@ -79,7 +79,7 @@ module Tasking
               bl.evaluate_as_saas(ll)
               @logger.an_event.debug bl
               if bl.is_a_backlink
-                kw = Keywords::Keyword.new(kw)
+                kw = Keyword.new(kw)
                 uri_rl = URI.parse(rl)
                 kw.evaluate_as_saas(uri_rl.hostname)
                 @logger.an_event.debug kw
@@ -120,7 +120,7 @@ module Tasking
           @traffic_source_f.close
 
         ensure
-           @repository_f.close unless @repository_f.nil?
+          @repository_f.close unless @repository_f.nil?
 
         end
       end
@@ -222,7 +222,6 @@ module Tasking
       end
 
 
-
       def reuse_old_repository
         @logger.an_event.info "try to use old repository referral for #{@website_label} and #{@date_building}"
 
@@ -269,7 +268,7 @@ module Tasking
                 # si le path ='/' alors semrush le supprime et ne considÃ¨re que le hostname
                 if uri_bl.path != "/" and !known_bl.include?("#{uri_bl.hostname}#{uri_bl.path}")
 
-                    keywords_arr = Keywords.scrape_as_saas("#{uri_bl.hostname}#{uri_bl.path}", opts)
+                  keywords_arr = Keyword.scrape_as_saas("#{uri_bl.hostname}#{uri_bl.path}", opts)
 
                   keywords_arr.each { |referral_uri_search, keywords|
                     @repository_f.write("#{[ll, referral_uri_search, keywords, bl].join(SEPARATOR1)}#{EOFLINE}")
@@ -285,7 +284,7 @@ module Tasking
               begin
                 unless known_bl.include?(uri_bl.hostname)
 
-                    keywords_arr = Keywords.scrape_as_saas(uri_bl.hostname, opts)
+                  keywords_arr = Keyword.scrape_as_saas(uri_bl.hostname, opts)
 
                   keywords_arr.each { |referral_uri_search, keywords|
                     @repository_f.write("#{[ll, referral_uri_search, keywords, bl].join(SEPARATOR1)}#{EOFLINE}")
