@@ -54,7 +54,7 @@ module Tasking
 
         @words = words.strip
         @engines = {}
-        Keyword.init_logging
+        @logger = Keyword.init_logging
       end
 
       def self.scrape_as_saas(hostname, opts={})
@@ -240,6 +240,7 @@ module Tasking
       def evaluate_as_saas(domain)
         try_count = 3
 
+
         begin
           parameters = Parameter.new(__FILE__)
           saas_host = parameters.saas_host.to_s
@@ -284,6 +285,7 @@ module Tasking
       def self.init_logging
         parameters = Parameter.new(__FILE__)
         @logger = Logging::Log.new(self, :staging => parameters.environment, :debugging => parameters.debugging)
+        @logger
       end
 
     end

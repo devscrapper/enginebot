@@ -23,7 +23,7 @@ module Tasking
       TMP = File.expand_path(File.join("..", "..","..", "..", "..","tmp"), __FILE__)
       EOFLINE ="\n"
       SEPARATOR1="%SEP%"
-      PROGRESS_BAR_SIZE = 100
+      PROGRESS_BAR_SIZE = 180
       SEC = 1
       MIN = 60 * SEC
       HOUR = 60 * MIN
@@ -58,13 +58,13 @@ module Tasking
 
           case medium
             when :direct
-              convert_to_landing_page("scraping-website", medium) { |p| Traffic_source_Direct.new(p) }
+              convert_to_landing_page("scraping-website", medium) { |p| Traffic_source_direct.new(p) }
 
             when :referral
-              convert_to_landing_page("scraping-traffic-source-referral", medium) { |p| Traffic_source_Referral.new(p) }
+              convert_to_landing_page("scraping-traffic-source-referral", medium) { |p| Traffic_source_referral.new(p) }
 
             when :organic
-              convert_to_landing_page("scraping-traffic-source-organic", medium) { |p| Traffic_source_Organic.new(p) }
+              convert_to_landing_page("scraping-traffic-source-organic", medium) { |p| Traffic_source_organic.new(p) }
 
           end
 
