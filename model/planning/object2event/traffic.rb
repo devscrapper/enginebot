@@ -271,7 +271,7 @@ module Planning
             Event.new(@key,
                       "Building_landing_pages_organic",
                       {
-                          "pre_tasks" => ["Scraping_traffic_source_organic"],
+                          "pre_tasks" => ["Evaluating_traffic_source_organic"],
                           # "periodicity" => IceCube::Schedule.new(@monday_start +
                           #                                            BUILDING_LANDING_PAGES_ORGANIC_DAY +
                           #                                            BUILDING_LANDING_PAGES_ORGANIC_HOUR,
@@ -290,7 +290,7 @@ module Planning
             Event.new(@key,
                       "Building_landing_pages_referral",
                       {
-                          "pre_tasks" => ["Scraping_traffic_source_referral"],
+                          "pre_tasks" => ["Evaluating_traffic_source_referral"],
                           # "periodicity" => IceCube::Schedule.new(@monday_start +
                           #                                            BUILDING_LANDING_PAGES_REFERRAL_DAY +
                           #                                            BUILDING_LANDING_PAGES_REFERRAL_HOUR,
