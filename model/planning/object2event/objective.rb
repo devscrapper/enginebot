@@ -293,6 +293,7 @@ module Planning
                                "periodicity" => periodicity.to_yaml,
                                "business" => {
                                    "objective_id" => @objective_id,
+                                   "policy_type" => @policy_type,
                                    "website_label" => @website_label,
                                    "min_count_page_advertiser" => @min_count_page_advertiser,
                                    "max_count_page_advertiser" => @max_count_page_advertiser,

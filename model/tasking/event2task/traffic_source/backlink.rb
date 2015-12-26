@@ -137,7 +137,7 @@ module Tasking
           raise Error.new(BACKLINK_NOT_EVALUATED, :values => {:url => @url}, :error => e)
 
         else
-          @is_a_backlink = JSON.parse(is_backlink.string)
+          @is_a_backlink = JSON.parse(is_backlink.string)["is_a_backlink"]
 
         end
 

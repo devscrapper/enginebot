@@ -9,6 +9,7 @@ module Tasking
   class Reporting
     TMP = File.expand_path(File.join("..", "..","..", "..", "tmp"), __FILE__)
     REPORTING2 = ";"
+    SEPARATOR2= "|"
     #statistics
     attr_reader :label,
                 :policy_type,
@@ -135,7 +136,7 @@ module Tasking
     end
 
     def planification_obj(hourly_distribution)
-      @hours_obj = hourly_distribution.split(Visits::SEPARATOR2) #.map { |h| h.to_i }
+      @hours_obj = hourly_distribution.split(SEPARATOR2) #.map { |h| h.to_i }
     end
 
 

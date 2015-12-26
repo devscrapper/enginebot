@@ -6,7 +6,8 @@ module Tasking
 
 
     class Chosens
-
+      TMP = File.expand_path(File.join("..", "..","..", "..", "..","tmp"), __FILE__)
+      PROGRESS_BAR_SIZE = 180
       attr :label,
            :date_building,
            :policy_type

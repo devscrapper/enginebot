@@ -27,6 +27,7 @@ module Tasking
 #------------------------------------------------------------------------------------------
       OUTPUT = File.dirname(__FILE__) + "/../../../../output"
       TMP = File.expand_path(File.join("..", "..","..", "..", "..","tmp"), __FILE__)
+      PROGRESS_BAR_SIZE = 180
       SEPARATOR1=";"
       SEPARATOR2="|"
       SEPARATOR3=","

@@ -7,7 +7,7 @@ development:
   :debugging:  false
   :time_out_saas_scrape: 300
   :time_out_saas_suggest: 180
-
+  :time_out_saas_evaluate: 180
 test:
   :majestic_user: webmaster@chauffage-electrique.net
   :majestic_pwd:  123456
@@ -16,7 +16,7 @@ test:
   :debugging:  false
   :time_out_saas_scrape: 300
   :time_out_saas_suggest: 180
-
+  :time_out_saas_evaluate: 180
 production:
   :majestic_user: webmaster@chauffage-electrique.net
   :majestic_pwd:  123456
@@ -25,3 +25,4 @@ production:
   :debugging:  false
   :time_out_saas_scrape: 300
   :time_out_saas_suggest: 180
+  :time_out_saas_evaluate: 180

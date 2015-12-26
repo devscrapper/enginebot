@@ -94,7 +94,7 @@ module Tasking
               if bl.is_a_backlink and kw.engines.size > 0
                 kw.engines.each { |engine, data|
                   uri = URI.parse(ll)
-                  line = [uri.scheme, uri.hostname, uri.path, bl.path, bl.hostname, "referral", "(not set)", bl.title, kw.words, rl, engine, data[:index]].join(SEPARATOR1)
+                  line = [uri.scheme, uri.hostname, uri.path, bl.path, bl.hostname, "referral", "(not set)", bl.title, kw.words, rl, engine, data['index']].join(SEPARATOR1)
 
                   @traffic_source_f.append("#{line}#{EOFLINE}")
 

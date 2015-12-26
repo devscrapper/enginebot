@@ -99,7 +99,7 @@ module Tasking
             @source,
             not_use,
             not_use,
-            @referral_title,
+            @referral_title,   #TODO supprimer referral_title dans engione_bot
             @referral_kw,
             @referral_uri_search,
             @referral_search_engine,
@@ -109,7 +109,7 @@ module Tasking
         @keyword = NOT_SET
 
         raise "traffic source referral malformed" if @scheme.nil? or @hostname.nil? or @landing_page_path.nil? or @source.nil? or \
-      @referral_title.nil? or @referral_kw.nil? or @referral_uri_search.nil? or @referral_search_engine.nil? or \
+       @referral_kw.nil? or @referral_uri_search.nil? or @referral_search_engine.nil? or \
       @referral_index_page_results.nil? or @referral_path.nil?
       end
 
