@@ -146,14 +146,14 @@ module Tasking
 # - soit reutilisation d'un referentiel prÃ©cÃ©dent si il existe
 # - soit creation d'un referentiel vide pour permettre l'execution de Evaluation_backlinks sans erreur
 #--------------------------------------------------------------------------------------------------------------
-      def make_repository(url_root)
+      def make_repository(url_root, max_bl = 0)
         begin
           @url_root = url_root
           @hostname = URI.parse(@url_root).hostname
           @domain = "#{@hostname.split(".")[1]}.#{@hostname.split(".")[2]}"
 
           new_repository = scrape
-          add_keyword_to_repository if new_repository
+          add_keyword_to_repository(max_bl) if new_repository
 
         rescue Exception => e
           @logger.an_event.fatal "repository referral for #{@website_label} and #{@date_building} : #{e.message}"
@@ -243,7 +243,7 @@ module Tasking
       end
 
 
-      def add_keyword_to_repository
+      def add_keyword_to_repository(max_bl)
         begin
           bl_arr = @repository_f.load_to_array(EOFLINE)
           keywords_arr = []
@@ -300,6 +300,7 @@ module Tasking
               p.increment
 
             end
+           break if $staging == "development" and @repository_f.count_lines(EOFLINE) > max_bl
           }
 
         rescue Exception => e

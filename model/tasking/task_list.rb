@@ -189,17 +189,18 @@ module Tasking
 
     def Scraping_traffic_source_referral
 
-      execute(__method__) {#TODO executer dans un Defer
+      execute(__method__) {
         TrafficSource::Referral.new(@data["website_label"],
                                     @data["date_building"],
-                                    @data["policy_type"]).make_repository(@data["url_root"])
+                                    @data["policy_type"]).make_repository(@data["url_root"],   #en dev 5 backlink max, zero = all
+                                                                          $staging == "development" ? 5 : 0)
       }
     end
 
     def Scraping_website
 
       execute(__method__) {
-        #TODO executer dans un Defer ou bien requete asynchone avec resultat par retour de fichier
+
         TrafficSource::Direct.new(@data["website_label"],
                                   @data["date_building"],
                                   @data["policy_type"]).scraping_pages(@data["url_root"],

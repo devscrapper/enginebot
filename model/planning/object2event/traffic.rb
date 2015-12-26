@@ -1,5 +1,6 @@
 require_relative 'policy'
-
+ #TODO corriger les horaire planification puor ne pas commencer à hh:^00 pour eviter les conflit avec les publishon horaire
+# TODO 2 taches commencent minuuit le samedi => décaler
 module Planning
 
   class Traffic < Policy
@@ -258,6 +259,44 @@ module Planning
                           #                                        :end_time => @registering_time +
                           #                                            BUILDING_LANDING_PAGES_DIRECT_DAY +
                           #                                            BUILDING_LANDING_PAGES_DIRECT_HOUR +
+                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "business" => {
+                              "website_label" => @website_label,
+                              "website_id" => @website_id,
+                              "policy_id" => @policy_id,
+                              "policy_type" => @policy_type
+                          }
+                      }),
+
+            Event.new(@key,
+                      "Building_landing_pages_organic",
+                      {
+                          "pre_tasks" => ["Scraping_traffic_source_organic"],
+                          # "periodicity" => IceCube::Schedule.new(@monday_start +
+                          #                                            BUILDING_LANDING_PAGES_ORGANIC_DAY +
+                          #                                            BUILDING_LANDING_PAGES_ORGANIC_HOUR,
+                          #                                        :end_time => @monday_start +
+                          #                                            BUILDING_LANDING_PAGES_ORGANIC_DAY +
+                          #                                            BUILDING_LANDING_PAGES_ORGANIC_HOUR +
+                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "business" => {
+                              "website_label" => @website_label,
+                              "website_id" => @website_id,
+                              "policy_id" => @policy_id,
+                              "policy_type" => @policy_type
+                          }
+                      }),
+
+            Event.new(@key,
+                      "Building_landing_pages_referral",
+                      {
+                          "pre_tasks" => ["Scraping_traffic_source_referral"],
+                          # "periodicity" => IceCube::Schedule.new(@monday_start +
+                          #                                            BUILDING_LANDING_PAGES_REFERRAL_DAY +
+                          #                                            BUILDING_LANDING_PAGES_REFERRAL_HOUR,
+                          #                                        :end_time => @monday_start +
+                          #                                            BUILDING_LANDING_PAGES_REFERRAL_DAY +
+                          #                                            BUILDING_LANDING_PAGES_REFERRAL_HOUR +
                           #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
                           "business" => {
                               "website_label" => @website_label,
