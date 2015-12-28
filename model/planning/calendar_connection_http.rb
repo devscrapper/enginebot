@@ -51,8 +51,22 @@ class CalendarConnection < EM::HttpServer::Server
             #TODO faire une reponse pour accept : HTML
             @logger.an_event.info "list #{ress_id} events from repository"
             case ress_type
-              when "tasks"
+              when "pre_task_over"
                 if ress_id == "All"
+                  tasks = @calendar.all_which_pre_tasks_over_is_complet
+
+                elsif ress_id == "Today"
+                  tasks = @calendar.all_which_pre_tasks_over_is_complet(Date.today)
+
+                else
+                  raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_id})
+                end
+
+              when "tasks"
+                if ["Monday", "Thuesday", "Wednesay" , "Friday", "Thursday", "Saturday", "Sunday"].include?(ress_id)
+                  tasks = @calendar.all_on_date(Calendar.next_day(ress_id))
+
+                elsif ress_id == "All"
                   tasks = @calendar.all
 
                 elsif ress_id == "Today"
@@ -86,9 +100,6 @@ class CalendarConnection < EM::HttpServer::Server
                                                     query_values["hour"].to_i,
                                                     query_values["min"].to_i)
 
-                    when "pre_task_over"
-                      raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
-                      tasks = @calendar.all_which_pre_tasks_over_is_complet(query_values["date"])
 
                     else
                       raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_id})

@@ -90,17 +90,17 @@ module Planning
 
 
       else
-        periodicity_scraping_website = IceCube::Schedule.new(registering_time + SCRAPING_WEBSITE_DAY + SCRAPING_WEBSITE_HOUR + SCRAPING_WEBSITE_MIN,
-                                                             :end_time => registering_time + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_scraping_website.add_recurrence_rule IceCube::Rule.monthly.until(registering_time + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_scraping_website = IceCube::Schedule.new(@registering_time + SCRAPING_WEBSITE_DAY + SCRAPING_WEBSITE_HOUR + SCRAPING_WEBSITE_MIN,
+                                                             :end_time => @registering_time + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_scraping_website.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time + @count_weeks * IceCube::ONE_WEEK)
 
-        periodicity_traffic_source_organic = IceCube::Schedule.new(registering_time + TRAFFIC_SOURCE_KEYWORDS_DAY + TRAFFIC_SOURCE_KEYWORDS_HOUR + TRAFFIC_SOURCE_KEYWORDS_MIN,
-                                                                   :end_time => registering_time + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(registering_time + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_traffic_source_organic = IceCube::Schedule.new(@registering_time + TRAFFIC_SOURCE_KEYWORDS_DAY + TRAFFIC_SOURCE_KEYWORDS_HOUR + TRAFFIC_SOURCE_KEYWORDS_MIN,
+                                                                   :end_time => @registering_time + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time + @count_weeks * IceCube::ONE_WEEK)
 
-        periodicity_traffic_source_referral = IceCube::Schedule.new(registering_time + TRAFFIC_SOURCE_BACKLINKS_DAY + TRAFFIC_SOURCE_BACKLINKS_HOUR + TRAFFIC_SOURCE_BACKLINKS_MIN,
-                                                                    :end_time => registering_time + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(registering_time + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_traffic_source_referral = IceCube::Schedule.new(@registering_time + TRAFFIC_SOURCE_BACKLINKS_DAY + TRAFFIC_SOURCE_BACKLINKS_HOUR + TRAFFIC_SOURCE_BACKLINKS_MIN,
+                                                                    :end_time => @registering_time + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time + @count_weeks * IceCube::ONE_WEEK)
 
 
         @events += [
@@ -152,13 +152,13 @@ module Planning
                       "Building_device_platform",
                       {
                           "pre_tasks" => ["Scraping_device_platform_plugin", "Scraping_device_platform_resolution"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_DEVICE_PLATFORM_DAY +
-                          #                                            BUILDING_DEVICE_PLATFORM_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_DEVICE_PLATFORM_DAY +
-                          #                                            BUILDING_DEVICE_PLATFORM_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "periodicity" => IceCube::Schedule.new(@monday_start +
+                                                                     BUILDING_DEVICE_PLATFORM_DAY +
+                                                                     BUILDING_DEVICE_PLATFORM_HOUR,
+                                                                 :end_time => @monday_start +
+                                                                     BUILDING_DEVICE_PLATFORM_DAY +
+                                                                     BUILDING_DEVICE_PLATFORM_HOUR +
+                                                                     @count_weeks * IceCube::ONE_WEEK).to_yaml,
                            "business" => {
                               "website_label" => @website_label,
                               "website_id" => @website_id,
@@ -171,13 +171,13 @@ module Planning
                       "Building_hourly_daily_distribution",
                       {
                           "pre_tasks" => ["Scraping_hourly_daily_distribution"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_HOURLY_DISTRIBUTION_DAY +
-                          #                                            BUILDING_HOURLY_DISTRIBUTION_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_HOURLY_DISTRIBUTION_DAY +
-                          #                                            BUILDING_HOURLY_DISTRIBUTION_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "periodicity" => IceCube::Schedule.new(@monday_start +
+                                                                     BUILDING_HOURLY_DISTRIBUTION_DAY +
+                                                                     BUILDING_HOURLY_DISTRIBUTION_HOUR,
+                                                                 :end_time => @monday_start +
+                                                                     BUILDING_HOURLY_DISTRIBUTION_DAY +
+                                                                     BUILDING_HOURLY_DISTRIBUTION_HOUR +
+                                                                     @count_weeks * IceCube::ONE_WEEK).to_yaml,
                           "business" => {
                               "website_label" => @website_label,
                               "website_id" => @website_id,
@@ -190,13 +190,13 @@ module Planning
                       "Building_behaviour",
                       {
                           "pre_tasks" => ["Scraping_behaviour"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_BEHAVIOUR_DAY +
-                          #                                            BUILDING_BEHAVIOUR_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_BEHAVIOUR_DAY +
-                          #                                            BUILDING_BEHAVIOUR_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "periodicity" => IceCube::Schedule.new(@monday_start +
+                                                                     BUILDING_BEHAVIOUR_DAY +
+                                                                     BUILDING_BEHAVIOUR_HOUR,
+                                                                 :end_time => @monday_start +
+                                                                     BUILDING_BEHAVIOUR_DAY +
+                                                                     BUILDING_BEHAVIOUR_HOUR +
+                                                                     @count_weeks * IceCube::ONE_WEEK).to_yaml,
                           "business" => {
                               "website_label" => @website_label,
                               "website_id" => @website_id,
@@ -209,13 +209,13 @@ module Planning
                       "Building_objectives",
                       {
                           "pre_tasks" => ["Building_hourly_daily_distribution", "Building_behaviour"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_OBJECTIVES_DAY +
-                          #                                            BUILDING_OBJECTIVES_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_OBJECTIVES_DAY +
-                          #                                            BUILDING_OBJECTIVES_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "periodicity" => IceCube::Schedule.new(@monday_start +
+                                                                     BUILDING_OBJECTIVES_DAY +
+                                                                     BUILDING_OBJECTIVES_HOUR,
+                                                                 :end_time => @monday_start +
+                                                                     BUILDING_OBJECTIVES_DAY +
+                                                                     BUILDING_OBJECTIVES_HOUR +
+                                                                     @count_weeks * IceCube::ONE_WEEK).to_yaml,
                           "business" => {
                               "change_count_visits_percent" => @change_count_visits_percent,
                               "change_bounce_visits_percent" => @change_bounce_visits_percent,
@@ -252,14 +252,13 @@ module Planning
                       "Building_landing_pages_direct",
                       {
                           "pre_tasks" => ["Scraping_website"],
-
-                          # "periodicity" => IceCube::Schedule.new(@registering_time +
-                          #                                            BUILDING_LANDING_PAGES_DIRECT_DAY +
-                          #                                            BUILDING_LANDING_PAGES_DIRECT_HOUR,
-                          #                                        :end_time => @registering_time +
-                          #                                            BUILDING_LANDING_PAGES_DIRECT_DAY +
-                          #                                            BUILDING_LANDING_PAGES_DIRECT_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "periodicity" => IceCube::Schedule.new(@registering_time +
+                                                                     BUILDING_LANDING_PAGES_DIRECT_DAY +
+                                                                     BUILDING_LANDING_PAGES_DIRECT_HOUR,
+                                                                 :end_time => @registering_time +
+                                                                     BUILDING_LANDING_PAGES_DIRECT_DAY +
+                                                                     BUILDING_LANDING_PAGES_DIRECT_HOUR +
+                                                                     @count_weeks * IceCube::ONE_WEEK).to_yaml,
                           "business" => {
                               "website_label" => @website_label,
                               "website_id" => @website_id,
@@ -272,13 +271,13 @@ module Planning
                       "Building_landing_pages_organic",
                       {
                           "pre_tasks" => ["Evaluating_traffic_source_organic"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_DAY +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_DAY +
-                          #                                            BUILDING_LANDING_PAGES_ORGANIC_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "periodicity" => IceCube::Schedule.new(@monday_start +
+                                                                     BUILDING_LANDING_PAGES_ORGANIC_DAY +
+                                                                     BUILDING_LANDING_PAGES_ORGANIC_HOUR,
+                                                                 :end_time => @monday_start +
+                                                                     BUILDING_LANDING_PAGES_ORGANIC_DAY +
+                                                                     BUILDING_LANDING_PAGES_ORGANIC_HOUR +
+                                                                     @count_weeks * IceCube::ONE_WEEK).to_yaml,
                           "business" => {
                               "website_label" => @website_label,
                               "website_id" => @website_id,
@@ -291,13 +290,13 @@ module Planning
                       "Building_landing_pages_referral",
                       {
                           "pre_tasks" => ["Evaluating_traffic_source_referral"],
-                          # "periodicity" => IceCube::Schedule.new(@monday_start +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_DAY +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_HOUR,
-                          #                                        :end_time => @monday_start +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_DAY +
-                          #                                            BUILDING_LANDING_PAGES_REFERRAL_HOUR +
-                          #                                            @count_weeks * IceCube::ONE_WEEK).to_yaml,
+                          "periodicity" => IceCube::Schedule.new(@monday_start +
+                                                                     BUILDING_LANDING_PAGES_REFERRAL_DAY +
+                                                                     BUILDING_LANDING_PAGES_REFERRAL_HOUR,
+                                                                 :end_time => @monday_start +
+                                                                     BUILDING_LANDING_PAGES_REFERRAL_DAY +
+                                                                     BUILDING_LANDING_PAGES_REFERRAL_HOUR +
+                                                                     @count_weeks * IceCube::ONE_WEEK).to_yaml,
                           "business" => {
                               "website_label" => @website_label,
                               "website_id" => @website_id,

@@ -32,8 +32,6 @@ module Planning
         @logger.an_event.debug "context <#{context}>"
 
           case cmd
-          when Event::EXECUTE_ALL
-            @calendar.execute_all(data_cmd)
           when Event::SAVE
             @logger.an_event.info "save events of the #{object} to repository"
             @calendar.save_object(object, data_cmd)

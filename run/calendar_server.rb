@@ -64,7 +64,7 @@ EventMachine.run {
       hour = now.hour
       min = now.min
       calendar.execute_all_at(start_date, hour, min)
-      calendar.execute_all_which_pre_tasks_over_is_complet
+      calendar.execute_all_which_pre_tasks_over_is_complet(start_date)
     rescue Exception => e
       logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
 

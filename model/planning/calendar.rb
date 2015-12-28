@@ -1,6 +1,6 @@
 require_relative 'events'
 require_relative 'event'
-
+require 'date'
 
 module Planning
 
@@ -15,17 +15,6 @@ module Planning
       @scrape_server_port = scrape_server_port
     end
 
-    def execute_all(data_event)
-      # exclusivement utiliser par le calendar_client.rb pour tester
-      if !data_event["date"].nil? and !data_event["hour"].nil?
-        @logger.an_event.info "ask execution all jobs at date #{data_event["date"]}, hour #{data_event["hour"]}"
-        @events.execute_all_at_time(data_event["date"], data_event["hour"])
-      else
-        @logger.an_event.error "cannot execute events because start time is not define"
-        @logger.an_event.debug "date #{data_event["date"]}"
-        @logger.an_event.debug "date #{data_event["hour"]}"
-      end
-    end
 
     def execute_all_at(date, hour, min)
 
@@ -34,11 +23,11 @@ module Planning
         tasks = all_on_time(date, hour, min)
 
       rescue Exception => e
-          raise "cannot list task to execute : #{e.message}"
+        raise "cannot list task to execute : #{e.message}"
 
       else
         unless tasks.empty?
-          @logger.an_event.info "ask execution #{tasks.size} tasks event at date #{date}, hour #{hour}, min #{min}"
+          @logger.an_event.info "ask execution #{tasks.size} tasks event at date #{date}, hour #{hour}, min #{min}: #{tasks.join(",")}"
 
           tasks.each { |evt, periodicity|
             begin
@@ -65,9 +54,9 @@ module Planning
 
     end
 
-    def execute_all_which_pre_tasks_over_is_complet
+    def execute_all_which_pre_tasks_over_is_complet(date)
       begin
-        tasks = all_which_pre_tasks_over_is_complet
+        tasks = all_which_pre_tasks_over_is_complet(date)
 
       rescue Exception => e
         raise "cannot list task to execute : #{e.message}"
@@ -75,7 +64,7 @@ module Planning
       else
 
         unless tasks.empty?
-          @logger.an_event.info "ask execution #{tasks.size} tasks event which pre task are over today"
+          @logger.an_event.info "ask execution #{tasks.size} tasks event which pre task are over today : #{tasks.join(",")}"
 
           tasks.each { |evt, periodicity|
             begin
@@ -108,22 +97,45 @@ module Planning
 
     def all_on_date(date)
       @logger.an_event.info "list all jobs at date <#{date}>"
-      @events.all_on_date(date)
+      raise ArgumentError, date if date.nil?
+      @events.on_day(date)
     end
 
     def all_on_hour(date, hour)
       @logger.an_event.info "list all jobs at <#{date}>, hour <#{hour}>"
-      @events.all_on_hour(date, hour)
+      raise ArgumentError, date if date.nil?
+      raise ArgumentError, hour if hour.nil?
+      @events.on_hour(date, hour)
     end
 
     def all_on_time(date, hour, min)
       @logger.an_event.info "list all jobs at time <#{date}>, hour <#{hour}>, hour <#{min}>"
-      @events.all_on_time(date, hour, min)
+
+      raise ArgumentError, date if date.nil?
+      raise ArgumentError, hour if hour.nil?
+      raise ArgumentError, min if min.nil?
+      @events.on_min(date, hour, min)
     end
 
-    def all_which_pre_tasks_over_is_complet
-      @logger.an_event.info "list all jobs which pre task are over"
-      @events.all_which_pre_tasks_over_is_complet
+
+    def all_which_pre_tasks_over_is_complet(date=nil)
+
+      unless date.nil?
+        start_time = Time.local(date.year, date.month, date.day)
+        end_time = start_time + 23 * IceCube::ONE_HOUR - IceCube::ONE_SECOND
+        @logger.an_event.info "list all jobs which pre task are over for #{date}"
+      else
+        @logger.an_event.info "list all jobs which pre task are over"
+      end
+
+      @events.all.keep_if { |evt, periodicity|
+        !evt.pre_tasks.empty? and # possède au moins une pré task
+            # selectionne les task qui s'execute pour cette >date<
+            (date.nil? or (!date.nil? and !evt.periodicity.empty? and IceCube::Schedule.from_yaml(evt.periodicity).occurring_between?(start_time, end_time))) and
+            evt.pre_tasks_running.empty? and # aucune pre task n'est en cours d'execution
+            #permet de comparer le contenu des array afin de s'assurer qu'ils sont identiques
+            (evt.pre_tasks_over & evt.pre_tasks).size == evt.pre_tasks.size # toutes les pre task sont OVER ; double controle avec running (sécurité)
+      }
     end
 
     def save_object(object, data_event)
@@ -222,6 +234,12 @@ module Planning
       else
         @logger.an_event.debug "update tasks #{key} with pre_task #{task_name}"
       end
+    end
+
+
+    def self.next_day(day)
+      date = Date.parse(day)
+      date + (date > Date.today ? 0 : 7)
     end
   end
 end

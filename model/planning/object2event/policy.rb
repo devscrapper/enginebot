@@ -117,11 +117,11 @@ module Planning
 
         periodicity_device_platform_plugin = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_PLUGIN_DAY + DEVICE_PLATFORM_PLUGIN_HOUR + DEVICE_PLATFORM_PLUGIN_MIN,
                                                                    :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_device_platform_plugin.add_recurrence_rule IceCube::Rule.daily.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_device_platform_plugin.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
 
         periodicity_device_platform_resolution = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_RESOLUTION_DAY + DEVICE_PLATFORM_RESOLUTION_HOUR,
                                                                        :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_device_platform_resolution.add_recurrence_rule IceCube::Rule.daily.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+        periodicity_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
 
         business = {
             "policy_type" => @policy_type,
