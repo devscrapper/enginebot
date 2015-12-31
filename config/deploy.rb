@@ -117,7 +117,8 @@ after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
 after "deploy:update", "apres:update", "deploy:start", "deploy:status"
 before "deploy:update" , "deploy:stop", "log:delete"
-
+before "data:clear", "deploy:stop"
+after "data:clear", "deploy:start"
 
 #----------------------------------------------------------------------------------------------------------------------
 # task list : log
