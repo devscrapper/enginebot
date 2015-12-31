@@ -11,7 +11,7 @@ development:
 test:
   :semrush_user: info@lesclesdumidi.com
   :semrush_pwd:  123456
-  :saas_host: localhost
+  :saas_host: 192.168.1.88
   :saas_port: 9251
   :debugging:  false
   :time_out_saas_scrape: 180

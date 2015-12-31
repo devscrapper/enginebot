@@ -6,14 +6,14 @@ development:
   :time_out_saas_scrape: 60
   :calendar_server_port: 9104
 test:
-  :saas_host: 127.0.0.1
+  :saas_host: 192.168.1.88
   :saas_port: 9253
   :debugging:  false
   :time_out_saas_scrape: 60
   :calendar_server_port: 9104
 
 production:
-  :saas_host: 127.0.0.1
+  :saas_host: 192.168.1.88
   :saas_port: 9253
   :debugging:  false
   :time_out_saas_scrape: 60
