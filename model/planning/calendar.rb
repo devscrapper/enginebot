@@ -29,22 +29,8 @@ module Planning
         unless tasks.empty?
           @logger.an_event.info "ask execution #{tasks.size} tasks event at date #{date}, hour #{hour}, min #{min}: #{tasks.join(",")}"
 
-          tasks.each { |evt, periodicity|
-            begin
-              if evt.state != Event::START
-                evt.execute
-              else
-                @logger.an_event.warn "task <#{evt.cmd}> already running"
-              end
+          execute_tasks(tasks)
 
-            rescue Exception => e
-              raise "cannot ask execution task <#{evt.cmd}> : #{e.message}"
-
-            else
-              @logger.an_event.info "asked execution task <#{evt.cmd}>"
-
-            end
-          }
         else
           @logger.an_event.info "none task event to execute"
 
@@ -66,26 +52,36 @@ module Planning
         unless tasks.empty?
           @logger.an_event.info "ask execution #{tasks.size} tasks event which pre task are over today : #{tasks.join(",")}"
 
-          tasks.each { |evt, periodicity|
-            begin
-              if evt.state != Event::START
-                evt.execute
-              else
-                @logger.an_event.warn "task <#{evt.cmd}> already running"
-              end
+          execute_tasks(tasks)
 
-            rescue Exception => e
-              raise "cannot ask execution task <#{evt.cmd}> : #{e.message}"
-
-            else
-              @logger.an_event.info "asked execution task <#{evt.cmd}>"
-
-            end
-          }
         else
           @logger.an_event.info "none task event to execute  which pre task are over today"
 
         end
+      end
+
+    end
+
+
+    def execute_one(id_task)
+      begin
+        tasks = one({"id" => id_task})
+
+      rescue Exception => e
+        raise "cannot list task to execute : #{e.message}"
+
+      else
+        unless tasks.empty?
+          @logger.an_event.info "ask execution #{tasks[0].cmd} tasks with id #{id_task}"
+
+          execute_tasks(tasks)
+
+        else
+          @logger.an_event.info "none task event to execute with id #{id_task}"
+
+        end
+
+        tasks
       end
 
     end
@@ -128,7 +124,7 @@ module Planning
         @logger.an_event.info "list all jobs which pre task are over"
       end
 
-      @events.all.keep_if { |evt, periodicity|
+      @events.all.keep_if { |evt|
         !evt.pre_tasks.empty? and # possède au moins une pré task
             # selectionne les task qui s'execute pour cette >date<
             (date.nil? or (!date.nil? and !evt.periodicity.empty? and IceCube::Schedule.from_yaml(evt.periodicity).occurring_between?(start_time, end_time))) and
@@ -138,11 +134,29 @@ module Planning
       }
     end
 
+
+    def one(options)
+      key = options.fetch("key", {})
+      id = options.fetch("id", "")
+
+      unless key.empty?
+        @events.all.keep_if { |evt|
+          evt.cmd == task and
+              (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or
+              (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"])
+        }
+      end
+      unless id.empty?
+        @events.all.keep_if { |evt| evt.id == id }
+      end
+
+    end
+
     def save_object(object, data_event)
       begin
         @logger.an_event.debug "object <#{object}> data_event #{data_event}"
         require_relative "object2event/#{object.downcase}"
-        events = eval(object).new(data_event).to_event
+        events = eval(object.capitalize!).new(data_event).to_event
 
         @sem.synchronize {
           events.each { |e|
@@ -240,6 +254,30 @@ module Planning
     def self.next_day(day)
       date = Date.parse(day)
       date + (date > Date.today ? 0 : 7)
+    end
+
+    private
+    def execute_tasks(tasks)
+
+      tasks.each { |evt|
+        begin
+          unless evt.state == Event::START
+            evt.execute
+
+          else
+            @logger.an_event.warn "task <#{evt.cmd}> already running"
+
+          end
+
+        rescue Exception => e
+          raise "cannot ask execution task <#{evt.cmd}> : #{e.message}"
+
+        else
+          @logger.an_event.info "asked execution task <#{evt.cmd}>"
+
+        end
+      }
+
     end
   end
 end

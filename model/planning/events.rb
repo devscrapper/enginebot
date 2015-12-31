@@ -23,7 +23,8 @@ module Planning
                                 "pre_tasks_running" => evt["pre_tasks_running"],
                                 "pre_tasks" => evt["pre_tasks"],
                                 "periodicity" => evt["periodicity"],
-                                "business" => evt["business"]})
+                                "business" => evt["business"]},
+                               evt["id"])
         }
         @logger.an_event.info "repository events is loaded"
         @logger.an_event.debug EVENTS_FILE
@@ -124,7 +125,7 @@ module Planning
       @events.each { |evt|
         unless evt.periodicity.empty?
           occurences = IceCube::Schedule.from_yaml(evt.periodicity).occurrences_between(start_time, end_time - IceCube::ONE_SECOND) # end_time exclue
-          selected_events << [evt, occurences] unless occurences.empty?
+          selected_events << evt unless occurences.empty?
         end
       }
       selected_events

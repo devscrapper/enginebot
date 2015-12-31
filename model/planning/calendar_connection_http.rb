@@ -15,6 +15,8 @@ class CalendarConnection < EM::HttpServer::Server
   VERBE_HTTP_NOT_MANAGE = 1804
 
 
+  @@title_html = ""
+
   attr :calendar, # repository events
        :logger
 
@@ -31,13 +33,10 @@ class CalendarConnection < EM::HttpServer::Server
     #------------------------------------------------------------------------------------------------------------------
     action = proc {
       begin
-        task = []
         nul, ress_type, ress_id = @http_request_uri.split("/")
 
         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_type"}) if ress_type.nil? or ress_type.empty?
         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
-
-        ress_id.capitalize!
 
         @logger.an_event.debug "@http_request_method : #{@http_request_method}"
 
@@ -48,51 +47,60 @@ class CalendarConnection < EM::HttpServer::Server
           # GET
           #--------------------------------------------------------------------------------------------------------------
           when "GET"
-            #TODO faire une reponse pour accept : HTML
+
             @logger.an_event.info "list #{ress_id} events from repository"
             case ress_type
               when "pre_task_over"
-                if ress_id == "All"
+                if ress_id == "all"
                   tasks = @calendar.all_which_pre_tasks_over_is_complet
+                  @@title_html = "All tasks which pre tasks is over"
 
-                elsif ress_id == "Today"
+                elsif ress_id == "today"
                   tasks = @calendar.all_which_pre_tasks_over_is_complet(Date.today)
+                  @@title_html = "Today #{Date.today} tasks which pre tasks is over "
 
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_id})
                 end
 
               when "tasks"
-                if ["Monday", "Thuesday", "Wednesay" , "Friday", "Thursday", "Saturday", "Sunday"].include?(ress_id)
+                if ["monday", "tuesday", "wednesday", "friday", "thursday", "saturday", "sunday"].include?(ress_id)
                   tasks = @calendar.all_on_date(Calendar.next_day(ress_id))
+                  @@title_html = "On #{ress_id} tasks"
 
-                elsif ress_id == "All"
+                elsif ress_id == "all"
                   tasks = @calendar.all
+                  @@title_html = "All tasks"
 
-                elsif ress_id == "Today"
+                elsif ress_id == "today"
                   tasks = @calendar.all_on_date(Date.today)
+                  @@title_html = "Today #{Date.today} tasks"
 
-                elsif ress_id == "Now"
+                elsif ress_id == "now"
                   now = Time.now
                   tasks = @calendar.all_on_time(Date.today,
                                                 now.hour,
                                                 now.min)
+                  @@title_html = "Current tasks #{now}"
 
                 else
                   raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "query string"}) if @http_query_string.nil?
                   query_values = Addressable::URI.parse("?#{@http_query_string}").query_values
 
                   case ress_id
-                    when "Date"
+                    when "date"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                       tasks = @calendar.all_on_date(Date.parse(query_values["date"]))
+                      @@title_html = "All tasks of date #{query_values["date"]}"
 
-                    when "Hour"
+                    when "hour"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "hour"}) if query_values["hour"].nil? or query_values["hour"].empty?
                       tasks = @calendar.all_on_hour(Date.parse(query_values["date"]),
                                                     query_values["hour"].to_i)
-                    when "Time"
+                      @@title_html = "All tasks of date #{query_values["date"]} and hour #{query_values["hour"]}"
+
+                    when "time"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "min"}) if query_values["min"].nil? or query_values["min"].empty?
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "hour"}) if query_values["hour"].nil? or query_values["hour"].empty?
@@ -100,6 +108,16 @@ class CalendarConnection < EM::HttpServer::Server
                                                     query_values["hour"].to_i,
                                                     query_values["min"].to_i)
 
+                      @@title_html = "All tasks of date #{query_values["date"]} and hour #{query_values["hour"]} and min #{query_values["min"]}"
+                    when "search"
+                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "key"}) if query_values["key"].nil? or query_values["key"].empty?
+                       tasks = @calendar.one(JSON.parse(query_values["key"]))
+                      @@title_html = "Search task (key : #{JSON.parse(query_values["key"])}"
+
+                    when "execute"
+                      raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "id"}) if query_values["id"].nil? or query_values["id"].empty?
+                      tasks = @calendar.execute_one(query_values["id"])
+                     @@title_html = "Task executed"
 
                     else
                       raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_id})
@@ -152,6 +170,8 @@ class CalendarConnection < EM::HttpServer::Server
 
             case ress_type
               when "tasks"
+                ress_id.capitalize!
+
                 case query_values["state"]
                   when "start"
                     @logger.an_event.info "update task #{ress_id} with START to repository"
@@ -160,6 +180,9 @@ class CalendarConnection < EM::HttpServer::Server
                   when "over"
                     @logger.an_event.info "update task #{ress_id} with OVER to repository"
                     @calendar.event_is_over(ress_id, @http_content)
+                  when "fail"
+                    @logger.an_event.info "update task #{ress_id} with FAIL to repository"
+                    @calendar.event_is_fail(ress_id, @http_content)
                   else
                     raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => query_values["state"]})
                 end
@@ -231,8 +254,46 @@ class CalendarConnection < EM::HttpServer::Server
         response.status = 200
       end
 
-      response.content_type 'application/json'
-      response.content = results.to_json
+      if @http[:accept].include?("text/html") and response.status == 200
+        # formatage des données en html si aucune erreur et si accès avec un navigateur
+        response.content_type 'text/html'
+        response.content =<<-_end_of_html_
+                                <HTML>
+                                 <HEAD>
+                                   <title>#{@@title_html}</title>
+                                </HEAD>
+                                  <BODY>
+                                    <h3>Short links</h3>
+                                    <p>
+                                      <a href="/pre_task_over/all">All tasks which pre tasks is over</a>
+                                      <a href="/pre_task_over/today">Today tasks which pre tasks is over</a>
+                                    </p>
+                                    <p>
+                                      <a href="/tasks/all">All tasks</a>
+                                      <a href="/tasks/today">Today tasks</a>
+                                      <a href="/tasks/now">Current tasks</a>
+                                      <a href="/tasks/monday">Monday tasks</a>
+                                      <a href="/tasks/tuesday">Tuesday tasks</a>
+                                      <a href="/tasks/wednesday">Wednesday tasks</a>
+                                      <a href="/tasks/thursday">Thursday tasks</a>
+                                      <a href="/tasks/friday">Friday tasks</a>
+                                      <a href="/tasks/saturday">Saturday tasks</a>
+                                      <a href="/tasks/sunday">Sunday tasks</a>
+                                    </p>
+                                    <h3>#{@@title_html}</h3>
+                                    <ul>
+                                       <li>#{results.map{|r| r.to_html }.join("</li><li>")}</li>
+                                    </ul>
+                                  <BODY>
+
+                                </HTML>
+        _end_of_html_
+      else
+        response.content_type 'application/json'
+        response.content = results.to_json
+
+      end
+
       response.send_response
       close_connection_after_writing
     }

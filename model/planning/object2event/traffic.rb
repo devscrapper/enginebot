@@ -107,7 +107,6 @@ module Planning
             Event.new(@key,
                       "Scraping_traffic_source_organic",
                       {
-
                           "periodicity" => periodicity_traffic_source_organic.to_yaml,
                           "business" => {
                               "policy_type" => @policy_type,
@@ -121,7 +120,6 @@ module Planning
             Event.new(@key,
                       "Scraping_traffic_source_referral",
                       {
-
                           "periodicity" => periodicity_traffic_source_referral.to_yaml,
                           "business" => {
                               "policy_type" => @policy_type,
@@ -134,7 +132,6 @@ module Planning
             Event.new(@key,
                       "Scraping_website",
                       {
-
                           "periodicity" => periodicity_scraping_website.to_yaml,
                           "business" => {
                               "policy_type" => @policy_type,

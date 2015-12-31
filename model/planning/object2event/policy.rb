@@ -1,4 +1,5 @@
 require_relative '../event'
+
 module Planning
 
   class Policy
@@ -22,7 +23,7 @@ module Planning
     DEVICE_PLATFORM_RESOLUTION_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
     DEVICE_PLATFORM_RESOLUTION_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est 1h du matin
 
-    attr :website_label,
+    attr          :website_label,
          :website_id,
          :policy_id,
          :policy_type,
@@ -96,6 +97,7 @@ module Planning
     def to_event
 
       #Si demande suppression de la website alors absence de business
+      #TODO a supprimer car la suppression se fera avec un verbe HTTP  : Delete e tun critère sur clé comme puor search
       if @website_label.nil?
         @events += [
             Event.new(@key, "Scraping_device_platform_plugin"),
