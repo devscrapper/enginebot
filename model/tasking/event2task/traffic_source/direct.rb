@@ -234,6 +234,7 @@ module Tasking
 
             @run_spawn.notify urls
           else
+            @stop_spawn.notify
 
           end
         }
