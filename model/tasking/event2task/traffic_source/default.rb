@@ -51,7 +51,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.fatal "repository organic for #{@website_label} and #{@date} : #{e.message}"
-
+          raise e
         else
           @logger.an_event.info "repository organic for #{@website_label} and #{@date}"
 

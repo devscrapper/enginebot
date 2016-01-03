@@ -123,6 +123,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error ("Building visits for <#{@policy_type}> <#{@website_label}> is over =>  #{e.message}")
+            raise e
         else
           @logger.an_event.debug("Building visits for <#{@policy_type}> <#{@website_label}> is over")
         end
@@ -192,6 +193,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error ("Building planification of visit for  <#{@policy_type}> <#{@website_label}> <#{@date_building}> is over =>  #{e.message}")
+          raise e
         else
           @logger.an_event.debug("Building planification of visit for  <#{@policy_type}> <#{@website_label}> <#{@date_building}> is over")
         end
@@ -259,6 +261,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error("Extending visits for <#{@policy_type}> #{@website_label} <#{@date_building}>is over =>  #{e.message}")
+          raise e
         else
           @logger.an_event.debug("Extending visits for <#{@policy_type}> #{@website_label} <#{@date_building}> is over")
         end
@@ -299,6 +302,7 @@ module Tasking
           reporting.archive
         rescue Exception => e
           @logger.an_event.error("Reporting visits for <#{@policy_type}> #{@website_label} #{@date_building} over => #{e.message}")
+          raise e
         else
           @logger.an_event.debug("Reporting visits for <#{@policy_type}> #{@website_label} is over (#{Time.now - start_time})")
         end
@@ -386,6 +390,7 @@ module Tasking
         rescue Exception => e
 
           @logger.an_event.error ("Publishing  at #{current_time} visits for <#{@policy_type}> #{@website_label} #{@date_building}:#{hour}:00 is over => #{e.message}")
+          raise e
         else
 
           @logger.an_event.debug("Publishing  at #{current_time} visits for <#{@policy_type}> #{@website_label} #{@date_building}:#{hour}:00 is over")

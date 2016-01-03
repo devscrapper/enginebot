@@ -136,7 +136,7 @@ module Tasking
     # TRAFFIC SOURCE
     #--------------------------------------------------------------------------------------
     def Building_landing_pages_direct
-      execute(__method__) {#TODO cette task est elle tj necessaire
+      execute(__method__) {
         TrafficSource::TrafficSource.new(@data["website_label"],
                                          @data["date_building"],
                                          @data["policy_type"]).Building_landing_pages(:direct)
@@ -144,7 +144,7 @@ module Tasking
     end
 
     def Building_landing_pages_organic
-      execute(__method__) {#TODO cette task est elle tj necessaire
+      execute(__method__) {
         TrafficSource::TrafficSource.new(@data["website_label"],
                                          @data["date_building"],
                                          @data["policy_type"]).Building_landing_pages(:organic)
@@ -152,7 +152,7 @@ module Tasking
     end
 
     def Building_landing_pages_referral
-      execute(__method__) {#TODO cette task est elle tj necessaire
+      execute(__method__) {
         TrafficSource::TrafficSource.new(@data["website_label"],
                                          @data["date_building"],
                                          @data["policy_type"]).Building_landing_pages(:referral)
@@ -174,7 +174,7 @@ module Tasking
 
       execute(__method__) {
         case @data["policy_type"].to_sym
-          when :traffic #TODO executer dans un Defer
+          when :traffic
             TrafficSource::Organic.new(@data["website_label"],
                                        @data["date_building"],
                                        @data["policy_type"]).make_repository(@data["url_root"], # 10mn de suggesting
@@ -432,56 +432,6 @@ module Tasking
 
     private
 
-    #  #TODO à supprimer
-    #  def send_over_to_calendar(task, info)
-    #    @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is over"
-    #    # informe le calendar que la tache est terminée. En fonction Calendar pourra declencher d'autres taches
-    #    # @query = {"cmd" => "over"}
-    #    # @query.merge!({"object" => task})
-    #    # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
-    #    @query = {"policy_id" => @data["policy_id"], "task" => task}
-    #    begin
-    #      #  response = Question.new(@query).ask_to("localhost", $calendar_server_port)
-    #      response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=over", @query.to_json, :content_type => :json, :accept => :json
-    #      if response.code != 200
-    #        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update => #{response.code}"
-    #      end
-    #
-    #
-    #    rescue Exception => e
-    #      @logger.an_event.error "event OVER not send to calendar for task <#{task}> and <#{info.join(",")}> => #{e.message}"
-    #
-    #    else
-    #      # raise response[:error] if response[:state] == :ko
-    #      # response[:data] if response[:state] == :ok and !response[:data].nil?
-    #
-    #    end
-    #  end
-    #
-    # #TODO à supprimer
-    #  def send_start_to_calendar(task, info)
-    #    @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is starting"
-    #
-    #    # informe le calendar que la tache est démarrée.
-    #    # @query = {"cmd" => "start"}
-    #    # @query.merge!({"object" => task})
-    #    # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
-    #    @query = {"policy_id" => @data["policy_id"], "task" => task}
-    #    begin
-    #      # response = Question.new(@query).ask_to("localhost", $calendar_server_port)
-    #      response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=start", @query.to_json, :content_type => :json, :accept => :json
-    #      if response.code != 200
-    #        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update => #{response.code}"
-    #      end
-    #    rescue Exception => e
-    #      @logger.an_event.error "event START not send to calendar for task <#{task}> and <#{info.join(",")}> => #{e.message}"
-    #
-    #    else
-    #      # raise response[:error] if response[:state] == :ko
-    #      # response[:data] if response[:state] == :ok and !response[:data].nil?
-    #
-    #    end
-    #  end
 
     def send_state_to_calendar(task, state, info)
       # informe le calendar du nouvelle etat de la tache (start/over/fail).
@@ -499,7 +449,7 @@ module Tasking
         @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update state : #{state} => #{e.message}"
 
       else
-        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update state : #{state} => #{response.code}" if response.code != 200
+        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> update state : #{state} => #{response.code}" if response.code != 200
 
       end
     end

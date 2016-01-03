@@ -71,6 +71,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error ("Building landing pages #{medium} for <#{@policy_type}> <#{@website_label}> is over #{e.message}")
+            raise e
         else
           @logger.an_event.debug("Building landing pages #{medium} for <#{@policy_type}> <#{@website_label}> is over")
         end
@@ -86,7 +87,8 @@ module Tasking
         landing_page_type_flow = "landing-pages-#{medium.to_s}"
         traffic_source_file = Flow.last(TMP, {:type_flow => traffic_source_type_flow,
                                                 :label => @website_label,
-                                                :policy => @policy_type}).last #input
+                                                :policy => @policy_type,
+                                           :ext => ".txt"}).last #input
         @logger.an_event.debug "traffic source type flow : #{traffic_source_file.basename}"
         raise IOError, "input flow <#{traffic_source_file.basename}> is missing" unless traffic_source_file.exist? #input
 

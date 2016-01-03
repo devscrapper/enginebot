@@ -114,7 +114,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error "backlinks evaluated for #{@website_label} and #{@date_building} : #{e.message}"
-          raise
+          raise e
         else
           @logger.an_event.info "backlinks evaluated for #{@website_label} and #{@date_building} save to #{@traffic_source_f.basename}"
           @traffic_source_f.close
@@ -157,7 +157,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.fatal "repository referral for #{@website_label} and #{@date_building} : #{e.message}"
-
+          raise e
         else
           @logger.an_event.info "repository referral for #{@website_label} and #{@date_building}"
 

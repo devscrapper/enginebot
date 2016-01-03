@@ -146,6 +146,7 @@ module Tasking
         response = RestClient.post "http://localhost:#{$calendar_server_port}/objects/objective/", data.to_json, :content_type => :json, :accept => :json
         if response.code != 200
           @logger.an_event.error "Objective <#{info.join(",")}> not save => #{response.code}"
+          raise "Objective <#{info.join(",")}> not save => #{response.code}"
         end
         #
         # try_count = 3

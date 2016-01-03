@@ -6,7 +6,7 @@ module Tasking
 
 
     class Chosens
-      TMP = File.expand_path(File.join("..", "..","..", "..", "..","tmp"), __FILE__)
+      TMP = File.expand_path(File.join("..", "..", "..", "..", "..", "tmp"), __FILE__)
       PROGRESS_BAR_SIZE = 180
       attr :label,
            :date_building,
@@ -85,6 +85,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error "cannot chose landing page of medium <#{medium_type}> for #{@policy_type} #{@label} : #{e.message}"
+          raise e
         ensure
           landing_pages_file.close
         end
@@ -111,8 +112,10 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error "cannot chose landing page of medium <#{medium_type}> for #{@policy_type} #{@label}"
+          raise e
+        ensure
+          landing_pages_file.close
         end
-        landing_pages_file.close
       end
 
       def title(action, policy = @policy_type, label = @label, date = @date_building)

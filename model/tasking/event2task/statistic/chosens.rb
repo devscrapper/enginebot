@@ -95,6 +95,7 @@ module Tasking
           chosen_device_platform_file.archive_previous
         rescue Exception => e
           @logger.an_event.error "Choosing device platform for <#{@policy_type}> <#{@label}> <#{@date_building}> is over =>  #{e.message}"
+          raise e
         else
 
           @logger.an_event.debug "Choosing device platform for <#{@policy_type}> <#{@label}> <#{@date_building}> is over"

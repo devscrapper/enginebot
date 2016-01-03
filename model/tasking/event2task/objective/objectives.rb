@@ -17,7 +17,7 @@ module Tasking
     EOFLINE2 ="\n"
     PROGRESS_BAR_SIZE = 100
 
-    TMP = File.expand_path(File.join("..", "..","..", "..", "..","tmp"), __FILE__)
+    TMP = File.expand_path(File.join("..", "..", "..", "..", "..", "tmp"), __FILE__)
     class Objectives
       attr :website_label,
            :date_building,
@@ -219,16 +219,19 @@ module Tasking
               @logger.an_event.debug obj
 
               obj.send_to_calendar
-              @logger.an_event.debug "send objective for <#{@policy_type}> <#{@website_label}> at date <#{day}> to calendar)"
+
 
             rescue Exception => e
               raise StandardError, "cannot send objective <#{@policy_type}> <#{@website_label}> at date <#{day}> to calendar => #{e.message}"
+            else
+              @logger.an_event.debug "send objective for <#{@policy_type}> <#{@website_label}> at date <#{day}> to calendar)"
             end
             p.increment
             day = day.next_day(1)
           }
         rescue Exception => e
           @logger.an_event.error "Building objectives for <#{@policy_type}> <#{@website_label}> at date <#{@date_building}> is over => #{e.message}"
+          raise e
         else
           @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> at date <#{@date_building}> is over"
         end

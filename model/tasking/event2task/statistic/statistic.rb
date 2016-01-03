@@ -83,6 +83,7 @@ module Tasking
           device_platform_file.archive_previous
         rescue Exception => e
           @logger.an_event.error("Building device platform for <#{@policy_type}> <#{@website_label}> is over #{e.message}")
+            raise e
         else
           @logger.an_event.debug("Building device platform for <#{@policy_type}> <#{@website_label}> is over")
         end
@@ -130,6 +131,7 @@ module Tasking
           tmp_distribution_count.archive_previous
         rescue Exception => e
           @logger.an_event.error("Building hourly daily distribution for <#{@policy_type}> <#{@date_building}> is over : #{e.message}")
+          raise e
         else
           @logger.an_event.debug("Building hourly daily distribution for <#{@policy_type}> <#{@website_label}> is over")
         end
@@ -164,6 +166,7 @@ module Tasking
           tmp_behaviour.archive_previous
         rescue Exception => e
           @logger.an_event.error("Building behaviour for <#{@policy_type}> <#{@date_building}> is over : #{e.message}")
+          raise e
         else
           @logger.an_event.debug("Building behaviour for <#{@policy_type}> <#{@website_label}> is over")
         end
