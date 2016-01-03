@@ -18,6 +18,7 @@ module Planning
     OVER = "over"
     START = "start"
     INIT = 'init'
+    FAIL = "fail"
 
     include Tasking
     attr :id,

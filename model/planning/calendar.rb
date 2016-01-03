@@ -201,34 +201,9 @@ module Planning
 
         unless data_event[:policy_id].nil?
           # lors que event de fin de tache sont émis par task_list alors policy_id est présent
-          key = {"policy_id" => data_event[:policy_id]}
-        else
-          # lorsque les fins de taches sont émis par flow_list alors policy_id est absent car il n'y a pas de données
-          # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
-          # du Flow pour identifier la policy : policy_type, website_label, date_building
-          key = {"website_label" => data_event[:website_label],
-                 "policy_type" => data_event[:policy_type],
-                 "date_building" => data_event[:date_building]
+          key = {"policy_id" => data_event[:policy_id],
+                 "task" => data_event[:task]
           }
-        end
-        @sem.synchronize {
-          @events.pre_tasks_over(task_name, key)
-          @events.save
-        }
-      rescue Exception => e
-        raise "cannot update tasks #{key} with pre_task #{task_name} : #{e.message}"
-
-      else
-        @logger.an_event.debug "update tasks #{key} with pre_task #{task_name}"
-      end
-    end
-
-    def event_is_start(task_name, data_event)
-      begin
-
-        unless data_event[:policy_id].nil?
-          # lors que event de fin de tache sont émis par task_list alors policy_id est présent
-          key = {"policy_id" => data_event[:policy_id]}
         else
           # lorsque les fins de taches sont émis par flow_list alors policy_id est absent car il n'y a pas de données
           # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
@@ -239,17 +214,79 @@ module Planning
           }
         end
         @sem.synchronize {
+          @events.update_state(key, Event::OVER)
+          @events.pre_tasks_over(task_name, key)
+          @events.save
+        }
+      rescue Exception => e
+        raise "cannot set over tasks #{task_name}(#{key} : #{e.message}"
+
+      else
+        @logger.an_event.debug "set over tasks #{task_name}(#{key})"
+
+      end
+    end
+
+    def event_is_start(task_name, data_event)
+      begin
+
+        unless data_event[:policy_id].nil?
+          # lors que event de fin de tache sont émis par task_list alors policy_id est présent
+          key = {"policy_id" => data_event[:policy_id],
+                 "task" => data_event[:task]
+          }
+        else
+          # lorsque les fins de taches sont émis par flow_list alors policy_id est absent car il n'y a pas de données
+          # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
+          # du Flow pour identifier la policy : policy_type, website_label, date_building
+          key = {"website_label" => data_event["website_label"],
+                 "policy_type" => data_event["policy_type"],
+                 "date_building" => data_event["date_building"]
+          }
+        end
+        @sem.synchronize {
+          @events.update_state(key, Event::START)
           @events.pre_tasks_running(task_name, key)
           @events.save
         }
       rescue Exception => e
-        raise "cannot update tasks #{key} with pre_task #{task_name} : #{e.message}"
+        raise "cannot set start tasks #{task_name}(#{key} : #{e.message}"
 
       else
-        @logger.an_event.debug "update tasks #{key} with pre_task #{task_name}"
+        @logger.an_event.debug "set start tasks #{task_name}(#{key})"
+
       end
     end
 
+    def event_is_fail(task_name, data_event)
+      begin
+
+        unless data_event[:policy_id].nil?
+          # lors que event de fin de tache sont émis par task_list alors policy_id est présent
+          key = {"policy_id" => data_event[:policy_id],
+                 "task" => data_event[:task]
+          }
+        else
+          # lorsque les fins de taches sont émis par flow_list alors policy_id est absent car il n'y a pas de données
+          # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
+          # du Flow pour identifier la policy : policy_type, website_label, date_building
+          key = {"website_label" => data_event["website_label"],
+                 "policy_type" => data_event["policy_type"],
+                 "date_building" => data_event["date_building"]
+          }
+        end
+        @sem.synchronize {
+          @events.update_state(key, Event::FAIL)
+          @events.save
+        }
+      rescue Exception => e
+        raise "cannot set fail tasks #{task_name}(#{key} : #{e.message}"
+
+      else
+        @logger.an_event.debug "set fail tasks #{task_name}(#{key})"
+
+      end
+    end
 
     def self.next_day(day)
       date = Date.parse(day)
@@ -279,5 +316,6 @@ module Planning
       }
 
     end
+
   end
 end

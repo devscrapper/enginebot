@@ -155,14 +155,14 @@ module Planning
       # }
 
       @events.each { |evt|
-        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or
-            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"])
+        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or    #TODO ne passer que la policy et pas toute la key car pas nécessaire
+            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"])  #TODOsupprimer le cas de test sans policy_id
 
           # remarques : une commande ne peut pas être pre task d'elle même, donc les 2 actions sont exclusives
           if (evt.cmd == task_name.to_s)
             #qd une commande est terminée, on remet à l'etat initial les pre_task de la command
             evt.pre_tasks_over = []
-            evt.state = Event::OVER
+
           else
             if evt.pre_tasks.include?(task_name.to_s)
               # deplace les task terminées de task_running vers les task_over de chaque commande (task)
@@ -173,6 +173,7 @@ module Planning
         end
       } unless @events.nil?
     end
+
 
     def pre_tasks_running(task_name, key)
       # key = {"policy_id" => data_event["policy_id"]}
@@ -197,10 +198,9 @@ module Planning
       # }
 
       @events.each { |evt|
-        evt.state = Event::START if evt.cmd == task_name.to_s
 
-        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or
-            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"]) and
+        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or   #TODO ne passer que la policy et pas toute la key car pas nécessaire
+            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"]) and #TODOsupprimer le cas de test sans policy_id
                 evt.pre_tasks.include?(task_name.to_s)
 
           evt.pre_tasks_running << task_name.to_s
@@ -225,6 +225,43 @@ module Planning
 
     def size
       @events.size
+    end
+
+    def update_state(key, state)
+      # key = {"policy_id" => data_event["policy_id"]}
+
+      # ou bien
+
+      # key = {"website_label" => data_event["website_label"],
+      #        "policy_type" => data_event["policy_type"]}
+      # dans events.json
+      # {
+      #     "key" : {
+      #     "policy_id" : 6
+      # },
+      #     "cmd" : "Building_landing_pages_direct",
+      #     "periodicity" : "---\n:start_date: 2015-11-16 00:00:00.000000000 +01:00\n:end_time: 2015-11-24 00:00:00.000000000 +01:00\n:rrules:\n- :validations: {}\n  :rule_type: IceCube::DailyRule\n  :interval: 1\n:exrules: []\n:rtimes: []\n:extimes: []\n",
+      #     "business" : {
+      #     "website_label" : "epilation",
+      #     "website_id" : 1,
+      #     "policy_id" : 6,
+      #     "policy_type" : "traffic"
+      # }
+      # }
+
+      @events.each { |evt|
+
+        evt.state = state if
+            (!key["policy_id"].nil? and
+            evt.key["policy_id"] == key["policy_id"] and
+            evt.key["task"] == key["task"]) \
+        or
+            (evt.business["website_label"] == key["website_label"] and
+                evt.business["policy_type"] == key["policy_type"] and
+                evt.key["task"] == key["task"])  #TODOsupprimer le cas de test sans policy_id
+
+      }
+
     end
   end
 end

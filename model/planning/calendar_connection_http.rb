@@ -180,9 +180,11 @@ class CalendarConnection < EM::HttpServer::Server
                   when "over"
                     @logger.an_event.info "update task #{ress_id} with OVER to repository"
                     @calendar.event_is_over(ress_id, @http_content)
+
                   when "fail"
                     @logger.an_event.info "update task #{ress_id} with FAIL to repository"
                     @calendar.event_is_fail(ress_id, @http_content)
+
                   else
                     raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => query_values["state"]})
                 end

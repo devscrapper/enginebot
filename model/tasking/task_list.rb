@@ -13,7 +13,7 @@ require_relative 'event2task/traffic_source/default'
 require_relative 'event2task/traffic_source/organic'
 require_relative 'event2task/traffic_source/referral'
 require_relative 'event2task/traffic_source/direct'
-
+require_relative '../planning/event'
 require 'rest-client'
 require 'json'
 
@@ -177,7 +177,7 @@ module Tasking
           when :traffic #TODO executer dans un Defer
             TrafficSource::Organic.new(@data["website_label"],
                                        @data["date_building"],
-                                       @data["policy_type"]).make_repository(@data["url_root"],   # 10mn de suggesting
+                                       @data["policy_type"]).make_repository(@data["url_root"], # 10mn de suggesting
                                                                              $staging == "development" ? 10 /(24 * 60) : @data["max_duration"])
           when :rank
             #Si il y a de smot cl� param�trer dans la tache alors elle est issue dune policy Rank
@@ -192,7 +192,7 @@ module Tasking
       execute(__method__) {
         TrafficSource::Referral.new(@data["website_label"],
                                     @data["date_building"],
-                                    @data["policy_type"]).make_repository(@data["url_root"],   #en dev 5 backlink max, zero = all
+                                    @data["policy_type"]).make_repository(@data["url_root"], #en dev 5 backlink max, zero = all
                                                                           $staging == "development" ? 5 : 0)
       }
     end
@@ -370,22 +370,17 @@ module Tasking
 
 
     def execute(task, &block)
+      info = ["policy (type/id) : #{@data["policy_type"]} / #{@data["policy_id"]}",
+              " website (label/id) : #{@data["website_label"]} / #{@data["website_id"]}",
+              " date : #{@data["date_building"]}"]
+      info << " objective_id : #{@data["objective_id"]}" unless @data["objective_id"].nil?
 
       action = proc {
-        info = ["policy (type/id) : #{@data["policy_type"]} / #{@data["policy_id"]}",
-                " website (label/id) : #{@data["website_label"]} / #{@data["website_id"]}",
-                " date : #{@data["date_building"]}"]
-        info << " objective_id : #{@data["objective_id"]}" unless @data["objective_id"].nil?
-
-
         begin
           # perform a long-running operation here, such as a database query.
-          send_start_to_calendar(task, info)
-
+          send_state_to_calendar(task, Planning::Event::START, info)
+          @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is start"
           yield
-
-          # scraping website utilise spawn => tout en asycnhrone => il enverra l'event de over à calendar
-          send_over_to_calendar(task, info) if task != :Scraping_website
 
         rescue Error => e
           results = e
@@ -395,7 +390,7 @@ module Tasking
           results = Error.new(ACTION_NOT_EXECUTE, :values => {:action => task}, :error => e)
 
         else
-
+          @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is over"
           results # as usual, the last expression evaluated in the block will be the return value.
 
         ensure
@@ -406,14 +401,14 @@ module Tasking
         # do something with result here, such as send it back to a network client.
 
         if results.is_a?(Error)
-
+          send_state_to_calendar(task, Planning::Event::FAIL, info)
 
         else
-
+          # scraping website utilise spawn => tout en asycnhrone => il enverra l'event de over à calendar
+          send_state_to_calendar(task, Planning::Event::OVER, info) if task != :Scraping_website
 
         end
 
-        send_monitoring_to_statupweb
       }
 
       if $staging == "development" #en dev tout ext exécuté hors thread pour pouvoir debugger
@@ -423,6 +418,7 @@ module Tasking
         rescue Exception => e
           @logger.an_event.error e.message
           callback.call(e)
+
         else
           callback.call(results)
 
@@ -435,61 +431,78 @@ module Tasking
 
     private
 
-    def send_over_to_calendar(task, info)
-      @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is over"
-      # informe le calendar que la tache est terminée. En fonction Calendar pourra declencher d'autres taches
-      # @query = {"cmd" => "over"}
-      # @query.merge!({"object" => task})
-      # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
-      @query = {"policy_id" => @data["policy_id"]}
-      begin
-        #  response = Question.new(@query).ask_to("localhost", $calendar_server_port)
-        response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=over", @query.to_json, :content_type => :json, :accept => :json
-        if response.code != 200
-          @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update => #{response.code}"
-        end
+    #  #TODO à supprimer
+    #  def send_over_to_calendar(task, info)
+    #    @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is over"
+    #    # informe le calendar que la tache est terminée. En fonction Calendar pourra declencher d'autres taches
+    #    # @query = {"cmd" => "over"}
+    #    # @query.merge!({"object" => task})
+    #    # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
+    #    @query = {"policy_id" => @data["policy_id"], "task" => task}
+    #    begin
+    #      #  response = Question.new(@query).ask_to("localhost", $calendar_server_port)
+    #      response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=over", @query.to_json, :content_type => :json, :accept => :json
+    #      if response.code != 200
+    #        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update => #{response.code}"
+    #      end
+    #
+    #
+    #    rescue Exception => e
+    #      @logger.an_event.error "event OVER not send to calendar for task <#{task}> and <#{info.join(",")}> => #{e.message}"
+    #
+    #    else
+    #      # raise response[:error] if response[:state] == :ko
+    #      # response[:data] if response[:state] == :ok and !response[:data].nil?
+    #
+    #    end
+    #  end
+    #
+    # #TODO à supprimer
+    #  def send_start_to_calendar(task, info)
+    #    @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is starting"
+    #
+    #    # informe le calendar que la tache est démarrée.
+    #    # @query = {"cmd" => "start"}
+    #    # @query.merge!({"object" => task})
+    #    # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
+    #    @query = {"policy_id" => @data["policy_id"], "task" => task}
+    #    begin
+    #      # response = Question.new(@query).ask_to("localhost", $calendar_server_port)
+    #      response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=start", @query.to_json, :content_type => :json, :accept => :json
+    #      if response.code != 200
+    #        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update => #{response.code}"
+    #      end
+    #    rescue Exception => e
+    #      @logger.an_event.error "event START not send to calendar for task <#{task}> and <#{info.join(",")}> => #{e.message}"
+    #
+    #    else
+    #      # raise response[:error] if response[:state] == :ko
+    #      # response[:data] if response[:state] == :ok and !response[:data].nil?
+    #
+    #    end
+    #  end
 
-
-      rescue Exception => e
-        @logger.an_event.error "event OVER not send to calendar for task <#{task}> and <#{info.join(",")}> => #{e.message}"
-
-      else
-        # raise response[:error] if response[:state] == :ko
-        # response[:data] if response[:state] == :ok and !response[:data].nil?
-
-      end
-    end
-
-    def send_start_to_calendar(task, info)
-      @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is starting"
-
-      # informe le calendar que la tache est démarrée.
+    def send_state_to_calendar(task, state, info)
+      # informe le calendar du nouvelle etat de la tache (start/over/fail).
       # @query = {"cmd" => "start"}
       # @query.merge!({"object" => task})
       # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
-      @query = {"policy_id" => @data["policy_id"]}
+
+      @query = {"policy_id" => @data["policy_id"], "task" => task}
+
       begin
-        # response = Question.new(@query).ask_to("localhost", $calendar_server_port)
-        response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=start", @query.to_json, :content_type => :json, :accept => :json
-        if response.code != 200
-          @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update => #{response.code}"
-        end
+
+        response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{task}/?state=#{state}", @query.to_json, :content_type => :json, :accept => :json
+
       rescue Exception => e
-        @logger.an_event.error "event START not send to calendar for task <#{task}> and <#{info.join(",")}> => #{e.message}"
+        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update state : #{state} => #{e.message}"
 
       else
-        # raise response[:error] if response[:state] == :ko
-        # response[:data] if response[:state] == :ok and !response[:data].nil?
+        @logger.an_event.error "task <#{task}> and <#{info.join(",")}> not update state : #{state} => #{response.code}" if response.code != 200
 
       end
     end
 
-    def send_monitoring_to_statupweb
-      #TODO revisiter la solution decoute du statupweb pour quelle ne soit pas d�di�e � compte rendu de traitement google_analytics.rb
-      #TODO envoyer � statupweb le resultat de l'ex�cution de la tache comme cela est fait dans google_analytics.rb
-      #TODO supprimer dans google analytics l'envoie vers statupweb
-      #TODO supprimer dans statistics l'envoie vers statupweb
-    end
 
     def is_nil_or_empty?
       @logger.an_event.debug yield
