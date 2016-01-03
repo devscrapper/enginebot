@@ -247,8 +247,7 @@ module Tasking
         @ferror.close
 
         @query = {"website_label" => @website_label,
-                  "policy_type" => @policy_type,
-                  "date_building" => @date_building
+                  "policy_type" => @policy_type
         }
         begin
 
@@ -264,6 +263,8 @@ module Tasking
         end
 
       end
+
+
 
 
       def push_file(id_file, last_volume = false)

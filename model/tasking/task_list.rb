@@ -404,7 +404,8 @@ module Tasking
           send_state_to_calendar(task, Planning::Event::FAIL, info)
 
         else
-          # scraping website utilise spawn => tout en asycnhrone => il enverra l'event de over à calendar
+          # scraping website utilise spawn => tout en asycnhrone => il enverra l'Event::over à calendar
+          # il n'enverra jamais Event::Fail à calendar.
           send_state_to_calendar(task, Planning::Event::OVER, info) if task != :Scraping_website
 
         end

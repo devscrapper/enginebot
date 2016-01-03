@@ -200,7 +200,7 @@ module Planning
       @events.each { |evt|
 
         if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or   #TODO ne passer que la policy et pas toute la key car pas nécessaire
-            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"]) and #TODOsupprimer le cas de test sans policy_id
+            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"]) and
                 evt.pre_tasks.include?(task_name.to_s)
 
           evt.pre_tasks_running << task_name.to_s
@@ -258,8 +258,7 @@ module Planning
         or
             (evt.business["website_label"] == key["website_label"] and
                 evt.business["policy_type"] == key["policy_type"] and
-                evt.key["task"] == key["task"])  #TODOsupprimer le cas de test sans policy_id
-
+                evt.key["task"] == key["task"])
       }
 
     end

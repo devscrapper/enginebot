@@ -207,10 +207,12 @@ module Planning
         else
           # lorsque les fins de taches sont émis par flow_list alors policy_id est absent car il n'y a pas de données
           # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
-          # du Flow pour identifier la policy : policy_type, website_label, date_building
-          key = {"website_label" => data_event["website_label"],
-                 "policy_type" => data_event["policy_type"],
-                 "date_building" => data_event["date_building"]
+          # du Flow pour identifier la policy : policy_type, website_label
+          # utiliser par Scraping_Website
+          # ne pas utiliser pour les task quotidiennes sinon risque de maj de plusieurs task
+          key = {"website_label" => data_event[:website_label],
+                 "policy_type" => data_event[:policy_type],
+                 "task" => task_name
           }
         end
         @sem.synchronize {
@@ -239,9 +241,9 @@ module Planning
           # lorsque les fins de taches sont émis par flow_list alors policy_id est absent car il n'y a pas de données
           # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
           # du Flow pour identifier la policy : policy_type, website_label, date_building
-          key = {"website_label" => data_event["website_label"],
-                 "policy_type" => data_event["policy_type"],
-                 "date_building" => data_event["date_building"]
+          key = {"website_label" => data_event[:website_label],
+                 "policy_type" => data_event[:policy_type],
+                 "date_building" => data_event[:date_building]
           }
         end
         @sem.synchronize {
@@ -270,9 +272,9 @@ module Planning
           # lorsque les fins de taches sont émis par flow_list alors policy_id est absent car il n'y a pas de données
           # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
           # du Flow pour identifier la policy : policy_type, website_label, date_building
-          key = {"website_label" => data_event["website_label"],
-                 "policy_type" => data_event["policy_type"],
-                 "date_building" => data_event["date_building"]
+          key = {"website_label" => data_event[:website_label],
+                 "policy_type" => data_event[:policy_type],
+                 "date_building" => data_event[:date_building]
           }
         end
         @sem.synchronize {
