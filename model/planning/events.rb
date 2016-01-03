@@ -57,6 +57,11 @@ module Planning
       @logger.an_event.info "event #{event.cmd} for #{event.business["website_label"]} deleted from repository"
     end
 
+    def delete_policy(policy_id)
+      @events.delete_if { |e| e.key["policy_id"] == policy_id }
+
+    end
+
     def display_cmd()
       i = 1
       @events.each { |evt|
@@ -155,8 +160,8 @@ module Planning
       # }
 
       @events.each { |evt|
-        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or    #TODO ne passer que la policy et pas toute la key car pas nécessaire
-            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"])  #TODOsupprimer le cas de test sans policy_id
+        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or #TODO ne passer que la policy et pas toute la key car pas nécessaire
+            (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"]) #TODOsupprimer le cas de test sans policy_id
 
           # remarques : une commande ne peut pas être pre task d'elle même, donc les 2 actions sont exclusives
           if (evt.cmd == task_name.to_s)
@@ -199,7 +204,7 @@ module Planning
 
       @events.each { |evt|
 
-        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or   #TODO ne passer que la policy et pas toute la key car pas nécessaire
+        if (!key["policy_id"].nil? and evt.key["policy_id"] == key["policy_id"]) or #TODO ne passer que la policy et pas toute la key car pas nécessaire
             (evt.business["website_label"] == key["website_label"] and evt.business["policy_type"] == key["policy_type"]) and
                 evt.pre_tasks.include?(task_name.to_s)
 
@@ -251,8 +256,7 @@ module Planning
 
       @events.each { |evt|
 
-        evt.state = state if
-            (!key["policy_id"].nil? and
+        evt.state = state if (!key["policy_id"].nil? and
             evt.key["policy_id"] == key["policy_id"] and
             evt.key["task"] == key["task"]) \
         or

@@ -138,8 +138,8 @@ class CalendarConnection < EM::HttpServer::Server
             @logger.an_event.debug "@http_content : #{@http_content}"
 
             case ress_type
-              when "objects"
-                tasks = @calendar.save_object(ress_id, @http_content)
+              when "policies"
+                tasks = @calendar.save_policy(ress_id, @http_content)
 
               else
                 raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
@@ -201,12 +201,10 @@ class CalendarConnection < EM::HttpServer::Server
           when "DELETE"
             # pas de respect de http, car maj ne renvoient pas la ressource maj
             #TODO à tester
-            @logger.an_event.info "delete events of the #{ress_id} to repository"
-            @http_content = JSON.parse(@http_content, {:symbolize_names => true})
-            @logger.an_event.debug "@http_content : #{@http_content}"
+            @logger.an_event.info "delete events of the #{ress_id} policy to repository"
             case ress_type
-              when "objects"
-                @calendar.delete_object(ress_id, @http_content)
+              when "policies"
+                @calendar.delete_policy(ress_id.to_i)
 
               else
                 raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})

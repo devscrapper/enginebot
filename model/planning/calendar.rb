@@ -152,11 +152,11 @@ module Planning
 
     end
 
-    def save_object(object, data_event)
+    def save_policy(policy, data_event)
       begin
-        @logger.an_event.debug "object <#{object}> data_event #{data_event}"
-        require_relative "object2event/#{object.downcase}"
-        events = eval(object.capitalize!).new(data_event).to_event
+        @logger.an_event.debug "policy <#{policy}> data_event #{data_event}"
+        require_relative "object2event/#{policy.downcase}"
+        events = eval(policy.capitalize!).new(data_event).to_event
 
         @sem.synchronize {
           events.each { |e|
@@ -195,7 +195,17 @@ module Planning
 
       end
     end
+    def delete_policy(policy_id)
+      begin
+        @sem.synchronize {
+          @events.delete_policy(policy_id)
+          @events.save
+        }
+      rescue Exception => e
+        raise "cannot delete policy #{polic_id} from repository : #{e.message}"
 
+      end
+    end
     def event_is_over(task_name, data_event)
       begin
 
