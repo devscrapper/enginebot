@@ -258,11 +258,15 @@ module Planning
 
         evt.state = state if (!key["policy_id"].nil? and
             evt.key["policy_id"] == key["policy_id"] and
-            evt.key["task"] == key["task"]) \
+            evt.key["task"] == key["task"] and
+            (key["building_date"].nil? or
+                !key["building_date"].nil? and evt.key["building_date"] == key["building_date"])) \
         or
             (evt.business["website_label"] == key["website_label"] and
                 evt.business["policy_type"] == key["policy_type"] and
-                evt.key["task"] == key["task"])
+                evt.key["task"] == key["task"] and
+                (key["building_date"].nil? or
+                    !key["building_date"].nil? and evt.key["building_date"] == key["building_date"]))
       }
 
     end

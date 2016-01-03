@@ -195,6 +195,7 @@ module Planning
 
       end
     end
+
     def delete_policy(policy_id)
       begin
         @sem.synchronize {
@@ -206,6 +207,7 @@ module Planning
 
       end
     end
+
     def event_is_over(task_name, data_event)
       begin
 
@@ -225,6 +227,11 @@ module Planning
                  "task" => task_name
           }
         end
+        # si event quotidien => plusieurs occurences dans le calendar contrairement aux event hebdo ou mensuel car la
+        # zone business est differente chaque jour alors que pour les autres, elle ne change pas tout au long de la
+        # durée de la policy
+        key.merge!({"building_date" => data_event[:building_date]}) unless data_event[:building_date].nil?
+
         @sem.synchronize {
           @events.update_state(key, Event::OVER)
           @events.pre_tasks_over(task_name, key)
@@ -252,10 +259,14 @@ module Planning
           # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
           # du Flow pour identifier la policy : policy_type, website_label, date_building
           key = {"website_label" => data_event[:website_label],
-                 "policy_type" => data_event[:policy_type],
-                 "date_building" => data_event[:date_building]
+                 "policy_type" => data_event[:policy_type]
           }
         end
+        # si event quotidien => plusieurs occurences dans le calendar contrairement aux event hebdo ou mensuel car la
+        # zone business est differente chaque jour alors que pour les autres, elle ne change pas tout au long de la
+        # durée de la policy
+        key.merge!({"building_date" => data_event[:building_date]}) unless data_event[:building_date].nil?
+
         @sem.synchronize {
           @events.update_state(key, Event::START)
           @events.pre_tasks_running(task_name, key)
@@ -283,10 +294,14 @@ module Planning
           # échangées, seule le nom du fichier est porteur de données donc on s'appuie sur les données du nom
           # du Flow pour identifier la policy : policy_type, website_label, date_building
           key = {"website_label" => data_event[:website_label],
-                 "policy_type" => data_event[:policy_type],
-                 "date_building" => data_event[:date_building]
+                 "policy_type" => data_event[:policy_type]
           }
         end
+        # si event quotidien => plusieurs occurences dans le calendar contrairement aux event hebdo ou mensuel car la
+        # zone business est differente chaque jour alors que pour les autres, elle ne change pas tout au long de la
+        # durée de la policy
+        key.merge!({"building_date" => data_event[:building_date]}) unless data_event[:building_date].nil?
+
         @sem.synchronize {
           @events.update_state(key, Event::FAIL)
           @events.save
@@ -314,7 +329,7 @@ module Planning
             evt.execute
 
           else
-            @logger.an_event.warn "task <#{evt.cmd}> already running"
+            raise "task already running"
 
           end
 

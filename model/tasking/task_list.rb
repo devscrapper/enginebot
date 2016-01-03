@@ -439,7 +439,10 @@ module Tasking
       # @query.merge!({"object" => task})
       # @query.merge!({"data" => {"policy_id" => @data["policy_id"]}})
 
-      @query = {"policy_id" => @data["policy_id"], "task" => task}
+      @query = {"policy_id" => @data["policy_id"],
+                "task" => task
+      }
+      @query.merge!({"building_date" => @data["date_building"]}) unless @data["date_building"].nil?
 
       begin
 

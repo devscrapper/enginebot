@@ -29,6 +29,27 @@ class CalendarConnection < EM::HttpServer::Server
 
   def process_http_request
     #------------------------------------------------------------------------------------------------------------------
+    # REST : uri disponibles
+    # GET
+    # http://localhost:9104/tasks/all
+    # http://localhost:9104/tasks/today
+    # http://localhost:9104/tasks/now
+    # http://localhost:9104/tasks/monday ... sunday
+    # http://localhost:9104/pre_task_over/all
+    # http://localhost:9104/pre_task_over/today
+    # POST
+    # http://localhost:9104/policies/traffic  payload = { ... }
+    # http://localhost:9104/policies/rank     payload = { ... }
+    # http://localhost:9104/objectives/traffic  payload = { ... }
+    # http://localhost:9104/objectives/rank      payload = { ... }
+    # PATCH
+    # http://localhost:9104/tasks/<taskname>/?state=start ou over ou fail  payload = {"policy_id" => @data["policy_id"], "task" => task}
+    # DELETE
+    # http://localhost:9104/policies/<policy_id>
+    #------------------------------------------------------------------------------------------------------------------
+
+
+    #------------------------------------------------------------------------------------------------------------------
     # Check input data
     #------------------------------------------------------------------------------------------------------------------
     action = proc {
@@ -200,7 +221,6 @@ class CalendarConnection < EM::HttpServer::Server
 
           when "DELETE"
             # pas de respect de http, car maj ne renvoient pas la ressource maj
-            #TODO à tester
             @logger.an_event.info "delete events of the #{ress_id} policy to repository"
             case ress_type
               when "policies"
