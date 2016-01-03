@@ -152,7 +152,7 @@ module Planning
 
     end
 
-    def save_policy(policy, data_event)
+    def save(policy, data_event)
       begin
         @logger.an_event.debug "policy <#{policy}> data_event #{data_event}"
         require_relative "object2event/#{policy.downcase}"
