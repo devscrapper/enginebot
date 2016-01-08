@@ -259,41 +259,7 @@ class CalendarConnection < EM::HttpServer::Server
       if @http[:accept].include?("text/html") and response.status == 200
         # formatage des données en html si aucune erreur et si accès avec un navigateur
         response.content_type 'text/html'
-        response.content =<<-_end_of_html_
-                                <HTML>
-                                 <HEAD>
-                                    <style>
-                                    #{@calendar.css}
-                                    </style>
-                                   <title>#{@@title_html}</title>
-
-                                </HEAD>
-                                  <BODY>
-                                      <p><div class="shortcut">
-                                        <a class="button" href="/tasks/all">All tasks</a>
-                                        <a class="button" href="/tasks/today">Today tasks</a>
-                                        <a class="button" href="/tasks/running">Running tasks</a>
-                                      </div>
-                                     </p>
-                                      <p><div class="shortcut">
-                                        <a class="button" href="/tasks/monday">Monday tasks</a>
-                                        <a class="button" href="/tasks/tuesday">Tuesday tasks</a>
-                                        <a class="button" href="/tasks/wednesday">Wednesday tasks</a>
-                                        <a class="button" href="/tasks/thursday">Thursday tasks</a>
-                                        <a class="button" href="/tasks/friday">Friday tasks</a>
-                                        <a class="button" href="/tasks/saturday">Saturday tasks</a>
-                                        <a class="button" href="/tasks/sunday">Sunday tasks</a>
-                                      </p>
-                                    </div>
-                                    <div class='title'><h3>#{@@title_html}</h3></div>
-                                    <ul >
-                                    #{@calendar.display(results)}
-                                    </ul>
-
-                                  </BODY>
-
-                                </HTML>
-        _end_of_html_
+        response.content = @calendar.to_html(results, @@title_html)
       else
         response.content_type 'application/json'
         response.content = results.to_json

@@ -9,7 +9,7 @@ module Planning
   class Calendar
 
     EVENTS_FILE = File.dirname(__FILE__) + "/../../data/" + File.basename(__FILE__, ".rb") + ".yml"
-
+    CALENDAR_CSS = File.dirname(__FILE__) + "/" + File.basename(__FILE__, ".rb") + ".css"
     attr :events,
          :sem,
          :logger
@@ -94,161 +94,6 @@ module Planning
       events.keep_if { |evt| evt.has_pre_tasks? and !evt.has_pre_tasks_running? and evt.all_pre_tasks_over? }
     end
 
-    def css
-      <<-_end_of_html_
-
-@import url(http://fonts.googleapis.com/css?family=Droid+Sans:400,700|Droid+Serif:400,700);
-* {
-  margin: 0;
-  padding: 0;
-}
-
-html, body {
-  height: 100%;
-width: 100%;
-overflow-y: auto;
-}
-
-body {
-  text-align: center;
-  background-color: #5d4660;
-  *zoom: 2;
-  font-family: 'Droid Sans', sans-serif;
-
-}
-
-.wrap {
- // width: 100%;
-  margin: 0 auto;
-  text-align: left;
-  color: #989A8F;
-overflow:auto;
-
-}
-
-.table {
- // background-color: #ffffff;
-  height: 270px;
-  width: 100%;
-  margin-top: 10px;
-
-}
-
-ul li {
-  float: left;
-  width: 250px;
-  text-align: center;
-  border-left: 1px solid #DDDCD8;
-     background-color: #ffffff;
-
-}
-
-.top {
-  background-color: #EAE9E4;
-  height: 50px;
-  margin-top: 0px;
-}
-.title h3{
-  background-color: #EAE9E4;
-  height: 50px;
-  margin-top: 20px;
-}
-.day h3{
-  background-color: #EAE9E4;
-  height: 50px;
-  margin-top: 20px;
-}
-.top h5 {
-  padding-top: 20px;
-}
-
-.circle {
-  width: 60px;
-  height: 60px;
-  border-radius: 60px;
-  font-size: 20px;
-  color: #fff;
-  line-height: 60px;
-  text-align: center;
-  background: #989A8F;
-  margin-left: 100px;
-  margin-top: 10px;
-}
-
-.bottom {
-  margin-top: 50px;
-  height: 300px;
-}
-.bottom p {
-
-  font-size: 13px;
-  font-family: 'Droid Serif', sans-serif;
-  padding: 10px;
-}
-.bottom p  {
-      font-family: 'Droid Sans', sans-serif;
-}
-.bottom p span {
-      font-family: 'Droid Sans', sans-serif;
-      font-weight: bold;
-}
-
-.sign {
-  margin-top: 50px;
-
-}
-.sign .button {
-  border: 2px solid #989A8F;
-  padding: 10px 40px;
-  -webkit-border-radius: 6px;
-  -moz-border-radius: 6px;
-  border-radius: 6px;
-  color: #989A8F;
-  font-size: 14px;
-  text-decoration: none;
-  vertical-align: middle;
-  font-size: 17px;
-}
-.shortcut {
-  margin-top: 35px;
-
-}
-.shortcut .button {
-  border: 1px solid #989A8F;
-  padding: 10px 40px;
-  -webkit-border-radius: 6px;
-  -moz-border-radius: 6px;
-  border-radius: 6px;
-  color: #FFFFFF;
-  font-size: 14px;
-  text-decoration: none;
-  vertical-align: middle;
-  font-size: 17px;
-  background-color: Indigo    ;
-}
-.purple {
-  background-color: #5D4660;
-}
-
-.white {
-  color: #FFFFFF;
-}
-
-.red {
-  background-color: FireBrick;
-}
-
-.green {
-  background-color: DarkGreen;
-}
-
-.pink {
-  background-color: #BC9B94;
-}
-
-      _end_of_html_
-    end
-
 
     # supprimer tous les events d'une policy => policy_id (integer)
     # si obj recherché est absent => RAS ; pas besoin de tester existance de obj.
@@ -269,28 +114,6 @@ ul li {
 
       end
     end
-
-
-    def display(events=@events)
-      res = {}
-      events.each { |evt|
-        date = Date.parse(evt.periodicity.first.to_s).to_s
-        if res[date].nil?
-          res.merge!({date => [evt]})
-        else
-          res[date] << evt
-        end
-      }
-      str = ""
-      res.sort_by { |date, events| date }.each { |date, events|
-        str += "<div class='day'><h3>#{date}</h3></div>" + '<div class="wrap"><div class="table"><ul>'
-        str += tri(events).map { |e| e.to_html }.join
-        str += '</ul>        </div>        </div>'
-      }
-      str + ""
-    end
-
-
 
 
     def event_is_over(event_id)
@@ -466,6 +289,23 @@ ul li {
 
     end
 
+    def to_html(results, title)
+      <<-_end_of_html_
+    <HTML>
+     <HEAD>
+        <style>
+        #{css}
+        </style>
+       <title>#{title}</title>
+    </HEAD>
+      <BODY>
+        #{header(title)}
+        #{display(results)}
+      </BODY>
+    </HTML>
+      _end_of_html_
+    end
+
     private
 
 
@@ -474,10 +314,31 @@ ul li {
       @events << event unless event.is_a?(Array)
     end
 
-    def delete_event(event)
-
+    def css
+      <<-_end_of_html_
+#{File.read(CALENDAR_CSS)}
+      _end_of_html_
     end
 
+
+    def display(events=@events)
+      res = {}
+      events.each { |evt|
+        date = Date.parse(evt.periodicity.first.to_s).to_s
+        if res[date].nil?
+          res.merge!({date => [evt]})
+        else
+          res[date] << evt
+        end
+      }
+      str = ""
+      res.sort_by { |date, events| date }.each { |date, events|
+        str += "<div class='day'><h3>#{date}</h3></div>" + '<div class="wrap"><div class="table"><ul>'
+        str += tri(events).map { |e| e.to_html }.join
+        str += '</ul>        </div>        </div>'
+      }
+      str + ""
+    end
 
     # execute tous les events
     def execute_tasks(events)
@@ -496,6 +357,32 @@ ul li {
       }
 
     end
+
+    def header(title)
+    <<-_end_of_html_
+    <p>
+      <div class="shortcut">
+      <a class="button" href="/tasks/all">All tasks</a>
+      <a class="button" href="/tasks/today">Today tasks</a>
+      <a class="button" href="/tasks/running">Running tasks</a>
+      </div>
+    </p>
+    <p>
+      <div class="shortcut">
+      <a class="button" href="/tasks/monday">Monday tasks</a>
+      <a class="button" href="/tasks/tuesday">Tuesday tasks</a>
+      <a class="button" href="/tasks/wednesday">Wednesday tasks</a>
+      <a class="button" href="/tasks/thursday">Thursday tasks</a>
+      <a class="button" href="/tasks/friday">Friday tasks</a>
+      <a class="button" href="/tasks/saturday">Saturday tasks</a>
+      <a class="button" href="/tasks/sunday">Sunday tasks</a>
+    </p>
+    </div>
+    <div class='title'><h3>#{title}</h3></div>
+    _end_of_html_
+
+    end
+
 
     # retourne un nouvel Array contenant les event sélectionné
     # retourne un Array vide si aucun event satisfait les critères
