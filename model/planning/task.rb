@@ -1,3 +1,4 @@
+require_relative '../communication'
 module Tasking
   PARAMETERS = File.dirname(__FILE__) + "/../../parameter/tasks_server.yml"
   ENVIRONMENT= File.dirname(__FILE__) + "/../../parameter/environment.yml"

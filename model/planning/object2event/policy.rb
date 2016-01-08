@@ -23,7 +23,7 @@ module Planning
     DEVICE_PLATFORM_RESOLUTION_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
     DEVICE_PLATFORM_RESOLUTION_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est 1h du matin
 
-    attr          :website_label,
+    attr :website_label,
          :website_id,
          :policy_id,
          :policy_type,
@@ -89,131 +89,99 @@ module Planning
         @page_views_per_visit = data[:page_views_per_visit]
       end
 
-      @key = {"policy_id" => @policy_id}
       @events = []
       @registering_time = Time.local(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min)
     end
 
     def to_event
 
-      #Si demande suppression de la website alors absence de business
-      #TODO a supprimer car la suppression se fera avec un verbe HTTP  : Delete e tun critère sur clé comme puor search
-      if @website_label.nil?
-        @events += [
-            Event.new(@key, "Scraping_device_platform_plugin"),
-            Event.new(@key, "Scraping_device_platform_resolution"),
-            Event.new(@key, "Scraping_hourly_daily_distribution"),
-            Event.new(@key, "Scraping_behaviour")
-        ]
 
-      else
+      periodicity_hourly_daily_distribution = IceCube::Schedule.new(@monday_start + HOURLY_DAILY_DISTRIBUTION_DAY + HOURLY_DAILY_DISTRIBUTION_HOUR + HOURLY_DAILY_DISTRIBUTION_MIN,
+                                                                    :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_hourly_daily_distribution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+
+      periodicity_behaviour = IceCube::Schedule.new(@monday_start + BEHAVIOUR_DAY + BEHAVIOUR_HOUR,
+                                                    :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+
+      periodicity_device_platform_plugin = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_PLUGIN_DAY + DEVICE_PLATFORM_PLUGIN_HOUR + DEVICE_PLATFORM_PLUGIN_MIN,
+                                                                 :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_device_platform_plugin.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+
+      periodicity_device_platform_resolution = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_RESOLUTION_DAY + DEVICE_PLATFORM_RESOLUTION_HOUR,
+                                                                     :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
 
 
-        periodicity_hourly_daily_distribution = IceCube::Schedule.new(@monday_start + HOURLY_DAILY_DISTRIBUTION_DAY + HOURLY_DAILY_DISTRIBUTION_HOUR + HOURLY_DAILY_DISTRIBUTION_MIN,
-                                                                      :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_hourly_daily_distribution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+      business.merge!({"profil_id_ga" => @profil_id_ga}) if @statistics_type == :ga
 
-        periodicity_behaviour = IceCube::Schedule.new(@monday_start + BEHAVIOUR_DAY + BEHAVIOUR_HOUR,
-                                                      :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+      @events += [
+          Event.new("Scraping_device_platform_plugin",
+                    periodicity_device_platform_plugin,
+                    {
+                        :policy_type => @policy_type,
+                        :policy_id => @policy_id,
+                        :website_label => @website_label,
+                        :website_id => @website_id,
+                        :statistic_type => @statistics_type
+                    }),
+          Event.new("Scraping_device_platform_resolution",
+                    periodicity_device_platform_resolution,
+                    {
+                        :policy_type => @policy_type,
+                        :policy_id => @policy_id,
+                        :website_label => @website_label,
+                        :website_id => @website_id,
+                        :statistic_type => @statistics_type
+                    }),
+          Event.new("Scraping_hourly_daily_distribution",
+                    periodicity_hourly_daily_distribution,
+                    @statistics_type == :custom ?
+                        {
 
-        periodicity_device_platform_plugin = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_PLUGIN_DAY + DEVICE_PLATFORM_PLUGIN_HOUR + DEVICE_PLATFORM_PLUGIN_MIN,
-                                                                   :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_device_platform_plugin.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+                            :policy_type => @policy_type,
+                            :policy_id => @policy_id,
+                            :website_label => @website_label,
+                            :website_id => @website_id,
+                            :statistic_type => @statistics_type,
+                            :hourly_daily_distribution => @hourly_daily_distribution
+                        }
+                    :
+                        {
+                            :policy_type => @policy_type,
+                            :policy_id => @policy_id,
+                            :website_label => @website_label,
+                            :website_id => @website_id,
+                            :statistic_type => @statistics_type
+                        }),
+          Event.new("Scraping_behaviour",
+                    periodicity_behaviour,
+                    @statistics_type == :custom ?
+                        {
 
-        periodicity_device_platform_resolution = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_RESOLUTION_DAY + DEVICE_PLATFORM_RESOLUTION_HOUR,
-                                                                       :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+                            :policy_type => @policy_type,
+                            :policy_id => @policy_id,
+                            :website_label => @website_label,
+                            :website_id => @website_id,
+                            :statistic_type => @statistics_type,
+                            :percent_new_visit => @percent_new_visit,
+                            :visit_bounce_rate => @visit_bounce_rate,
+                            :avg_time_on_site => @avg_time_on_site,
+                            :page_views_per_visit => @page_views_per_visit
+                        }
+                    :
+                        {
+                            :policy_type => @policy_type,
+                            :policy_id => @policy_id,
+                            :website_label => @website_label,
+                            :website_id => @website_id,
+                            :statistic_type => @statistics_type
+                        }
+          )
 
-        business = {
-            "policy_type" => @policy_type,
-            "policy_id" => @policy_id,
-            "website_label" => @website_label,
-            "website_id" => @website_id,
-            "statistic_type" => @statistics_type
-        }
-
-        business.merge!({"profil_id_ga" => @profil_id_ga}) if @statistics_type == :ga
-
-        @events += [
-            Event.new(@key,
-                      "Scraping_device_platform_plugin",
-                      {
-                          "periodicity" => periodicity_device_platform_plugin.to_yaml,
-                          "business" => {
-                              "policy_type" => @policy_type,
-                              "policy_id" => @policy_id,
-                              "website_label" => @website_label,
-                              "website_id" => @website_id,
-                              "statistic_type" => @statistics_type
-                          }
-                      }),
-            Event.new(@key,
-                      "Scraping_device_platform_resolution",
-                      {
-                          "periodicity" => periodicity_device_platform_resolution.to_yaml,
-                          "business" => {
-                              "policy_type" => @policy_type,
-                              "policy_id" => @policy_id,
-                              "website_label" => @website_label,
-                              "website_id" => @website_id,
-                              "statistic_type" => @statistics_type
-                          }
-                      }),
-            Event.new(@key,
-                      "Scraping_hourly_daily_distribution",
-                      {
-                          "periodicity" => periodicity_hourly_daily_distribution.to_yaml,
-                          "business" => @statistics_type == :custom ?
-                              {
-
-                                  "policy_type" => @policy_type,
-                                  "policy_id" => @policy_id,
-                                  "website_label" => @website_label,
-                                  "website_id" => @website_id,
-                                  "statistic_type" => @statistics_type,
-                                  "hourly_daily_distribution" => @hourly_daily_distribution
-                              }
-                          :
-                              {
-                                  "policy_type" => @policy_type,
-                                  "policy_id" => @policy_id,
-                                  "website_label" => @website_label,
-                                  "website_id" => @website_id,
-                                  "statistic_type" => @statistics_type
-                              }
-                      }),
-            Event.new(@key,
-                      "Scraping_behaviour",
-                      {
-                          "periodicity" => periodicity_behaviour.to_yaml,
-                          "business" => @statistics_type == :custom ?
-                              {
-
-                                  "policy_type" => @policy_type,
-                                  "policy_id" => @policy_id,
-                                  "website_label" => @website_label,
-                                  "website_id" => @website_id,
-                                  "statistic_type" => @statistics_type,
-                                  "percent_new_visit" => @percent_new_visit,
-                                  "visit_bounce_rate" => @visit_bounce_rate,
-                                  "avg_time_on_site" => @avg_time_on_site,
-                                  "page_views_per_visit" => @page_views_per_visit
-                              }
-                          :
-                              {
-                                  "policy_type" => @policy_type,
-                                  "policy_id" => @policy_id,
-                                  "website_label" => @website_label,
-                                  "website_id" => @website_id,
-                                  "statistic_type" => @statistics_type
-                              }
-                      })
-
-        ]
-      end
-
+      ]
     end
+
   end
 
 end

@@ -20,7 +20,7 @@ module Tasking
         context = []
         cmd = data["cmd"]
         data_cmd = data["data"]
-        context << cmd
+        context = [cmd]
 
         @logger.ndc context
         @logger.an_event.debug "cmd <#{cmd}>"

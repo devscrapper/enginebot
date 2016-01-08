@@ -55,22 +55,29 @@ EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
 
-  calendar = Calendar.new(scrape_server_port)
+  calendar = Calendar.new
   scheduler = Rufus::Scheduler.start_new
   scheduler.cron periodicity do
+    now = Time.now #
+    start_date = Date.new(now.year, now.month, now.day)
+    hour = now.hour
+    min = now.min
     begin
-      now = Time.now #
-      start_date = Date.new(now.year, now.month, now.day)
-      hour = now.hour
-      min = now.min
-      calendar.execute_all_at(start_date, hour, min)
-      calendar.execute_all_which_pre_tasks_over_is_complet(start_date)
+      calendar.execute_all_events_at(start_date, hour, min)
+
+    rescue Exception => e
+      logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
+
+    end
+    begin
+       # en developpement, afin de tester plus facilement, on n'attend pas le jour de décenchement des events
+      calendar.execute_all_events_which_all_pre_tasks_are_over($staging == 'development' ? nil : start_date)
+
     rescue Exception => e
       logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
 
     end
   end
-  logger.a_log.info "planning is running"
 
   logger.a_log.info "calendar server is running"
   EventMachine.start_server "0.0.0.0", listening_port, CalendarConnection, logger, calendar

@@ -91,15 +91,16 @@ module Tasking
            :saas_host,
            :saas_port, #host et port du serveur de scraping en mode saas
            :time_out, #time out de la requet de scraping
-           :calendar_server_port
+           :calendar_server_port,
+           :event_id #utiliser pour identifier event qui a déclencher la task pour maj le state de l'event
 #--------------------------------------------------------------------------------------------------------------
 # scraping_device_platform_plugin
 #--------------------------------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------
-      def initialize(website_label, date_building, policy_type)
+      def initialize(website_label, date_building, policy_type,event_id)
         super(website_label, date_building, policy_type)
-
+        @event_id = event_id
         @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       end
 
@@ -246,15 +247,11 @@ module Tasking
         @f.close
         @ferror.close
 
-        @query = {"website_label" => @website_label,
-                  "policy_type" => @policy_type
-        }
+
         begin
 
-          response = RestClient.patch "http://localhost:#{@calendar_server_port}/tasks/scraping_website/?state=over", @query.to_json, :content_type => :json, :accept => :json
-          if response.code != 200
-            @logger.an_event.error "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER => #{response.code}"
-          end
+          response = RestClient.patch "http://localhost:#{@calendar_server_port}/tasks/#{@event_id}/?state=over", :content_type => :json, :accept => :json
+          raise response.content if response.code != 200
 
         rescue Exception => e
           @logger.an_event.error "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER => #{e.message}"

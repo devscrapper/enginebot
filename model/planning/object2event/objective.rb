@@ -97,10 +97,6 @@ module Planning
       @min_duration = data[:min_duration]
       @max_duration = data[:max_duration]
       @url_root = data[:url_root]
-      @key = {
-          "policy_id" => @policy_id,
-          "building_date" => @building_date
-      }
       @date_objective = IceCube::Schedule.from_yaml(@periodicity).start_time
       @events = []
     end
@@ -121,19 +117,17 @@ module Planning
                                                                               EVALUATING_LANDING_PAGE_KEYWORD_HOUR +
                                                                               EVALUATING_LANDING_PAGE_KEYWORD_MIN)
 
-        @events << Event.new(key,
-                             "Evaluating_traffic_source_organic",
+        @events << Event.new("Evaluating_traffic_source_organic",
+                             periodicity_organic,
                              {
-                                 "periodicity" => periodicity_organic.to_yaml,
-                                 "business" => {
-                                     "website_label" => @website_label,
-                                     "objective_id" => @objective_id,
-                                     "policy_id" => @policy_id,
-                                     "policy_type" => @policy_type,
-                                     "website_id" => @website_id,
-                                     "count_max" => ((@organic_medium_percent * @count_visits / 100) * 1.2).round(0), # ajout de 20% de mot clé pour eviter les manques
-                                     "url_root" => @url_root
-                                 }
+                                 :website_label=> @website_label,
+                                 :building_date => @building_date,
+                                 :objective_id => @objective_id,
+                                 :policy_id => @policy_id,
+                                 :policy_type=> @policy_type,
+                                 :website_id => @website_id,
+                                 :count_max => ((@organic_medium_percent * @count_visits / 100) * 1.2).round(0), # ajout de 20% de mot clé pour eviter les manques
+                                 :url_root=> @url_root
                              })
 
       end
@@ -149,21 +143,19 @@ module Planning
                                                          EVALUATING_LANDING_PAGE_BACKLINK_HOUR)
 
         periodicity_referral.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                               EVALUATING_LANDING_PAGE_KEYWORD_DAY +
-                                                                               EVALUATING_LANDING_PAGE_KEYWORD_HOUR)
+                                                                               EVALUATING_LANDING_PAGE_BACKLINK_DAY +
+                                                                               EVALUATING_LANDING_PAGE_BACKLINK_HOUR)
 
-        @events << Event.new(key,
-                             "Evaluating_traffic_source_referral",
+        @events << Event.new("Evaluating_traffic_source_referral",
+                             periodicity_referral,
                              {
-                                 "periodicity" => periodicity_referral.to_yaml,
-                                 "business" => {
-                                     "website_label" => @website_label,
-                                     "objective_id" => @objective_id,
-                                     "policy_id" => @policy_id,
-                                     "policy_type" => @policy_type,
-                                     "count_max" => ((@referral_medium_percent * @count_visits / 100) * 1.2).round(0), # ajout de 20% de mot clé pour eviter les manques
-                                     "url_root" => @url_root
-                                 }
+                                 :website_label=> @website_label,
+                                 :building_date => @building_date,
+                                 :objective_id => @objective_id,
+                                 :policy_id => @policy_id,
+                                 :policy_type=> @policy_type,
+                                 :count_max => ((@referral_medium_percent * @count_visits / 100) * 1.2).round(0), # ajout de 20% de mot clé pour eviter les manques
+                                 :url_root=> @url_root
                              })
 
       end
@@ -171,136 +163,120 @@ module Planning
                                           :end_time => @date_objective + CHOOSING_LANDING_PAGES_DAY)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective + CHOOSING_LANDING_PAGES_DAY)
 
-      @events << Event.new(key,
-                           "Choosing_landing_pages",
+      @events << Event.new("Choosing_landing_pages",
+                           periodicity,
                            {
-                               "pre_tasks" => ["Building_landing_pages_organic",
-                                               "Building_landing_pages_referral"],
-                               "periodicity" => periodicity.to_yaml,
-                               "business" => {
-                                   "policy_id" => @policy_id,
-                                   "date_building" => @building_date,
-                                   "policy_type" => @policy_type,
-                                   "objective_id" => @objective_id,
-                                   "website_label" => @website_label,
-                                   "count_visits" => @count_visits,
-                                   "direct_medium_percent" => @direct_medium_percent,
-                                   "organic_medium_percent" => @organic_medium_percent,
-                                   "referral_medium_percent" => @referral_medium_percent
+                               :policy_id => @policy_id,
+                               :building_date => @building_date,
+                               :policy_type=> @policy_type,
+                               :objective_id => @objective_id,
+                               :website_label=> @website_label,
+                               :count_visits => @count_visits,
+                               :direct_medium_percent => @direct_medium_percent,
+                               :organic_medium_percent => @organic_medium_percent,
+                               :referral_medium_percent => @referral_medium_percent
 
-                               }
-                           })
+                           },
+                           ["Building_landing_pages_organic",
+                            "Building_landing_pages_referral"])
 
       periodicity = IceCube::Schedule.new(@date_objective + BUILDING_VISITS_DAY,
                                           :end_time => @date_objective + BUILDING_VISITS_DAY)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective + BUILDING_VISITS_DAY)
 
-      @events << Event.new(key,
-                           "Building_visits",
+      @events << Event.new("Building_visits",
+                           periodicity,
                            {
-                               "pre_tasks" => ["Choosing_landing_pages"],
-                               "periodicity" => periodicity.to_yaml,
-                               "business" => {
-                                   "objective_id" => @objective_id,
-                                   "website_label" => @website_label,
-                                   "date_building" => @building_date,
-                                   "policy_type" => @policy_type,
-                                   "website_id" => @website_id,
-                                   "policy_id" => @policy_id,
-                                   "count_visits" => @count_visits,
-                                   "visit_bounce_rate" => @visit_bounce_rate,
-                                   "page_views_per_visit" => @page_views_per_visit,
-                                   "avg_time_on_site" => @avg_time_on_site,
-                                   "min_durations" => @min_durations,
-                                   "min_pages" => @min_pages,
-                               }
-                           })
+                               :objective_id => @objective_id,
+                               :website_label=> @website_label,
+                               :building_date => @building_date,
+                               :policy_type=> @policy_type,
+                               :website_id => @website_id,
+                               :policy_id => @policy_id,
+                               :count_visits => @count_visits,
+                               :visit_bounce_rate => @visit_bounce_rate,
+                               :page_views_per_visit => @page_views_per_visit,
+                               :avg_time_on_site => @avg_time_on_site,
+                               :min_durations => @min_durations,
+                               :min_pages => @min_pages,
+                           },
+                           ["Choosing_landing_pages"])
       periodicity = IceCube::Schedule.new(@date_objective + BUILDING_PLANIFICATION_DAY,
                                           :end_time => @date_objective + BUILDING_PLANIFICATION_DAY)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective + BUILDING_PLANIFICATION_DAY)
 
-      @events << Event.new(key,
-                           "Building_planification",
+      @events << Event.new("Building_planification",
+                           periodicity,
                            {
-                               "pre_tasks" => ["Building_visits"],
-                               "periodicity" => periodicity.to_yaml,
-                               "business" => {
-                                   "objective_id" => @objective_id,
-                                   "website_label" => @website_label,
-                                   "date_building" => @building_date,
-                                   "policy_type" => @policy_type,
-                                   "website_id" => @website_id,
-                                   "policy_id" => @policy_id,
-                                   "count_visits" => @count_visits,
-                                   "hourly_distribution" => @hourly_distribution
-                               }
-                           })
+                               :objective_id => @objective_id,
+                               :website_label=> @website_label,
+                               :building_date => @building_date,
+                               :policy_type=> @policy_type,
+                               :website_id => @website_id,
+                               :policy_id => @policy_id,
+                               :count_visits => @count_visits,
+                               :hourly_distribution => @hourly_distribution
+                           },
+                           ["Building_visits"])
       periodicity = IceCube::Schedule.new(@date_objective + EXTENDING_VISITS_DAY,
                                           :end_time => @date_objective + EXTENDING_VISITS_DAY)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective + EXTENDING_VISITS_DAY)
 
-      @events << Event.new(key,
-                           "Extending_visits",
+      @events << Event.new("Extending_visits",
+                           periodicity,
                            {
-                               "pre_tasks" => ["Building_planification",
-                                               "Choosing_device_platform"],
-                               "periodicity" => periodicity.to_yaml,
-                               "business" => {
-                                   "objective_id" => @objective_id,
-                                   "website_label" => @website_label,
-                                   "date_building" => @building_date,
-                                   "policy_type" => @policy_type,
-                                   "website_id" => @website_id,
-                                   "policy_id" => @policy_id,
-                                   "count_visits" => @count_visits,
-                                   "advertising_percent" => @advertising_percent,
-                                   "advertisers" => @advertisers
-                               }
-                           })
+                               :objective_id => @objective_id,
+                               :website_label=> @website_label,
+                               :building_date => @building_date,
+                               :policy_type=> @policy_type,
+                               :website_id => @website_id,
+                               :policy_id => @policy_id,
+                               :count_visits => @count_visits,
+                               :advertising_percent => @advertising_percent,
+                               :advertisers => @advertisers
+                           },
+                           ["Building_planification",
+                            "Choosing_device_platform"])
 
 
       periodicity = IceCube::Schedule.new(@date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR,
                                           :end_time => @date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR)
       periodicity.add_recurrence_rule IceCube::Rule.hourly.until(@date_objective + CHOOSING_DEVICE_PLATFORM_DAY + CHOOSING_DEVICE_PLATFORM_HOUR)
 
-      @events << Event.new(key,
-                           "Choosing_device_platform",
+      @events << Event.new("Choosing_device_platform",
+                           periodicity,
                            {
-                               "periodicity" => periodicity.to_yaml,
-                               "business" => {
-                                   "policy_id" => @policy_id,
-                                   "date_building" => @building_date,
-                                   "policy_type" => @policy_type,
-                                   "objective_id" => @objective_id,
-                                   "website_label" => @website_label,
-                                   "count_visits" => @count_visits
-                               }
+                               :policy_id => @policy_id,
+                               :building_date => @building_date,
+                               :policy_type=> @policy_type,
+                               :objective_id => @objective_id,
+                               :website_label=> @website_label,
+                               :count_visits => @count_visits
                            })
 
       periodicity = IceCube::Schedule.new(@date_objective + START_PUBLISHING_VISITS_DAY + START_PUBLISHING_VISITS_HOUR,
                                           :end_time => @date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR)
       periodicity.add_recurrence_rule IceCube::Rule.hourly.until(@date_objective + END_PUBLISHING_VISITS_DAY + END_PUBLISHING_VISITS_HOUR)
-      @events << Event.new(key,
-                           "Publishing_visits",
+      @events << Event.new("Publishing_visits",
+                           periodicity,
                            {
-                               "periodicity" => periodicity.to_yaml,
-                               "business" => {
-                                   "objective_id" => @objective_id,
-                                   "policy_type" => @policy_type,
-                                   "website_label" => @website_label,
-                                   "min_count_page_advertiser" => @min_count_page_advertiser,
-                                   "max_count_page_advertiser" => @max_count_page_advertiser,
-                                   "min_duration_page_advertiser" => @min_duration_page_advertiser,
-                                   "max_duration_page_advertiser" => @max_duration_page_advertiser,
-                                   "percent_local_page_advertiser" => @percent_local_page_advertiser,
-                                   "duration_referral" => @duration_referral,
-                                   "min_count_page_organic" => @min_count_page_organic,
-                                   "max_count_page_organic" => @max_count_page_organic,
-                                   "min_duration_page_organic" => @min_duration_page_organic,
-                                   "max_duration_page_organic" => @max_duration_page_organic,
-                                   "min_duration" => @min_duration,
-                                   "max_duration" => @max_duration
-                               }
+                               :objective_id => @objective_id,
+                               :building_date => @building_date,
+                               :policy_id => @policy_id,
+                               :policy_type=> @policy_type,
+                               :website_label=> @website_label,
+                               :min_count_page_advertiser => @min_count_page_advertiser,
+                               :max_count_page_advertiser => @max_count_page_advertiser,
+                               :min_duration_page_advertiser => @min_duration_page_advertiser,
+                               :max_duration_page_advertiser => @max_duration_page_advertiser,
+                               :percent_local_page_advertiser => @percent_local_page_advertiser,
+                               :duration_referral => @duration_referral,
+                               :min_count_page_organic => @min_count_page_organic,
+                               :max_count_page_organic => @max_count_page_organic,
+                               :min_duration_page_organic => @min_duration_page_organic,
+                               :max_duration_page_organic => @max_duration_page_organic,
+                               :min_duration => @min_duration,
+                               :max_duration => @max_duration
                            })
 
 
