@@ -143,8 +143,11 @@ class CalendarConnection < EM::HttpServer::Server
             @logger.an_event.debug "@http_content : #{@http_content}"
 
             case ress_type
-              when "policies", "objects"
-                tasks = @calendar.register(ress_id, @http_content)
+              when "policies"
+                tasks = @calendar.register_policy(ress_id, @http_content)
+
+              when "objectives"
+                tasks = @calendar.register_objective(ress_id, @http_content)
 
               else
                 raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})

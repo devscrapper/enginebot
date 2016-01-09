@@ -94,6 +94,11 @@ module Planning
       events.keep_if { |evt| evt.has_pre_tasks? and !evt.has_pre_tasks_running? and evt.all_pre_tasks_over? }
     end
 
+    #supprimer tous events produit par les objectives pour un policy
+    def delete_objectives(policy_id)
+      raise ArgumentError, policy_id if policy_id.nil?
+      @events.delete_if { |e| e.is_objective? and e.key[:policy_id] == policy_id }
+    end
 
     # supprimer tous les events d'une policy => policy_id (integer)
     # si obj recherché est absent => RAS ; pas besoin de tester existance de obj.
@@ -257,10 +262,45 @@ module Planning
       date + (date > Date.today ? 0 : 7)
     end
 
-    # enregister les Events issus d'une policy ou d'un objective dans le calendar
+    # enregister les Events issus d'une policy  dans le calendar
     # retourne Array contenant les Events
     # retourne Array vide si pb
-    def register(object, data_event)
+    def register_policy(policy, data_event)
+      raise ArgumentError, policy if policy.nil? or policy.empty?
+      raise ArgumentError, data_event if data_event.nil? or data_event.empty?
+      begin
+        @logger.an_event.debug "delete policy <#{policy}:#{data_event[:policy_id]}>"
+
+        delete_policy(data_event[:policy_id])
+
+        @logger.an_event.debug "register policy <#{policy}> data_event #{data_event}"
+        require_relative "object2event/#{policy.downcase}"
+        events = eval(policy.capitalize!).new(data_event).to_event
+
+        @sem.synchronize {
+          events.each { |e|
+            add(e)
+          }
+          save
+        }
+
+      rescue Exception => e
+        @logger.an_event.debug "cannot register #{events.size} events #{events} in calendar : #{e.message}"
+        raise "cannot register events policy #{policy} in calendar : #{e.message}"
+        []
+
+      else
+        @logger.an_event.debug "register #{events.size} events #{events} in calendar"
+        events
+
+      end
+
+    end
+
+    # enregister les Events issus d'un objective dans le calendar
+    # retourne Array contenant les Events
+    # retourne Array vide si pb
+    def register_objective(object, data_event)
       raise ArgumentError, object if object.nil? or object.empty?
       raise ArgumentError, data_event if data_event.nil? or data_event.empty?
       begin
@@ -269,6 +309,9 @@ module Planning
         events = eval(object.capitalize!).new(data_event).to_event
 
         @sem.synchronize {
+          #suppression des objective existant de la policy : policy_id
+          delete_objective(policy_id)
+
           events.each { |e|
             delete_event(e)
             add(e)
@@ -277,8 +320,8 @@ module Planning
         }
 
       rescue Exception => e
-        @logger.an_event.debug "cannot register #{events.size} events #{events} in calendar"
-        raise "cannot register events object #{object} in calendar"
+        @logger.an_event.debug "cannot register #{events.size} events #{events} in calendar : #{e.message}"
+        raise "cannot register events object #{object} in calendar : #{e.message}"
         []
 
       else
@@ -300,7 +343,7 @@ module Planning
     </HEAD>
       <BODY>
         #{header(title)}
-        #{display(results)}
+      #{display(results)}
       </BODY>
     </HTML>
       _end_of_html_
@@ -320,6 +363,9 @@ module Planning
       _end_of_html_
     end
 
+    def delete_event(event)
+      @events.delete_if { |e| e.id == event.id }
+    end
 
     def display(events=@events)
       res = {}
@@ -359,7 +405,7 @@ module Planning
     end
 
     def header(title)
-    <<-_end_of_html_
+      <<-_end_of_html_
     <p>
       <div class="shortcut">
       <a class="button" href="/tasks/all">All tasks</a>
@@ -379,7 +425,7 @@ module Planning
     </p>
     </div>
     <div class='title'><h3>#{title}</h3></div>
-    _end_of_html_
+      _end_of_html_
 
     end
 

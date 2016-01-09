@@ -1,4 +1,5 @@
 require_relative 'policy'
+
 #TODO corriger les horaire planification puor ne pas commencer à hh:^00 pour eviter les conflit avec les publishon horaire
 # TODO 2 taches commencent minuuit le samedi => décaler
 module Planning
@@ -24,6 +25,36 @@ module Planning
     BUILDING_LANDING_PAGES_REFERRAL_HOUR = 0 * IceCube::ONE_HOUR
     BUILDING_LANDING_PAGES_ORGANIC_DAY = -1 * IceCube::ONE_DAY
     BUILDING_LANDING_PAGES_ORGANIC_HOUR = 0 * IceCube::ONE_HOUR
+    @@traffic_source_keywords_day
+    @@traffic_source_keywords_hour
+    @@traffic_source_keywords_min
+    @@traffic_source_backlinks_day
+    @@traffic_source_backlinks_hour
+    @@traffic_source_backlinks_min
+    @@traffic_source_website_day
+    @@traffic_source_website_hour
+    @@traffic_source_website_min
+    @@building_device_platform_day
+    @@building_device_platform_hour
+    @@building_device_platform_min
+    @@building_hourly_distribution_day
+    @@building_hourly_distribution_hour
+    @@building_hourly_distribution_min
+    @@building_behaviour_day
+    @@building_behaviour_hour
+    @@building_behaviour_min
+    @@building_objectives_day
+    @@building_objectives_hour
+    @@building_objectives_min
+    @@building_landing_pages_direct_day
+    @@building_landing_pages_direct_hour
+    @@building_landing_pages_direct_min
+    @@building_landing_pages_referral_day
+    @@building_landing_pages_referral_hour
+    @@building_landing_pages_referral_min
+    @@building_landing_pages_organic_day
+    @@building_landing_pages_organic_hour
+    @@building_landing_pages_organic_min
 
     attr :change_count_visits_percent,
          :change_bounce_visits_percent,
@@ -58,6 +89,42 @@ module Planning
       end
       # iceCube a besoin d'un Time et pas d'un Date
 
+      begin
+        parameters = Parameter.new(__FILE__)
+      rescue Exception => e
+        raise "loading parameter traffic failed : #{e.message}"
+      else
+        @@traffic_source_keywords_day= 0
+       @@traffic_source_keywords_hour= 0
+       @@traffic_source_keywords_min= 0
+       @@traffic_source_backlinks_day= 0
+       @@traffic_source_backlinks_hour= 0
+       @@traffic_source_backlinks_min= 30
+       @@traffic_source_website_day= 0
+       @@traffic_source_website_hour= 0
+       @@traffic_source_website_min= 45
+       @@building_device_platform_day= -2
+       @@building_device_platform_hour= 0
+       @@building_device_platform_min= 0
+       @@building_hourly_distribution_day= -2
+       @@building_hourly_distribution_hour= 0
+       @@building_hourly_distribution_min= 0
+       @@building_behaviour_day= -2
+       @@building_behaviour_hour= 0
+       @@building_behaviour_min= 0
+       @@building_objectives_day= -2
+       @@building_objectives_hour= 0
+       @@building_objectives_min= 0
+       @@building_landing_pages_direct_day= 0
+       @@building_landing_pages_direct_hour= 0
+       @@building_landing_pages_direct_min= 0
+       @@building_landing_pages_referral_day= -1
+       @@building_landing_pages_referral_hour= 0
+       @@building_landing_pages_referral_min= 0
+       @@building_landing_pages_organic_day= -1
+       @@building_landing_pages_organic_hour= 0
+       @@building_landing_pages_organic_min= 0
+       end
 
     end
 

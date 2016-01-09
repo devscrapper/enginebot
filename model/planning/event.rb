@@ -122,6 +122,10 @@ module Planning
       @pre_tasks_over = []
     end
 
+    def is_objective?
+     !@business[:objective_id].nil?
+    end
+
     def is_started
       @state = START
       @pre_tasks_over = []

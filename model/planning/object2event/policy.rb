@@ -1,5 +1,5 @@
 require_relative '../event'
-
+require_relative '../../../lib/parameter'
 module Planning
 
   class Policy
