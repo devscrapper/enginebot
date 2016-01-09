@@ -310,7 +310,7 @@ module Planning
 
         @sem.synchronize {
           #suppression des objective existant de la policy : policy_id
-          delete_objective(policy_id)
+          delete_objectives(data_event[:policy_id])
 
           events.each { |e|
             delete_event(e)
