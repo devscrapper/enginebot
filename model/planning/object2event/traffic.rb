@@ -1,7 +1,6 @@
 require_relative 'policy'
 
-#TODO corriger les horaire planification puor ne pas commencer à hh:^00 pour eviter les conflit avec les publishon horaire
-# TODO 2 taches commencent minuuit le samedi => décaler
+
 module Planning
 
   class Traffic < Policy
