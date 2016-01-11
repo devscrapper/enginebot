@@ -111,11 +111,11 @@ module Planning
         }
 
       rescue Exception => e
-        @logger.an_event.debug "cannot delete policy #{policy_id} events in calendar : #{e.message}"
-        raise "cannot delete policy #{policy_id} events in calendar : #{e.message}"
+        @logger.an_event.debug "cannot delete events policy #{policy_id} in calendar : #{e.message}"
+        raise "cannot delete events policy #{policy_id} in calendar : #{e.message}"
 
       else
-        @logger.an_event.debug "delete policy #{policy_id} events in calendar"
+        @logger.an_event.debug "delete events policy #{policy_id} in calendar"
 
       end
     end
@@ -277,20 +277,24 @@ module Planning
         require_relative "object2event/#{policy.downcase}"
         events = eval(policy.capitalize!).new(data_event).to_event
 
+        @logger.an_event.debug "count #{events.size} events from policy #{policy}"
+
         @sem.synchronize {
           events.each { |e|
             add(e)
+            @logger.an_event.debug "add #{e} to calendar"
           }
           save
+          @logger.an_event.debug "save calendar"
         }
 
       rescue Exception => e
-        @logger.an_event.debug "cannot register #{events.size} events #{events} in calendar : #{e.message}"
+        @logger.an_event.debug "cannot register events policy #{policy} in calendar : #{e.message}"
         raise "cannot register events policy #{policy} in calendar : #{e.message}"
         []
 
       else
-        @logger.an_event.debug "register #{events.size} events #{events} in calendar"
+        @logger.an_event.debug "register #{events.size} events in calendar"
         events
 
       end

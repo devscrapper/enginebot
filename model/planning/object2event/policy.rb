@@ -3,25 +3,19 @@ require_relative '../../../lib/parameter'
 module Planning
 
   class Policy
-    BUILDING_OBJECTIVES_DAY = -3 * IceCube::ONE_DAY #on decale d'un  jour j-3
-    BUILDING_OBJECTIVES_HOUR = 12 * IceCube::ONE_HOUR #heure de démarrage est 12h du matin
-    BUILDING_MATRIX_AND_PAGES_DAY = -1 * IceCube::ONE_DAY #on decale d'un  jour j-1
-    BUILDING_MATRIX_AND_PAGES_HOUR = 0 * IceCube::ONE_HOUR #heure de démarrage est 0h du matin
 
-    TRAFFIC_SOURCE_KEYWORDS_DAY = 0 * IceCube::ONE_DAY # jour d'entegistrement de l'event
-    TRAFFIC_SOURCE_KEYWORDS_HOUR = 0 * IceCube::ONE_HOUR # heure d'enregistrement
-    TRAFFIC_SOURCE_KEYWORDS_MIN = 15 * IceCube::ONE_MINUTE # min d'enregistrement + 15mn
-
-    HOURLY_DAILY_DISTRIBUTION_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
-    HOURLY_DAILY_DISTRIBUTION_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est minuit
-    HOURLY_DAILY_DISTRIBUTION_MIN = 30 * IceCube::ONE_MINUTE #min denregistrement + 30mn
-    BEHAVIOUR_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
-    BEHAVIOUR_HOUR = 3 * IceCube::ONE_HOUR #heure de démarrage est 1h du matin
-    DEVICE_PLATFORM_PLUGIN_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
-    DEVICE_PLATFORM_PLUGIN_HOUR = 1 * IceCube::ONE_HOUR #heure de démarrage est minuit
-    DEVICE_PLATFORM_PLUGIN_MIN = 30 * IceCube::ONE_MINUTE #min denregistrement + 30mn
-    DEVICE_PLATFORM_RESOLUTION_DAY = -2 * IceCube::ONE_DAY #on decale d'un  jour j-1
-    DEVICE_PLATFORM_RESOLUTION_HOUR = 2 * IceCube::ONE_HOUR #heure de démarrage est 1h du matin
+    @@scraping_hourly_distribution_day
+    @@scraping_hourly_distribution_hour
+    @@scraping_hourly_distribution_min
+    @@scraping_behaviour_day
+    @@scraping_behaviour_hour
+    @@scraping_behaviour_min
+    @@scraping_device_platform_plugin_day
+    @@scraping_device_platform_plugin_hour
+    @@scraping_device_platform_plugin_min
+    @@scraping_device_platform_resolution_day
+    @@scraping_device_platform_resolution_hour
+    @@scraping_device_platform_resolution_min
 
     attr :website_label,
          :website_id,
@@ -91,33 +85,72 @@ module Planning
 
       @events = []
       @registering_time = Time.local(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min)
+      begin
+             parameters = Parameter.new(__FILE__)
+           rescue Exception => e
+             raise "loading parameter traffic failed : #{e.message}"
+     
+           else
+             @@scraping_hourly_distribution_day = parameters.scraping_hourly_distribution_day
+             @@scraping_hourly_distribution_hour = parameters.scraping_hourly_distribution_hour
+             @@scraping_hourly_distribution_min = parameters.scraping_hourly_distribution_min
+             @@scraping_behaviour_day = parameters.scraping_behaviour_day
+             @@scraping_behaviour_hour = parameters.scraping_behaviour_hour
+             @@scraping_behaviour_min = parameters.scraping_behaviour_min
+             @@scraping_device_platform_plugin_day = parameters.scraping_device_platform_plugin_day
+             @@scraping_device_platform_plugin_hour = parameters.scraping_device_platform_plugin_min
+             @@scraping_device_platform_plugin_min = parameters.scraping_device_platform_plugin_hour
+             @@scraping_device_platform_resolution_day = parameters.scraping_device_platform_resolution_day
+             @@scraping_device_platform_resolution_hour = parameters.scraping_device_platform_resolution_hour
+             @@scraping_device_platform_resolution_min = parameters.scraping_device_platform_resolution_min
+        end
     end
 
     def to_event
 
 
-      periodicity_hourly_daily_distribution = IceCube::Schedule.new(@monday_start + HOURLY_DAILY_DISTRIBUTION_DAY + HOURLY_DAILY_DISTRIBUTION_HOUR + HOURLY_DAILY_DISTRIBUTION_MIN,
-                                                                    :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-      periodicity_hourly_daily_distribution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_hourly_distribution = IceCube::Schedule.new(@monday_start +
+                                                                        @@scraping_hourly_distribution_day * IceCube::ONE_DAY +
+                                                                        @@scraping_hourly_distribution_hour * IceCube::ONE_HOUR +
+                                                                        @@scraping_hourly_distribution_min * IceCube::ONE_MINUTE,
+                                                                    :end_time => @monday_start +
+                                                                        @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_hourly_distribution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
+                                                                                               @count_weeks * IceCube::ONE_WEEK)
 
-      periodicity_behaviour = IceCube::Schedule.new(@monday_start + BEHAVIOUR_DAY + BEHAVIOUR_HOUR,
-                                                    :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-      periodicity_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_behaviour = IceCube::Schedule.new(@monday_start +
+                                                        @@scraping_behaviour_day * IceCube::ONE_DAY +
+                                                        @@scraping_behaviour_hour * IceCube::ONE_HOUR +
+                                                        @@scraping_behaviour_min * IceCube::ONE_MINUTE,
+                                                    :end_time => @monday_start +
+                                                        @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
+                                                                               @count_weeks * IceCube::ONE_WEEK)
 
-      periodicity_device_platform_plugin = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_PLUGIN_DAY + DEVICE_PLATFORM_PLUGIN_HOUR + DEVICE_PLATFORM_PLUGIN_MIN,
-                                                                 :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-      periodicity_device_platform_plugin.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_device_platform_plugin = IceCube::Schedule.new(@monday_start + 
+                                                                     @@scraping_device_platform_plugin_day * IceCube::ONE_DAY + 
+                                                                     @@scraping_device_platform_plugin_hour * IceCube::ONE_HOUR + 
+                                                                     @@scraping_device_platform_plugin_min * IceCube::ONE_MINUTE,
+                                                                 :end_time => @monday_start + 
+                                                                     @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_device_platform_plugin.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + 
+                                                                                            @count_weeks * IceCube::ONE_WEEK)
 
-      periodicity_device_platform_resolution = IceCube::Schedule.new(@monday_start + DEVICE_PLATFORM_RESOLUTION_DAY + DEVICE_PLATFORM_RESOLUTION_HOUR,
-                                                                     :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-      periodicity_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_device_platform_resolution = IceCube::Schedule.new(@monday_start + 
+                                                                         @@scraping_device_platform_resolution_day  * IceCube::ONE_DAY + 
+                                                                         @@scraping_device_platform_resolution_hour  * IceCube::ONE_HOUR + 
+                                                                         @@scraping_device_platform_resolution_min* IceCube::ONE_MINUTE,
+                                                                     :end_time => @monday_start + 
+                                                                         @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
+                                                                                                         @count_weeks * IceCube::ONE_WEEK)
 
 
       business.merge!({"profil_id_ga" => @profil_id_ga}) if @statistics_type == :ga
 
       @events += [
           Event.new("Scraping_device_platform_plugin",
-                    periodicity_device_platform_plugin,
+                    periodicity_scraping_device_platform_plugin,
                     {
                         :policy_type => @policy_type,
                         :policy_id => @policy_id,
@@ -126,7 +159,7 @@ module Planning
                         :statistic_type => @statistics_type
                     }),
           Event.new("Scraping_device_platform_resolution",
-                    periodicity_device_platform_resolution,
+                    periodicity_scraping_device_platform_resolution,
                     {
                         :policy_type => @policy_type,
                         :policy_id => @policy_id,
@@ -135,7 +168,7 @@ module Planning
                         :statistic_type => @statistics_type
                     }),
           Event.new("Scraping_hourly_daily_distribution",
-                    periodicity_hourly_daily_distribution,
+                    periodicity_scraping_hourly_distribution,
                     @statistics_type == :custom ?
                         {
 
@@ -155,7 +188,7 @@ module Planning
                             :statistic_type => @statistics_type
                         }),
           Event.new("Scraping_behaviour",
-                    periodicity_behaviour,
+                    periodicity_scraping_behaviour,
                     @statistics_type == :custom ?
                         {
 

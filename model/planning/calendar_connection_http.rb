@@ -138,7 +138,6 @@ class CalendarConnection < EM::HttpServer::Server
           # POST
           #--------------------------------------------------------------------------------------------------------------
           when "POST"
-            @logger.an_event.info "save events of object #{ress_id} to repository"
             @http_content = JSON.parse(@http_content, {:symbolize_names => true})
             @logger.an_event.debug "@http_content : #{@http_content}"
 
@@ -153,7 +152,7 @@ class CalendarConnection < EM::HttpServer::Server
                 raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
 
             end
-            @logger.an_event.info "save #{tasks.size} events of object #{ress_id} to repository"
+            @logger.an_event.info "save #{tasks.size} events of object #{ress_id} to calendar"
           #--------------------------------------------------------------------------------------------------------------
           # PUT
           #--------------------------------------------------------------------------------------------------------------
