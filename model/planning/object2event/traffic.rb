@@ -1,11 +1,13 @@
 require_relative 'policy'
-
+require_relative '../../../lib/parameter'
 
 module Planning
 
   class Traffic < Policy
 
-    attr :traffic_source_referral,
+    attr :scraping_traffic_source_referral_day,
+         :scraping_traffic_source_referral_hour,
+         :scraping_traffic_source_referral_min,
          :change_count_visits_percent,
          :change_bounce_visits_percent,
          :direct_medium_percent,
@@ -105,9 +107,9 @@ module Planning
 
 
       periodicity_scraping_traffic_source_referral = IceCube::Schedule.new(@registering_time +
-                                                                               @traffic_source_referral_day * IceCube::ONE_DAY +
-                                                                               @traffic_source_referral_hour * IceCube::ONE_HOUR +
-                                                                               @traffic_source_referral_min * IceCube::ONE_MINUTE,
+                                                                               @scraping_traffic_source_referral_day * IceCube::ONE_DAY +
+                                                                               @scraping_traffic_source_referral_hour * IceCube::ONE_HOUR +
+                                                                               @scraping_traffic_source_referral_min * IceCube::ONE_MINUTE,
                                                                            :end_time => @registering_time +
                                                                                @count_weeks * IceCube::ONE_WEEK)
       periodicity_scraping_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +

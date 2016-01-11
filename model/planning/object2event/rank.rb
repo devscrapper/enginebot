@@ -1,40 +1,9 @@
-require_relative '../event'
 require_relative 'policy'
+require_relative '../../../lib/parameter'
 
 module Planning
 
   class Rank < Policy
-
-    @@scraping_traffic_source_keywords_day
-    @@scraping_traffic_source_keywords_hour
-    @@scraping_traffic_source_keywords_min
-    @@scraping_building_hourly_distribution_day
-    @@scraping_building_hourly_distribution_hour
-    @@scraping_building_hourly_distribution_min
-    @@scraping_behaviour_day
-    @@scraping_behaviour_hour
-    @@scraping_behaviour_min
-    @@scraping_device_platform_plugin_day
-    @@scraping_device_platform_plugin_hour
-    @@scraping_device_platform_plugin_min
-    @@scraping_device_platform_resolution_day
-    @@scraping_device_platform_resolution_hour
-    @@scraping_device_platform_resolution_min
-    @@building_device_platform_day
-    @@building_device_platform_hour
-    @@building_device_platform_min
-    @@building_hourly_distribution_day
-    @@building_hourly_distribution_hour
-    @@building_hourly_distribution_min
-    @@building_behaviour_day
-    @@building_behaviour_hour
-    @@building_behaviour_min
-    @@building_objectives_day
-    @@building_objectives_hour
-    @@building_objectives_min
-    @@building_landing_pages_organic_day
-    @@building_landing_pages_organic_hour
-    @@building_landing_pages_organic_min
 
     DELAY_TO_PREPARE = 1
 
