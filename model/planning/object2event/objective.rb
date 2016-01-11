@@ -3,33 +3,32 @@ require_relative '../event'
 module Planning
 
   class Objective
-    @@evaluating_landing_pages_keyword_day
-    @@evaluating_landing_pages_keyword_hour
-    @@evaluating_landing_pages_keyword_min
-    @@evaluating_landing_pages_backlink_day
-    @@evaluating_landing_pages_backlink_hour
-    @@evaluating_landing_pages_backlink_min
-    @@choosing_device_platform_day
-    @@choosing_device_platform_hour
-    @@choosing_device_platform_min
-    @@choosing_landing_pages_day
-    @@choosing_landing_pages_hour
-    @@choosing_landing_pages_min
-    @@building_visits_day
-    @@building_visits_hour
-    @@building_visits_min
-    @@building_planification_day
-    @@building_planification_hour
-    @@building_planification_min
-    @@extending_visits_day
-    @@extending_visits_hour
-    @@extending_visits_min
-    @@start_publishing_visits_day
-    @@start_publishing_visits_hour
-    @@end_publishing_visits_day
-    @@end_publishing_visits_hour
-
-    attr :count_visits,
+    attr :evaluating_traffic_source_organic_day,
+         :evaluating_traffic_source_organic_hour,
+         :evaluating_traffic_source_organic_min,
+         :evaluating_traffic_source_referral_day,
+         :evaluating_traffic_source_referral_hour,
+         :evaluating_traffic_source_referral_min,
+         :choosing_device_platform_day,
+         :choosing_device_platform_hour,
+         :choosing_device_platform_min,
+         :choosing_landing_pages_day,
+         :choosing_landing_pages_hour,
+         :choosing_landing_pages_min,
+         :building_visits_day,
+         :building_visits_hour,
+         :building_visits_min,
+         :building_planification_day,
+         :building_planification_hour,
+         :building_planification_min,
+         :extending_visits_day,
+         :extending_visits_hour,
+         :extending_visits_min,
+         :start_publishing_visits_day,
+         :start_publishing_visits_hour,
+         :end_publishing_visits_day,
+         :end_publishing_visits_hour,
+         :count_visits,
          :website_label,
          :building_date,
          :start_time,
@@ -110,31 +109,31 @@ module Planning
         raise "loading parameter traffic failed : #{e.message}"
 
       else
-        @@evaluating_landing_pages_keyword_day = parameters.evaluating_landing_pages_keyword_day
-        @@evaluating_landing_pages_keyword_hour = parameters.evaluating_landing_pages_keyword_hour
-        @@evaluating_landing_pages_keyword_min = parameters.evaluating_landing_pages_keyword_min
-        @@evaluating_landing_pages_backlink_day = parameters.evaluating_landing_pages_backlink_day
-        @@evaluating_landing_pages_backlink_hour = parameters.evaluating_landing_pages_backlink_hour
-        @@evaluating_landing_pages_backlink_min = parameters.evaluating_landing_pages_backlink_min
-        @@choosing_device_platform_day = parameters.choosing_device_platform_day
-        @@choosing_device_platform_hour = parameters.choosing_device_platform_hour
-        @@choosing_device_platform_min = parameters.choosing_device_platform_min
-        @@choosing_landing_pages_day = parameters.choosing_landing_pages_day
-        @@choosing_landing_pages_hour = parameters.choosing_landing_pages_hour
-        @@choosing_landing_pages_min = parameters.choosing_landing_pages_min
-        @@building_visits_day = parameters.building_visits_day
-        @@building_visits_hour = parameters.building_visits_hour
-        @@building_visits_min = parameters.building_visits_min
-        @@building_planification_day = parameters.building_planification_day
-        @@building_planification_hour = parameters.building_planification_hour
-        @@building_planification_min = parameters.building_planification_min
-        @@extending_visits_day = parameters.extending_visits_day
-        @@extending_visits_hour = parameters.extending_visits_hour
-        @@extending_visits_min = parameters.extending_visits_min
-        @@start_publishing_visits_day = parameters.start_publishing_visits_day
-        @@start_publishing_visits_hour = parameters.start_publishing_visits_hour
-        @@end_publishing_visits_day = parameters.end_publishing_visits_day
-        @@end_publishing_visits_hour = parameters.end_publishing_visits_hour
+        @evaluating_traffic_source_organic_day = parameters.evaluating_landing_pages_keyword_day
+        @evaluating_traffic_source_organic_hour = parameters.evaluating_landing_pages_keyword_hour
+        @evaluating_traffic_source_organic_min = parameters.evaluating_landing_pages_keyword_min
+        @evaluating_traffic_source_referral_day = parameters.evaluating_traffic_source_referral_day
+        @evaluating_traffic_source_referral_hour = parameters.evaluating_traffic_source_referral_hour
+        @evaluating_traffic_source_referral_min = parameters.evaluating_traffic_source_referral_min
+        @choosing_device_platform_day = parameters.choosing_device_platform_day
+        @choosing_device_platform_hour = parameters.choosing_device_platform_hour
+        @choosing_device_platform_min = parameters.choosing_device_platform_min
+        @choosing_landing_pages_day = parameters.choosing_landing_pages_day
+        @choosing_landing_pages_hour = parameters.choosing_landing_pages_hour
+        @choosing_landing_pages_min = parameters.choosing_landing_pages_min
+        @building_visits_day = parameters.building_visits_day
+        @building_visits_hour = parameters.building_visits_hour
+        @building_visits_min = parameters.building_visits_min
+        @building_planification_day = parameters.building_planification_day
+        @building_planification_hour = parameters.building_planification_hour
+        @building_planification_min = parameters.building_planification_min
+        @extending_visits_day = parameters.extending_visits_day
+        @extending_visits_hour = parameters.extending_visits_hour
+        @extending_visits_min = parameters.extending_visits_min
+        @start_publishing_visits_day = parameters.start_publishing_visits_day
+        @start_publishing_visits_hour = parameters.start_publishing_visits_hour
+        @end_publishing_visits_day = parameters.end_publishing_visits_day
+        @end_publishing_visits_hour = parameters.end_publishing_visits_hour
       end
     end
 
@@ -142,17 +141,17 @@ module Planning
       if @organic_medium_percent > 0
 
         periodicity_organic = IceCube::Schedule.new(@date_objective +
-                                                        @@evaluating_landing_pages_keyword_day * IceCube::ONE_DAY + 
-                                                        @@evaluating_landing_pages_keyword_hour * IceCube::ONE_HOUR +
-                                                        @@evaluating_landing_pages_keyword_min * IceCube::ONE_MINUTE,
+                                                        @evaluating_traffic_source_organic_day * IceCube::ONE_DAY +
+                                                        @evaluating_traffic_source_organic_hour * IceCube::ONE_HOUR +
+                                                        @evaluating_traffic_source_organic_min * IceCube::ONE_MINUTE,
                                                     :end_time => @date_objective +
-                                                        @@evaluating_landing_pages_keyword_day * IceCube::ONE_DAY + 
-                                                        @@evaluating_landing_pages_keyword_hour * IceCube::ONE_HOUR +
-                                                        @@evaluating_landing_pages_keyword_min * IceCube::ONE_MINUTE)
+                                                        @evaluating_traffic_source_organic_day * IceCube::ONE_DAY +
+                                                        @evaluating_traffic_source_organic_hour * IceCube::ONE_HOUR +
+                                                        @evaluating_traffic_source_organic_min * IceCube::ONE_MINUTE)
         periodicity_organic.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                              @@evaluating_landing_pages_keyword_day * IceCube::ONE_DAY + 
-                                                                              @@evaluating_landing_pages_keyword_hour * IceCube::ONE_HOUR +
-                                                                              @@evaluating_landing_pages_keyword_min * IceCube::ONE_MINUTE)
+                                                                              @evaluating_traffic_source_organic_day * IceCube::ONE_DAY +
+                                                                              @evaluating_traffic_source_organic_hour * IceCube::ONE_HOUR +
+                                                                              @evaluating_traffic_source_organic_min * IceCube::ONE_MINUTE)
 
         @events << Event.new("Evaluating_traffic_source_organic",
                              periodicity_organic,
@@ -173,18 +172,18 @@ module Planning
       if @referral_medium_percent > 0
 
         periodicity_referral = IceCube::Schedule.new(@date_objective +
-                                                         @@evaluating_landing_pages_backlink_day * IceCube::ONE_DAY + 
-                                                         @@evaluating_landing_pages_backlink_hour * IceCube::ONE_HOUR +
-                                                         @@evaluating_landing_pages_backlink_min * IceCube::ONE_MINUTE,
+                                                         @evaluating_traffic_source_referral_day * IceCube::ONE_DAY +
+                                                         @evaluating_traffic_source_referral_hour * IceCube::ONE_HOUR +
+                                                         @evaluating_traffic_source_referral_min * IceCube::ONE_MINUTE,
                                                      :end_time => @date_objective +
-                                                         @@evaluating_landing_pages_backlink_day * IceCube::ONE_DAY + 
-                                                         @@evaluating_landing_pages_backlink_hour * IceCube::ONE_HOUR +
-                                                         @@evaluating_landing_pages_backlink_min * IceCube::ONE_MINUTE)
+                                                         @evaluating_traffic_source_referral_day * IceCube::ONE_DAY +
+                                                         @evaluating_traffic_source_referral_hour * IceCube::ONE_HOUR +
+                                                         @evaluating_traffic_source_referral_min * IceCube::ONE_MINUTE)
 
         periodicity_referral.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                               @@evaluating_landing_pages_backlink_day * IceCube::ONE_DAY + 
-                                                                               @@evaluating_landing_pages_backlink_hour * IceCube::ONE_HOUR +
-                                                                               @@evaluating_landing_pages_backlink_min * IceCube::ONE_MINUTE)
+                                                                               @evaluating_traffic_source_referral_day * IceCube::ONE_DAY +
+                                                                               @evaluating_traffic_source_referral_hour * IceCube::ONE_HOUR +
+                                                                               @evaluating_traffic_source_referral_min * IceCube::ONE_MINUTE)
 
         @events << Event.new("Evaluating_traffic_source_referral",
                              periodicity_referral,
@@ -200,18 +199,21 @@ module Planning
 
       end
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@choosing_landing_pages_day * IceCube::ONE_DAY + 
-                                              @@choosing_landing_pages_hour * IceCube::ONE_HOUR +
-                                              @@choosing_landing_pages_min * IceCube::ONE_MINUTE,
+                                              @choosing_landing_pages_day * IceCube::ONE_DAY +
+                                              @choosing_landing_pages_hour * IceCube::ONE_HOUR +
+                                              @choosing_landing_pages_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@choosing_landing_pages_day * IceCube::ONE_DAY + 
-                                              @@choosing_landing_pages_hour * IceCube::ONE_HOUR +
-                                              @@choosing_landing_pages_min * IceCube::ONE_MINUTE)
+                                              @choosing_landing_pages_day * IceCube::ONE_DAY +
+                                              @choosing_landing_pages_hour * IceCube::ONE_HOUR +
+                                              @choosing_landing_pages_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@choosing_landing_pages_day * IceCube::ONE_DAY + 
-                                                                    @@choosing_landing_pages_hour * IceCube::ONE_HOUR +
-                                                                    @@choosing_landing_pages_min * IceCube::ONE_MINUTE)
+                                                                    @choosing_landing_pages_day * IceCube::ONE_DAY +
+                                                                    @choosing_landing_pages_hour * IceCube::ONE_HOUR +
+                                                                    @choosing_landing_pages_min * IceCube::ONE_MINUTE)
 
+      pre_tasks = []
+      pre_tasks << "Building_landing_pages_organic" if @organic_medium_percent > 0
+      pre_tasks << "Building_landing_pages_referral" if @referral_medium_percent > 0
       @events << Event.new("Choosing_landing_pages",
                            periodicity,
                            {
@@ -226,21 +228,20 @@ module Planning
                                :referral_medium_percent => @referral_medium_percent
 
                            },
-                           ["Building_landing_pages_organic",
-                            "Building_landing_pages_referral"])
+                           pre_tasks)
 
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@building_visits_day * IceCube::ONE_DAY + 
-                                              @@building_visits_hour * IceCube::ONE_HOUR +
-                                              @@building_visits_min * IceCube::ONE_MINUTE,
+                                              @building_visits_day * IceCube::ONE_DAY +
+                                              @building_visits_hour * IceCube::ONE_HOUR +
+                                              @building_visits_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@building_visits_day * IceCube::ONE_DAY + 
-                                              @@building_visits_hour * IceCube::ONE_HOUR +
-                                              @@building_visits_min * IceCube::ONE_MINUTE)
+                                              @building_visits_day * IceCube::ONE_DAY +
+                                              @building_visits_hour * IceCube::ONE_HOUR +
+                                              @building_visits_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@building_visits_day * IceCube::ONE_DAY + 
-                                                                    @@building_visits_hour * IceCube::ONE_HOUR +
-                                                                    @@building_visits_min * IceCube::ONE_MINUTE)
+                                                                    @building_visits_day * IceCube::ONE_DAY +
+                                                                    @building_visits_hour * IceCube::ONE_HOUR +
+                                                                    @building_visits_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Building_visits",
                            periodicity,
@@ -260,17 +261,17 @@ module Planning
                            },
                            ["Choosing_landing_pages"])
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@building_planification_day * IceCube::ONE_DAY + 
-                                              @@building_planification_hour * IceCube::ONE_HOUR +
-                                              @@building_planification_min * IceCube::ONE_MINUTE,
+                                              @building_planification_day * IceCube::ONE_DAY +
+                                              @building_planification_hour * IceCube::ONE_HOUR +
+                                              @building_planification_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@building_planification_day * IceCube::ONE_DAY + 
-                                              @@building_planification_hour * IceCube::ONE_HOUR +
-                                              @@building_planification_min * IceCube::ONE_MINUTE)
+                                              @building_planification_day * IceCube::ONE_DAY +
+                                              @building_planification_hour * IceCube::ONE_HOUR +
+                                              @building_planification_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@building_planification_day * IceCube::ONE_DAY + 
-                                                                    @@building_planification_hour * IceCube::ONE_HOUR +
-                                                                    @@building_planification_min * IceCube::ONE_MINUTE)
+                                                                    @building_planification_day * IceCube::ONE_DAY +
+                                                                    @building_planification_hour * IceCube::ONE_HOUR +
+                                                                    @building_planification_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Building_planification",
                            periodicity,
@@ -286,17 +287,17 @@ module Planning
                            },
                            ["Building_visits"])
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@extending_visits_day * IceCube::ONE_DAY + 
-                                              @@extending_visits_hour * IceCube::ONE_HOUR +
-                                              @@extending_visits_min * IceCube::ONE_MINUTE,
+                                              @extending_visits_day * IceCube::ONE_DAY +
+                                              @extending_visits_hour * IceCube::ONE_HOUR +
+                                              @extending_visits_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@extending_visits_day * IceCube::ONE_DAY + 
-                                              @@extending_visits_hour * IceCube::ONE_HOUR +
-                                              @@extending_visits_min * IceCube::ONE_MINUTE)
+                                              @extending_visits_day * IceCube::ONE_DAY +
+                                              @extending_visits_hour * IceCube::ONE_HOUR +
+                                              @extending_visits_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@extending_visits_day * IceCube::ONE_DAY + 
-                                                                    @@extending_visits_hour * IceCube::ONE_HOUR +
-                                                                    @@extending_visits_min * IceCube::ONE_MINUTE)
+                                                                    @extending_visits_day * IceCube::ONE_DAY +
+                                                                    @extending_visits_hour * IceCube::ONE_HOUR +
+                                                                    @extending_visits_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Extending_visits",
                            periodicity,
@@ -316,17 +317,17 @@ module Planning
 
 
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@choosing_device_platform_day * IceCube::ONE_DAY + 
-                                              @@choosing_device_platform_hour * IceCube::ONE_HOUR +
-                                              @@choosing_device_platform_min * IceCube::ONE_MINUTE,
+                                              @choosing_device_platform_day * IceCube::ONE_DAY +
+                                              @choosing_device_platform_hour * IceCube::ONE_HOUR +
+                                              @choosing_device_platform_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@choosing_device_platform_day * IceCube::ONE_DAY + 
-                                              @@choosing_device_platform_hour * IceCube::ONE_HOUR +
-                                              @@choosing_device_platform_min * IceCube::ONE_MINUTE)
+                                              @choosing_device_platform_day * IceCube::ONE_DAY +
+                                              @choosing_device_platform_hour * IceCube::ONE_HOUR +
+                                              @choosing_device_platform_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.hourly.until(@date_objective +
-                                                                     @@choosing_device_platform_day * IceCube::ONE_DAY + 
-                                                                     @@choosing_device_platform_hour * IceCube::ONE_HOUR +
-                                                                     @@choosing_device_platform_min * IceCube::ONE_MINUTE)
+                                                                     @choosing_device_platform_day * IceCube::ONE_DAY +
+                                                                     @choosing_device_platform_hour * IceCube::ONE_HOUR +
+                                                                     @choosing_device_platform_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Choosing_device_platform",
                            periodicity,
@@ -340,14 +341,14 @@ module Planning
                            })
 
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@start_publishing_visits_day * IceCube::ONE_DAY + 
-                                              @@start_publishing_visits_hour * IceCube::ONE_HOUR,
+                                              @start_publishing_visits_day * IceCube::ONE_DAY +
+                                              @start_publishing_visits_hour * IceCube::ONE_HOUR,
                                           :end_time => @date_objective +
-                                              @@start_publishing_visits_day * IceCube::ONE_DAY + 
-                                              @@start_publishing_visits_hour * IceCube::ONE_HOUR)
+                                              @start_publishing_visits_day * IceCube::ONE_DAY +
+                                              @start_publishing_visits_hour * IceCube::ONE_HOUR)
       periodicity.add_recurrence_rule IceCube::Rule.hourly.until(@date_objective +
-                                                                     @@start_publishing_visits_day * IceCube::ONE_DAY + 
-                                                                     @@start_publishing_visits_hour * IceCube::ONE_HOUR)
+                                                                     @start_publishing_visits_day * IceCube::ONE_DAY +
+                                                                     @start_publishing_visits_hour * IceCube::ONE_HOUR)
       @events << Event.new("Publishing_visits",
                            periodicity,
                            {

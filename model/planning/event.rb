@@ -184,12 +184,12 @@ module Planning
               <div class="circle #{color}"> #{@state} </div>
             </div>
             <div class="bottom">
-              <p>Website<br><span>#{@business[:website_label]}</s pan></p>
-              <p>Policy id<br><span>#{@key[:policy_id]}</s pan></p>
-              <p>Building date<br><span> #{@key[:building_date]}</span></p>
+              <p>Website<br><span>#{@business[:website_label]}</span></p>
+              <p>Policy id<br><span>#{@key[:policy_id]}</span></p>
+              <p>Building date<br><span>#{@key[:building_date]}</span></p>
               <p>Pre tasks<br><span>#{@pre_tasks.join("<br>")}</span></p>
               <div class="sign">
-                <a href="/tasks/execute/?i d= #{@id}" class='button'>Execute</a>
+                <a href="/tasks/execute/?id=#{@id}" class='button'>Execute</a>
               </div>
             </div>
           </li>

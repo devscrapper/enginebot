@@ -5,6 +5,37 @@ module Planning
 
   class Rank < Policy
 
+    @@scraping_traffic_source_keywords_day
+    @@scraping_traffic_source_keywords_hour
+    @@scraping_traffic_source_keywords_min
+    @@scraping_building_hourly_distribution_day
+    @@scraping_building_hourly_distribution_hour
+    @@scraping_building_hourly_distribution_min
+    @@scraping_behaviour_day
+    @@scraping_behaviour_hour
+    @@scraping_behaviour_min
+    @@scraping_device_platform_plugin_day
+    @@scraping_device_platform_plugin_hour
+    @@scraping_device_platform_plugin_min
+    @@scraping_device_platform_resolution_day
+    @@scraping_device_platform_resolution_hour
+    @@scraping_device_platform_resolution_min
+    @@building_device_platform_day
+    @@building_device_platform_hour
+    @@building_device_platform_min
+    @@building_hourly_distribution_day
+    @@building_hourly_distribution_hour
+    @@building_hourly_distribution_min
+    @@building_behaviour_day
+    @@building_behaviour_hour
+    @@building_behaviour_min
+    @@building_objectives_day
+    @@building_objectives_hour
+    @@building_objectives_min
+    @@building_landing_pages_organic_day
+    @@building_landing_pages_organic_hour
+    @@building_landing_pages_organic_min
+
     DELAY_TO_PREPARE = 1
 
     attr :count_visits_per_day,
@@ -19,107 +50,45 @@ module Planning
         delay = (@monday_start.to_date - Time.now.to_date).to_i
         raise "#{delay} day(s) remaining before start policy, it is too short to prepare #{@policy_type} policy, #{DELAY_TO_PREPARE} day(s) are require !" if delay < DELAY_TO_PREPARE
       end
-    end
 
-    def to_event
-
-
-      #Si demande suppression de la policy alors absence de periodicity et de business_building_objectives
-      if @count_weeks.nil? and @monday_start.nil?
-        @events += [
-            Event.new(@key, "Building_objectives"),
-            Event.new(@key, "Building_landing_pages_organic"),
-            Event.new(@key, "Choosing_device_platform"),
-            Event.new(@key, "Choosing_landing_pages"),
-            Event.new(@key, "Building_visits"),
-            Event.new(@key, "Publishing_visits"),
-            Event.new(@key, "Scraping_traffic_source_organic"),
-            Event.new(@key, "Evaluating_traffic_source_organic")
-        ]
+      begin
+        parameters = Parameter.new(__FILE__)
+      rescue Exception => e
+        raise "loading parameter traffic failed : #{e.message}"
 
       else
-
-        periodicity_traffic_source_organic = IceCube::Schedule.new(@registering_time +
-                                                                       TRAFFIC_SOURCE_KEYWORDS_DAY +
-                                                                       TRAFFIC_SOURCE_KEYWORDS_HOUR,
-                                                                   :end_time => @registering_time +
-                                                                       @count_weeks * IceCube::ONE_WEEK)
-        periodicity_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +
-                                                                                               @count_weeks * IceCube::ONE_WEEK)
-
-        @events << Event.new(@key,
-                             "Scraping_traffic_source_organic",
-                             {
-
-                                 "periodicity" => periodicity_traffic_source_organic.to_yaml,
-                                 "business" => {
-                                     "policy_type" => @policy_type,
-                                     "policy_id" => @policy_id,
-                                     "website_label" => @website_label,
-                                     "url_root" => @url_root,
-                                     "website_id" => @website_id,
-                                     "keywords" => @keywords
-                                 }
-                             })
-
-
-        periodicity_building_objectives = IceCube::Schedule.new(@monday_start + BUILDING_OBJECTIVES_DAY + BUILDING_OBJECTIVES_HOUR,
-                                                                :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_building_objectives.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start + @count_weeks * IceCube::ONE_WEEK)
-
-        @events << Event.new(@key,
-                             "Building_objectives",
-                             {
-                                 "pre_tasks" => ["Building_hourly_daily_distribution", "Building_behaviour"],
-                                 "periodicity" => periodicity_building_objectives.to_yaml,
-                                 "business" => {
-                                     "count_visits_per_day" => @count_visits_per_day,
-                                     "website_label" => @website_label,
-                                     "monday_start" => @monday_start,
-                                     "count_weeks" => @count_weeks,
-                                     "website_id" => @website_id,
-                                     "policy_id" => @policy_id,
-                                     "url_root" => @url_root,
-                                     "min_count_page_advertiser" => @min_count_page_advertiser,
-                                     "max_count_page_advertiser" => @max_count_page_advertiser,
-                                     "min_duration_page_advertiser" => @min_duration_page_advertiser,
-                                     "max_duration_page_advertiser" => @max_duration_page_advertiser,
-                                     "percent_local_page_advertiser" => @percent_local_page_advertiser,
-                                     "duration_referral" => @duration_referral,
-                                     "min_count_page_organic" => @min_count_page_organic,
-                                     "max_count_page_organic" => @max_count_page_organic,
-                                     "min_duration_page_organic" => @min_duration_page_organic,
-                                     "max_duration_page_organic" => @max_duration_page_organic,
-                                     "min_duration" => @min_duration,
-                                     "max_duration" => @max_duration,
-                                     "min_duration_website" => @min_duration_website,
-                                     "min_pages_website" => @min_pages_website,
-                                     "policy_type" => @policy_type
-                                 }
-                             })
+        @scraping_traffic_source_organic_day = parameters.scraping_traffic_source_organic_day
+        @scraping_traffic_source_organic_hour = parameters.scraping_traffic_source_organic_hour
+        @scraping_traffic_source_organic_min = parameters.scraping_traffic_source_organic_min
+        @scraping_device_platform_plugin_day = parameters.scraping_device_platform_plugin_day
+        @scraping_device_platform_plugin_hour =parameters.scraping_device_platform_plugin_hour
+        @scraping_device_platform_plugin_min =parameters.scraping_device_platform_plugin_min
+        @scraping_device_platform_resolution_day = parameters.scraping_device_platform_resolution_day
+        @scraping_device_platform_resolution_hour =parameters.scraping_device_platform_resolution_hour
+        @scraping_device_platform_resolution_min =parameters.scraping_device_platform_resolution_min
+        @scraping_hourly_distribution_day = parameters.scraping_hourly_distribution_day
+        @scraping_hourly_distribution_hour = parameters.scraping_hourly_distribution_hour
+        @scraping_hourly_distribution_min = parameters.scraping_hourly_distribution_min
+        @scraping_behaviour_day = parameters.scraping_behaviour_day
+        @scraping_behaviour_hour = parameters.scraping_behaviour_hour
+        @scraping_behaviour_min =parameters.scraping_behaviour_min
+        @building_device_platform_day = parameters.building_device_platform_day
+        @building_device_platform_hour = parameters.building_device_platform_hour
+        @building_device_platform_min = parameters.building_device_platform_min
+        @building_hourly_distribution_day = parameters.building_hourly_distribution_day
+        @building_hourly_distribution_hour = parameters.building_hourly_distribution_hour
+        @building_hourly_distribution_min = parameters.building_hourly_distribution_min
+        @building_behaviour_day = parameters.building_behaviour_day
+        @building_behaviour_hour = parameters.building_behaviour_hour
+        @building_behaviour_min = parameters.building_behaviour_min
+        @building_landing_pages_organic_day = parameters.building_landing_pages_organic_day
+        @building_landing_pages_organic_hour = parameters.building_landing_pages_organic_hour
+        @building_landing_pages_organic_min = parameters.building_landing_pages_organic_min
 
 
-        periodicity_building_landing_pages = IceCube::Schedule.new(@monday_start + BUILDING_MATRIX_AND_PAGES_DAY + BUILDING_MATRIX_AND_PAGES_HOUR,
-                                                                   :end_time => @monday_start + @count_weeks * IceCube::ONE_WEEK)
-        periodicity_building_landing_pages.add_recurrence_rule IceCube::Rule.daily
-
-        @events << Event.new(@key,
-                             "Building_landing_pages_direct",
-                             {
-                                 "pre_tasks" => ["scraping_website"],
-
-                                 "periodicity" => periodicity_building_landing_pages.to_yaml,
-                                 "business" => {
-                                     "website_label" => @website_label,
-                                     "website_id" => @website_id,
-                                     "policy_id" => @policy_id,
-                                     "policy_type" => @policy_type
-                                 }
-                             })
       end
-
-      @events
     end
+
   end
 
 
