@@ -123,7 +123,7 @@ module Planning
     end
 
     def is_objective?
-     !@business[:objective_id].nil?
+      !@business[:objective_id].nil?
     end
 
     def is_started
@@ -143,6 +143,20 @@ module Planning
     def to_s(*a)
       @key.to_s(*a)
     end
+
+    # def pre_tasks_to_html
+    #
+    #   @pre_tasks.map { |t|
+    #     if @pre_tasks_over.include?(t)
+    #       "<span class=\"green\">\"#{t}\"</span>"
+    #     elsif @pre_tasks_running.include?(t)
+    #       "<span class=\"purple\">\"#{t}\"</span>"
+    #     else
+    #       "<span class=\"pink\">\"#{t}\"</span>"
+    #           end
+    #        }.join("<br>")
+    #
+    # end
 
     # affiche au format html le contenu de l'event selon 2 niveau de details
     # :summary (par defaut)
@@ -164,36 +178,36 @@ module Planning
       case details
         when :summary
           <<-_end_of_html_
-<li>
-<div class="top">
-    <h5>#{@label}</h5>
-    <div class="circle #{color}"> #{@state} </div>
-</div>
-<div class="bottom">
-    <p>Website<br><span>#{@business[:website_label]}</span></p>
-    <p>Policy id<br><span>#{@key[:policy_id]}</span></p>
-    <p>Building date<br><span> #{@key[:building_date]}</span></p>
-    <p>Pre tasks<br><span>#{@pre_tasks.join("<br>")}</span></p>
-<div class="sign">
-      <a href="/tasks/execute/?id=#{@id}" class='button'>Execute</a>
-    </div>
-</div>
-</li>
+          <li>
+            <div class="top">
+              <h5>#{@label}</h5>
+              <div class="circle #{color}"> #{@state} </div>
+            </div>
+            <div class="bottom">
+              <p>Website<br><span>#{@business[:website_label]}</s pan></p>
+              <p>Policy id<br><span>#{@key[:policy_id]}</s pan></p>
+              <p>Building date<br><span> #{@key[:building_date]}</span></p>
+              <p>Pre tasks<br><span>#{@pre_tasks.join("<br>")}</span></p>
+              <div class="sign">
+                <a href="/tasks/execute/?i d= #{@id}" class='button'>Execute</a>
+              </div>
+            </div>
+          </li>
           _end_of_html_
         when :complete
           <<-_end_of_html_
-               <ul>
-                   <li><b>id</b> : #{@id}</li>
-                   <li><b>key</b> : #{@key}</li>
-                   <li><b>label</b> : #{@label}</li>
-                   <li><b>state</b> : <font color="#{color}">#{@state}</font></li>
-                   <li><b>pre_tasks</b> : #{@pre_tasks}</li>
-                   <li><b>pre_tasks_running</b> : #{@pre_tasks_running}</li>
-                   <li><b>pre_tasks_over</b> : #{@pre_tasks_over}</li>
-                   <li><b>periodicity</b> : #{@periodicity.to_s}</li>
-                   <li><b>business</b> : #{@business}</li>
-                   <li><a href="/tasks/execute/?id=#{@id}">Execute</a></li>
-                </ul>
+          <ul>
+            <li><b>id</ b> : #{@id}</li>
+            <li><b>key</b> : #{@key}</li>
+            <li><b>label</b> : #{@label}</li>
+            <li><b>state</b> : <font color="#{color}">#{@state}</font></li>
+            <li><b>pre_tasks</ b> : #{@pre_tasks}</li>
+            <li><b>pre_tasks_running</b> : #{@pre_tasks_running}</li>
+            <li><b>pre_tasks_over</b> : #{@pre_tasks_over}</li>
+            <li><b>periodicity</b> : #{@periodicity.to_s}</li>
+            <li><b>business</b> : #{@business}</ li>
+            <li><a href="/tasks/execute/?id=#{@id}">Execute</a></li>
+          </ul>
           _end_of_html_
       end
 
