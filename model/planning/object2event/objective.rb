@@ -142,17 +142,17 @@ module Planning
       if @organic_medium_percent > 0
 
         periodicity_organic = IceCube::Schedule.new(@date_objective +
-                                                        @@evaluating_landing_pages_keyword_day +
-                                                        @@evaluating_landing_pages_keyword_hour +
-                                                        @@evaluating_landing_pages_keyword_min,
+                                                        @@evaluating_landing_pages_keyword_day * IceCube::ONE_DAY + 
+                                                        @@evaluating_landing_pages_keyword_hour * IceCube::ONE_HOUR +
+                                                        @@evaluating_landing_pages_keyword_min * IceCube::ONE_MINUTE,
                                                     :end_time => @date_objective +
-                                                        @@evaluating_landing_pages_keyword_day +
-                                                        @@evaluating_landing_pages_keyword_hour +
-                                                        @@evaluating_landing_pages_keyword_min)
+                                                        @@evaluating_landing_pages_keyword_day * IceCube::ONE_DAY + 
+                                                        @@evaluating_landing_pages_keyword_hour * IceCube::ONE_HOUR +
+                                                        @@evaluating_landing_pages_keyword_min * IceCube::ONE_MINUTE)
         periodicity_organic.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                              @@evaluating_landing_pages_keyword_day +
-                                                                              @@evaluating_landing_pages_keyword_hour +
-                                                                              @@evaluating_landing_pages_keyword_min)
+                                                                              @@evaluating_landing_pages_keyword_day * IceCube::ONE_DAY + 
+                                                                              @@evaluating_landing_pages_keyword_hour * IceCube::ONE_HOUR +
+                                                                              @@evaluating_landing_pages_keyword_min * IceCube::ONE_MINUTE)
 
         @events << Event.new("Evaluating_traffic_source_organic",
                              periodicity_organic,
@@ -173,18 +173,18 @@ module Planning
       if @referral_medium_percent > 0
 
         periodicity_referral = IceCube::Schedule.new(@date_objective +
-                                                         @@evaluating_landing_pages_backlink_day +
-                                                         @@evaluating_landing_pages_backlink_hour +
-                                                         @@evaluating_landing_pages_backlink_min,
+                                                         @@evaluating_landing_pages_backlink_day * IceCube::ONE_DAY + 
+                                                         @@evaluating_landing_pages_backlink_hour * IceCube::ONE_HOUR +
+                                                         @@evaluating_landing_pages_backlink_min * IceCube::ONE_MINUTE,
                                                      :end_time => @date_objective +
-                                                         @@evaluating_landing_pages_backlink_day +
-                                                         @@evaluating_landing_pages_backlink_hour +
-                                                         @@evaluating_landing_pages_backlink_min)
+                                                         @@evaluating_landing_pages_backlink_day * IceCube::ONE_DAY + 
+                                                         @@evaluating_landing_pages_backlink_hour * IceCube::ONE_HOUR +
+                                                         @@evaluating_landing_pages_backlink_min * IceCube::ONE_MINUTE)
 
         periodicity_referral.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                               @@evaluating_landing_pages_backlink_day +
-                                                                               @@evaluating_landing_pages_backlink_hour +
-                                                                               @@evaluating_landing_pages_backlink_min)
+                                                                               @@evaluating_landing_pages_backlink_day * IceCube::ONE_DAY + 
+                                                                               @@evaluating_landing_pages_backlink_hour * IceCube::ONE_HOUR +
+                                                                               @@evaluating_landing_pages_backlink_min * IceCube::ONE_MINUTE)
 
         @events << Event.new("Evaluating_traffic_source_referral",
                              periodicity_referral,
@@ -200,17 +200,17 @@ module Planning
 
       end
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@choosing_landing_pages_day +
-                                              @@choosing_landing_pages_hour +
-                                              @@choosing_landing_pages_min,
+                                              @@choosing_landing_pages_day * IceCube::ONE_DAY + 
+                                              @@choosing_landing_pages_hour * IceCube::ONE_HOUR +
+                                              @@choosing_landing_pages_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@choosing_landing_pages_day +
-                                              @@choosing_landing_pages_hour +
-                                              @@choosing_landing_pages_min)
+                                              @@choosing_landing_pages_day * IceCube::ONE_DAY + 
+                                              @@choosing_landing_pages_hour * IceCube::ONE_HOUR +
+                                              @@choosing_landing_pages_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@choosing_landing_pages_day +
-                                                                    @@choosing_landing_pages_hour +
-                                                                    @@choosing_landing_pages_min)
+                                                                    @@choosing_landing_pages_day * IceCube::ONE_DAY + 
+                                                                    @@choosing_landing_pages_hour * IceCube::ONE_HOUR +
+                                                                    @@choosing_landing_pages_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Choosing_landing_pages",
                            periodicity,
@@ -230,17 +230,17 @@ module Planning
                             "Building_landing_pages_referral"])
 
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@building_visits_day +
-                                              @@building_visits_hour +
-                                              @@building_visits_min,
+                                              @@building_visits_day * IceCube::ONE_DAY + 
+                                              @@building_visits_hour * IceCube::ONE_HOUR +
+                                              @@building_visits_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@building_visits_day +
-                                              @@building_visits_hour +
-                                              @@building_visits_min)
+                                              @@building_visits_day * IceCube::ONE_DAY + 
+                                              @@building_visits_hour * IceCube::ONE_HOUR +
+                                              @@building_visits_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@building_visits_day +
-                                                                    @@building_visits_hour +
-                                                                    @@building_visits_min)
+                                                                    @@building_visits_day * IceCube::ONE_DAY + 
+                                                                    @@building_visits_hour * IceCube::ONE_HOUR +
+                                                                    @@building_visits_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Building_visits",
                            periodicity,
@@ -260,17 +260,17 @@ module Planning
                            },
                            ["Choosing_landing_pages"])
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@building_planification_day +
-                                              @@building_planification_hour +
-                                              @@building_planification_min,
+                                              @@building_planification_day * IceCube::ONE_DAY + 
+                                              @@building_planification_hour * IceCube::ONE_HOUR +
+                                              @@building_planification_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@building_planification_day +
-                                              @@building_planification_hour +
-                                              @@building_planification_min)
+                                              @@building_planification_day * IceCube::ONE_DAY + 
+                                              @@building_planification_hour * IceCube::ONE_HOUR +
+                                              @@building_planification_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@building_planification_day +
-                                                                    @@building_planification_hour +
-                                                                    @@building_planification_min)
+                                                                    @@building_planification_day * IceCube::ONE_DAY + 
+                                                                    @@building_planification_hour * IceCube::ONE_HOUR +
+                                                                    @@building_planification_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Building_planification",
                            periodicity,
@@ -286,17 +286,17 @@ module Planning
                            },
                            ["Building_visits"])
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@extending_visits_day +
-                                              @@extending_visits_hour +
-                                              @@extending_visits_min,
+                                              @@extending_visits_day * IceCube::ONE_DAY + 
+                                              @@extending_visits_hour * IceCube::ONE_HOUR +
+                                              @@extending_visits_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@extending_visits_day +
-                                              @@extending_visits_hour +
-                                              @@extending_visits_min)
+                                              @@extending_visits_day * IceCube::ONE_DAY + 
+                                              @@extending_visits_hour * IceCube::ONE_HOUR +
+                                              @@extending_visits_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
-                                                                    @@extending_visits_day +
-                                                                    @@extending_visits_hour +
-                                                                    @@extending_visits_min)
+                                                                    @@extending_visits_day * IceCube::ONE_DAY + 
+                                                                    @@extending_visits_hour * IceCube::ONE_HOUR +
+                                                                    @@extending_visits_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Extending_visits",
                            periodicity,
@@ -316,17 +316,17 @@ module Planning
 
 
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@choosing_device_platform_day +
-                                              @@choosing_device_platform_hour +
-                                              @@choosing_device_platform_min,
+                                              @@choosing_device_platform_day * IceCube::ONE_DAY + 
+                                              @@choosing_device_platform_hour * IceCube::ONE_HOUR +
+                                              @@choosing_device_platform_min * IceCube::ONE_MINUTE,
                                           :end_time => @date_objective +
-                                              @@choosing_device_platform_day +
-                                              @@choosing_device_platform_hour +
-                                              @@choosing_device_platform_min)
+                                              @@choosing_device_platform_day * IceCube::ONE_DAY + 
+                                              @@choosing_device_platform_hour * IceCube::ONE_HOUR +
+                                              @@choosing_device_platform_min * IceCube::ONE_MINUTE)
       periodicity.add_recurrence_rule IceCube::Rule.hourly.until(@date_objective +
-                                                                     @@choosing_device_platform_day +
-                                                                     @@choosing_device_platform_hour +
-                                                                     @@choosing_device_platform_min)
+                                                                     @@choosing_device_platform_day * IceCube::ONE_DAY + 
+                                                                     @@choosing_device_platform_hour * IceCube::ONE_HOUR +
+                                                                     @@choosing_device_platform_min * IceCube::ONE_MINUTE)
 
       @events << Event.new("Choosing_device_platform",
                            periodicity,
@@ -340,14 +340,14 @@ module Planning
                            })
 
       periodicity = IceCube::Schedule.new(@date_objective +
-                                              @@start_publishing_visits_day +
-                                              @@start_publishing_visits_hour,
+                                              @@start_publishing_visits_day * IceCube::ONE_DAY + 
+                                              @@start_publishing_visits_hour * IceCube::ONE_HOUR,
                                           :end_time => @date_objective +
-                                              @@start_publishing_visits_day +
-                                              @@start_publishing_visits_hour)
+                                              @@start_publishing_visits_day * IceCube::ONE_DAY + 
+                                              @@start_publishing_visits_hour * IceCube::ONE_HOUR)
       periodicity.add_recurrence_rule IceCube::Rule.hourly.until(@date_objective +
-                                                                     @@start_publishing_visits_day +
-                                                                     @@start_publishing_visits_hour)
+                                                                     @@start_publishing_visits_day * IceCube::ONE_DAY + 
+                                                                     @@start_publishing_visits_hour * IceCube::ONE_HOUR)
       @events << Event.new("Publishing_visits",
                            periodicity,
                            {
