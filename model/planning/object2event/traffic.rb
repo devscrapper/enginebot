@@ -116,20 +116,7 @@ module Planning
                                                                                                        @count_weeks * IceCube::ONE_WEEK)
 
 
-      periodicity_building_landing_pages_referral = IceCube::Schedule.new(@monday_start +
-                                                                              @building_landing_pages_referral_day * IceCube::ONE_DAY +
-                                                                              @building_landing_pages_referral_hour * IceCube::ONE_HOUR +
-                                                                              @building_landing_pages_referral_min * IceCube::ONE_MINUTE,
-                                                                          :end_time => @monday_start +
-                                                                              @building_landing_pages_referral_day * IceCube::ONE_DAY +
-                                                                              @building_landing_pages_referral_hour * IceCube::ONE_HOUR +
-                                                                              @building_landing_pages_referral_min * IceCube::ONE_MINUTE +
-                                                                              @count_weeks * IceCube::ONE_WEEK)
-      periodicity_building_landing_pages_referral.add_recurrence_rule IceCube::Rule.daily.until(@monday_start +
-                                                                                                    @building_landing_pages_referral_day * IceCube::ONE_DAY +
-                                                                                                    @building_landing_pages_referral_hour * IceCube::ONE_HOUR +
-                                                                                                    @building_landing_pages_referral_min * IceCube::ONE_MINUTE +
-                                                                                                    @count_weeks * IceCube::ONE_WEEK)
+
       @events += [
 
           Event.new("Scraping_traffic_source_referral",
@@ -155,7 +142,7 @@ module Planning
                         :types => @types
                     }),
           Event.new("Building_landing_pages_direct",
-                    IceCube::Schedule.new(@registering_time +
+                    IceCube::Schedule.new(@registering_time.to_date +
                                               @building_landing_pages_direct_day * IceCube::ONE_DAY +
                                               @building_landing_pages_direct_hour * IceCube::ONE_HOUR +
                                               @building_landing_pages_direct_min * IceCube::ONE_MINUTE,
@@ -170,17 +157,9 @@ module Planning
                         :policy_id => @policy_id,
                         :policy_type => @policy_type
                     },
-                    ["Scraping_website"]),
+                    ["Scraping_website"])
 
-          Event.new("Building_landing_pages_referral",
-                    periodicity_building_landing_pages_referral,
-                    {
-                        :website_label => @website_label,
-                        :website_id => @website_id,
-                        :policy_id => @policy_id,
-                        :policy_type => @policy_type
-                    },
-                    ["Evaluating_traffic_source_referral"])
+
       ]
 
 

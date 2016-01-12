@@ -148,21 +148,7 @@ module Planning
       periodicity_scraping_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
                                                                                                          @count_weeks * IceCube::ONE_WEEK)
 
-      periodicity_building_landing_pages_organic =IceCube::Schedule.new(@monday_start +
-                                                                            @building_landing_pages_organic_day * IceCube::ONE_DAY +
-                                                                            @building_landing_pages_organic_hour * IceCube::ONE_HOUR +
-                                                                            @building_landing_pages_organic_min * IceCube::ONE_MINUTE,
-                                                                        :end_time => @monday_start +
-                                                                            @building_landing_pages_organic_day * IceCube::ONE_DAY +
-                                                                            @building_landing_pages_organic_hour * IceCube::ONE_HOUR +
-                                                                            @building_landing_pages_organic_min * IceCube::ONE_MINUTE +
-                                                                            @count_weeks * IceCube::ONE_WEEK)
 
-      periodicity_building_landing_pages_organic.add_recurrence_rule IceCube::Rule.daily.until(@monday_start +
-                                                                                                   @building_landing_pages_organic_day * IceCube::ONE_DAY +
-                                                                                                   @building_landing_pages_organic_hour * IceCube::ONE_HOUR +
-                                                                                                   @building_landing_pages_organic_min * IceCube::ONE_MINUTE +
-                                                                                                   @count_weeks * IceCube::ONE_WEEK)
 
       business.merge!({"profil_id_ga" => @profil_id_ga}) if @statistics_type == :ga
 
@@ -290,15 +276,7 @@ module Planning
                         :policy_type => @policy_type
                     },
                     ["Scraping_behaviour"]),
-          Event.new("Building_landing_pages_organic",
-                    periodicity_building_landing_pages_organic,
-                    {
-                        :website_label => @website_label,
-                        :website_id => @website_id,
-                        :policy_id => @policy_id,
-                        :policy_type => @policy_type
-                    },
-                    ["Evaluating_traffic_source_organic"]),
+
           Event.new("Building_objectives",
                     IceCube::Schedule.new(@monday_start +
                                               @building_objectives_day * IceCube::ONE_DAY +

@@ -242,7 +242,7 @@ module Tasking
         today = Date.parse(date) if date.is_a?(String)
         today = date if date.is_a?(Date)
         return today.next_day(1) if today.sunday?
-        return today if today.monday?
+        return today.next_day(7) if today.monday?
         return today.next_day(6) if today.tuesday?
         return today.next_day(5) if today.wednesday?
         return today.next_day(4) if today.thursday?

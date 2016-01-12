@@ -24,9 +24,6 @@ development:
   :building_behaviour_day: -2
   :building_behaviour_hour: 0
   :building_behaviour_min: 0
-  :building_landing_pages_organic_day: -1
-  :building_landing_pages_organic_hour: 0
-  :building_landing_pages_organic_min: 0
   :building_objectives_day: -2
   :building_objectives_hour: 0
   :building_objectives_min: 0
@@ -56,9 +53,6 @@ test:
   :building_behaviour_day: -2
   :building_behaviour_hour: 0
   :building_behaviour_min: 0
-  :building_landing_pages_organic_day: -1
-  :building_landing_pages_organic_hour: 0
-  :building_landing_pages_organic_min: 0
   :building_objectives_day: -2
   :building_objectives_hour: 0
   :building_objectives_min: 0
@@ -88,9 +82,6 @@ production:
   :building_behaviour_day: -2
   :building_behaviour_hour: 0
   :building_behaviour_min: 0
-  :building_landing_pages_organic_day: -1
-  :building_landing_pages_organic_hour: 0
-  :building_landing_pages_organic_min: 0
   :building_objectives_day: -2
   :building_objectives_hour: 0
   :building_objectives_min: 0

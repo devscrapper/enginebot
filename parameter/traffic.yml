@@ -30,15 +30,9 @@ development:
   :building_behaviour_day: -2
   :building_behaviour_hour: 0
   :building_behaviour_min: 0
-  :building_landing_pages_organic_day: -1
-  :building_landing_pages_organic_hour: 0
-  :building_landing_pages_organic_min: 0
   :building_landing_pages_direct_day: 0
   :building_landing_pages_direct_hour: 0
   :building_landing_pages_direct_min: 0
-  :building_landing_pages_referral_day: -1
-  :building_landing_pages_referral_hour: 0
-  :building_landing_pages_referral_min: 0
   :building_objectives_day: -2
   :building_objectives_hour: 0
   :building_objectives_min: 0
@@ -80,12 +74,6 @@ test:
   :building_landing_pages_direct_day: 0
   :building_landing_pages_direct_hour: 0
   :building_landing_pages_direct_min: 0
-  :building_landing_pages_referral_day: -1
-  :building_landing_pages_referral_hour: 0
-  :building_landing_pages_referral_min: 0
-  :building_landing_pages_organic_day: -1
-  :building_landing_pages_organic_hour: 0
-  :building_landing_pages_organic_min: 0
 
 production:
   :scraping_traffic_source_organic_day: 0
@@ -124,9 +112,3 @@ production:
   :building_landing_pages_direct_day: 0
   :building_landing_pages_direct_hour: 0
   :building_landing_pages_direct_min: 0
-  :building_landing_pages_referral_day: -1
-  :building_landing_pages_referral_hour: 0
-  :building_landing_pages_referral_min: 0
-  :building_landing_pages_organic_day: -1
-  :building_landing_pages_organic_hour: 0
-  :building_landing_pages_organic_min: 0

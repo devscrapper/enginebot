@@ -109,9 +109,9 @@ module Planning
         raise "loading parameter traffic failed : #{e.message}"
 
       else
-        @evaluating_traffic_source_organic_day = parameters.evaluating_landing_pages_keyword_day
-        @evaluating_traffic_source_organic_hour = parameters.evaluating_landing_pages_keyword_hour
-        @evaluating_traffic_source_organic_min = parameters.evaluating_landing_pages_keyword_min
+        @evaluating_traffic_source_organic_day = parameters.evaluating_traffic_source_organic_day
+        @evaluating_traffic_source_organic_hour = parameters.evaluating_traffic_source_organic_hour
+        @evaluating_traffic_source_organic_min = parameters.evaluating_traffic_source_organic_min
         @evaluating_traffic_source_referral_day = parameters.evaluating_traffic_source_referral_day
         @evaluating_traffic_source_referral_hour = parameters.evaluating_traffic_source_referral_hour
         @evaluating_traffic_source_referral_min = parameters.evaluating_traffic_source_referral_min
@@ -165,7 +165,28 @@ module Planning
                                  :count_max => ((@organic_medium_percent * @count_visits / 100) * 1.2).round(0), # ajout de 20% de mot clé pour eviter les manques
                                  :url_root => @url_root
                              })
+        periodicity_building_landing_pages_organic =IceCube::Schedule.new(@date_objective +
+                                                                              @building_landing_pages_organic_day * IceCube::ONE_DAY +
+                                                                              @building_landing_pages_organic_hour * IceCube::ONE_HOUR +
+                                                                              @building_landing_pages_organic_min * IceCube::ONE_MINUTE,
+                                                                          :end_time => @date_objective +
+                                                                              @building_landing_pages_organic_day * IceCube::ONE_DAY +
+                                                                              @building_landing_pages_organic_hour * IceCube::ONE_HOUR +
+                                                                              @building_landing_pages_organic_min * IceCube::ONE_MINUTE)
 
+        periodicity_building_landing_pages_organic.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
+                                                                                                     @building_landing_pages_organic_day * IceCube::ONE_DAY +
+                                                                                                     @building_landing_pages_organic_hour * IceCube::ONE_HOUR +
+                                                                                                     @building_landing_pages_organic_min * IceCube::ONE_MINUTE )
+        @events << Event.new("Building_landing_pages_organic",
+                            periodicity_building_landing_pages_organic,
+                            {
+                                :website_label => @website_label,
+                                :website_id => @website_id,
+                                :policy_id => @policy_id,
+                                :policy_type => @policy_type
+                            },
+                            ["Evaluating_traffic_source_organic"])
       end
 
       # permet de ne pas planifier un event sur evaluating referral pour la policy Rank et de maière generale de gagner du temps
@@ -196,6 +217,29 @@ module Planning
                                  :count_max => ((@referral_medium_percent * @count_visits / 100) * 1.2).round(0), # ajout de 20% de mot clé pour eviter les manques
                                  :url_root => @url_root
                              })
+
+        periodicity_building_landing_pages_referral = IceCube::Schedule.new(@date_objective +
+                                                                                @building_landing_pages_referral_day * IceCube::ONE_DAY +
+                                                                                @building_landing_pages_referral_hour * IceCube::ONE_HOUR +
+                                                                                @building_landing_pages_referral_min * IceCube::ONE_MINUTE,
+                                                                            :end_time => @date_objective +
+                                                                                @building_landing_pages_referral_day * IceCube::ONE_DAY +
+                                                                                @building_landing_pages_referral_hour * IceCube::ONE_HOUR +
+                                                                                @building_landing_pages_referral_min * IceCube::ONE_MINUTE)
+        periodicity_building_landing_pages_referral.add_recurrence_rule IceCube::Rule.daily.until(@date_objective +
+                                                                                                      @building_landing_pages_referral_day * IceCube::ONE_DAY +
+                                                                                                      @building_landing_pages_referral_hour * IceCube::ONE_HOUR +
+                                                                                                      @building_landing_pages_referral_min * IceCube::ONE_MINUTE)
+
+        @events <<  Event.new("Building_landing_pages_referral",
+                  periodicity_building_landing_pages_referral,
+                  {
+                      :website_label => @website_label,
+                      :website_id => @website_id,
+                      :policy_id => @policy_id,
+                      :policy_type => @policy_type
+                  },
+                  ["Evaluating_traffic_source_referral"])
 
       end
       periodicity = IceCube::Schedule.new(@date_objective +
