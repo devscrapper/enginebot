@@ -388,9 +388,10 @@ module Planning
       res.sort_by { |date| date }.each { |date, events|
         events_with_pre_task = sort_by_pre_task(events.select { |e| e.has_pre_tasks? })
         events_with_start_time = sort_by_start_time(events.select { |e| !e.has_pre_tasks? })
-        str += "<div class='day'><h3>#{date}</h3></div>" + '<div class="wrap"><div class="table"><ul>'
+        events = events_with_start_time + events_with_pre_task
+        str += "<div class='day'><h3>#{date}(#{events.size})</h3></div>" + '<div class="wrap"><div class="table"><ul>'
         #     str += sort_by_pre_task(events).map { |e| e.to_html }.join
-        str += (events_with_start_time + events_with_pre_task).map { |e| e.to_html }.join
+        str += events.map { |e| e.to_html }.join
         str += '</ul></div></div>'
       }
       str + ""

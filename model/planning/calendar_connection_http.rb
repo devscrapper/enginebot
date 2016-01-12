@@ -70,22 +70,22 @@ class CalendarConnection < EM::HttpServer::Server
 
             @logger.an_event.info "list #{ress_id} events from repository"
             case ress_type
-               when "tasks"
+              when "tasks"
                 if ["monday", "tuesday", "wednesday", "friday", "thursday", "saturday", "sunday"].include?(ress_id)
                   tasks = @calendar.all_events_on_date(Calendar.next_day(ress_id))
                   @@title_html = "On #{ress_id} tasks"
 
                 elsif ress_id == "all"
                   tasks = @calendar.all_events
-                  @@title_html = "All tasks"
+                  @@title_html = "All tasks(#{tasks.size})"
 
                 elsif ress_id == "today"
                   tasks = @calendar.all_events_on_date(Date.today)
-                  @@title_html = "Today #{Date.today} tasks"
+                  @@title_html = "Today #{Date.today} tasks(#{tasks.size})"
 
                 elsif ress_id == "running"
                   tasks = @calendar.all_events_running
-                  @@title_html = "Running tasks"
+                  @@title_html = "Running tasks(#{tasks.size})"
 
                 else
                   raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "query string"}) if @http_query_string.nil?
@@ -95,34 +95,34 @@ class CalendarConnection < EM::HttpServer::Server
                     when "date"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                       tasks = @calendar.all_events_on_date(Date.parse(query_values["date"]))
-                      @@title_html = "All tasks of date #{query_values["date"]}"
+                      @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]}"
 
                     when "hour"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "hour"}) if query_values["hour"].nil? or query_values["hour"].empty?
                       tasks = @calendar.all_events_on_hour(Date.parse(query_values["date"]),
-                                                    query_values["hour"].to_i)
-                      @@title_html = "All tasks of date #{query_values["date"]} and hour #{query_values["hour"]}"
+                                                           query_values["hour"].to_i)
+                      @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]} and hour #{query_values["hour"]}"
 
                     when "time"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "min"}) if query_values["min"].nil? or query_values["min"].empty?
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "hour"}) if query_values["hour"].nil? or query_values["hour"].empty?
                       tasks = @calendar.all_events_on_time(Date.parse(query_values["date"]),
-                                                    query_values["hour"].to_i,
-                                                    query_values["min"].to_i)
+                                                           query_values["hour"].to_i,
+                                                           query_values["min"].to_i)
 
-                      @@title_html = "All tasks of date #{query_values["date"]} and hour #{query_values["hour"]} and min #{query_values["min"]}"
+                      @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]} and hour #{query_values["hour"]} and min #{query_values["min"]}"
                     when "search"
-                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "key"}) if query_values["key"].nil? or query_values["key"].empty?
-                       tasks = @calendar.one(JSON.parse(query_values["key"]))
-                      @@title_html = "Search task (key : #{JSON.parse(query_values["key"])}"
+                      raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "key"}) if query_values["key"].nil? or query_values["key"].empty?
+                      tasks = @calendar.one(JSON.parse(query_values["key"]))
+                      @@title_html = "Search task(#{tasks.size}) (key : #{JSON.parse(query_values["key"])}"
 
                     when "execute"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "id"}) if query_values["id"].nil? or query_values["id"].empty?
                       @calendar.execute_one(query_values["id"])
                       tasks = @calendar.all_events_running
-                                        @@title_html = "Running tasks"
+                      @@title_html = "Running tasks(#{tasks.size})"
 
                     else
                       raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_id})
