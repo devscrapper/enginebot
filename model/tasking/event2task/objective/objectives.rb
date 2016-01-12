@@ -20,7 +20,7 @@ module Tasking
     TMP = File.expand_path(File.join("..", "..", "..", "..", "..", "tmp"), __FILE__)
     class Objectives
       attr :website_label,
-           :date_building,
+           :date_building,  # n'est pas utilisé pour planifier les events, ni identifier les fichiers produits
            :policy_id,
            :website_id, :policy_type, :count_weeks
 
@@ -51,6 +51,7 @@ module Tasking
                                       referral_medium_percent,
                                       advertising_percent,
                                       advertisers,
+                                      monday_start,
                                       url_root,
                                       min_count_page_advertiser,
                                       max_count_page_advertiser,
@@ -80,6 +81,7 @@ module Tasking
         @logger.an_event.debug "website_id #{@website_id}"
         @logger.an_event.debug "policy_type #{@policy_type}"
         @logger.an_event.debug "count_weeks #{@count_weeks}"
+        @logger.an_event.debug "monday start #{monday_start}"
         @logger.an_event.debug "url_root #{url_root}"
         @logger.an_event.debug "min_count_page_advertiser #{min_count_page_advertiser}"
         @logger.an_event.debug "max_count_page_advertiser #{max_count_page_advertiser}"
@@ -95,6 +97,8 @@ module Tasking
         @logger.an_event.debug "max_duration #{max_duration}"
         @logger.an_event.debug "min_duration_website #{min_duration_website}"
         @logger.an_event.debug "min_pages_website #{min_pages_website}"
+
+        @monday_start = monday_start
 
         Building_objectives { |day, splitted_behaviour, splitted_hourly_daily_distribution|
           Objective.new(@website_label, day,
@@ -131,6 +135,7 @@ module Tasking
       end
 
       def Building_objectives_rank(count_visits_per_day,
+                                   monday_start,
                                    url_root,
                                    min_count_page_advertiser,
                                    max_count_page_advertiser,
@@ -149,10 +154,12 @@ module Tasking
 
         @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> <#{@date_building}> is starting"
         @logger.an_event.debug "count_visits_per_day #{count_visits_per_day}"
+        @logger.an_event.debug "count_visits_per_day #{monday_start}"
         @logger.an_event.debug "policy_id #{@policy_id}"
         @logger.an_event.debug "website_id #{@website_id}"
         @logger.an_event.debug "policy_type #{@policy_type}"
         @logger.an_event.debug "url_root #{url_root}"
+        @monday_start = monday_start
 
         Building_objectives { |day, splitted_behaviour, splitted_hourly_daily_distribution|
           Objective.new(@website_label, day,
@@ -209,14 +216,14 @@ module Tasking
           behaviour = behaviour_file.load_to_array(EOFLINE2)
 
           p = ProgressBar.create(:title => "Building objectives", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => behaviour_file_size, :format => '%t, %c/%C, %a|%w|')
-          day = next_monday(@date_building)
+          day =  @monday_start.to_date
 
           behaviour_file_size.times { |line|
             begin
               splitted_behaviour = behaviour[line].strip.split(SEPARATOR2)
               splitted_hourly_daily_distribution = hourly_daily_distribution[line].strip.split(SEPARATOR2)
               obj = yield(day, splitted_behaviour, splitted_hourly_daily_distribution)
-              @logger.an_event.debug obj
+              @logger.an_event.debug obj.to_s
 
               obj.send_to_calendar
 
@@ -238,17 +245,7 @@ module Tasking
 
       end
 
-      def next_monday(date)
-        today = Date.parse(date) if date.is_a?(String)
-        today = date if date.is_a?(Date)
-        return today.next_day(1) if today.sunday?
-        return today.next_day(7) if today.monday?
-        return today.next_day(6) if today.tuesday?
-        return today.next_day(5) if today.wednesday?
-        return today.next_day(4) if today.thursday?
-        return today.next_day(3) if today.friday?
-        return today.next_day(2) if today.saturday?
-      end
+
     end
   end
 end

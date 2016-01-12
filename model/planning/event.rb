@@ -48,7 +48,8 @@ module Planning
 
       # si planification quotidienne alors ajoute la date de planification à la clé
       # :building_date est Objet Date
-      @key.merge!({:building_date => periodicity.next_occurrence.start_time.to_date}) if periodicity.rrules[0].is_a?(IceCube::DailyRule)
+      @key.merge!({:building_date => @business[:building_date].to_s}) if @periodicity.rrules[0].is_a?(IceCube::DailyRule) or
+          @periodicity.rrules[0].is_a?(IceCube::HourlyRule)
 
     end
 
@@ -192,12 +193,9 @@ module Planning
             <div class="bottom">
               <p>Website<br><span>#{@business[:website_label]}</span></p>
               <p>Policy id : <span>#{@key[:policy_id]}</span></p>
-              <p>Building date<br><span>#{@key[:building_date]}</span></p>
-              <p>Pre tasks<br><span>#{@pre_tasks.join("<br>")}</span></p>
-              <p>Start time : <span>#{@periodicity.start_time.hour}h#{@periodicity.start_time.min}</span></p>
-              <div class="sign">
-                <a href="/tasks/execute/?id=#{@id}" class='button'>Execute</a>
-              </div>
+              #{building_date_display}
+          #{pre_task_or_start_time_display}
+          #{btn_execute_display}
             </div>
           </li>
           _end_of_html_
@@ -237,7 +235,37 @@ module Planning
       end
     end
 
+    private
+    def btn_execute_display
+      if $debugging
+        <<-_end_of_html_
+          <div class="sign">
+            <a href="/tasks/execute/?id=#{@id}" class='button'>Execute</a>
+          </div>
+        _end_of_html_
+      end
+    end
+
+    def building_date_display
+      if !@key[:building_date].nil?
+        <<-_end_of_html_
+        <p>Building date<br><span>#{@key[:building_date]}</span></p>
+        _end_of_html_
+      end
+    end
+
+    def pre_task_or_start_time_display
+      if has_pre_tasks?
+        <<-_end_of_html_
+      <p>Pre tasks<br><span>#{@pre_tasks.join("<br>")}</span></p>
+        _end_of_html_
+      else
+        <<-_end_of_html_
+      <p>Start time : <span>#{@periodicity.start_time.hour}h#{@periodicity.start_time.min}</span></p>
+        _end_of_html_
+      end
+    end
+
+
   end
-
-
 end

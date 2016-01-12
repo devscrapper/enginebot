@@ -77,18 +77,13 @@ module Planning
         @building_behaviour_day = parameters.building_behaviour_day
         @building_behaviour_hour = parameters.building_behaviour_hour
         @building_behaviour_min = parameters.building_behaviour_min
-        @building_landing_pages_organic_day = parameters.building_landing_pages_organic_day
-        @building_landing_pages_organic_hour = parameters.building_landing_pages_organic_hour
-        @building_landing_pages_organic_min = parameters.building_landing_pages_organic_min
         @building_objectives_day = parameters.building_objectives_day
         @building_objectives_hour = parameters.building_objectives_hour
         @building_objectives_min = parameters.building_objectives_min
         @building_landing_pages_direct_day = parameters.building_landing_pages_direct_day
         @building_landing_pages_direct_hour = parameters.building_landing_pages_direct_hour
         @building_landing_pages_direct_min = parameters.building_landing_pages_direct_min
-        @building_landing_pages_referral_day = parameters.building_landing_pages_referral_day
-        @building_landing_pages_referral_hour = parameters.building_landing_pages_referral_hour
-        @building_landing_pages_referral_min = parameters.building_landing_pages_referral_min
+
      end
 
     end

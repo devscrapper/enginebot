@@ -95,10 +95,10 @@ module Planning
       events.keep_if { |evt| evt.has_pre_tasks? and !evt.has_pre_tasks_running? and evt.all_pre_tasks_over? }
     end
 
-    #supprimer tous events produit par les objectives pour un policy
-    def delete_objectives(policy_id)
+    #supprimer tous events produit par les objectives d'un policy
+    def delete_objectives(policy_id, building_date)
       raise ArgumentError, policy_id if policy_id.nil?
-      @events.delete_if { |e| e.is_objective? and e.key[:policy_id] == policy_id }
+      @events.delete_if { |e| e.is_objective? and e.key[:policy_id] == policy_id and e.key[:building_date] == building_date}
     end
 
     # supprimer tous les events d'une policy => policy_id (integer)
@@ -315,10 +315,9 @@ module Planning
 
         @sem.synchronize {
           #suppression des objective existant de la policy : policy_id
-          delete_objectives(data_event[:policy_id])
+          delete_objectives(data_event[:policy_id], data_event[:building_date])
 
           events.each { |e|
-            delete_event(e)
             add(e)
           }
           save
@@ -358,7 +357,7 @@ module Planning
 
 
     def add(event)
-      event.each { |evt| @events << evt } if event.is_a?(Array)
+      @events += event if event.is_a?(Array)
       @events << event unless event.is_a?(Array)
     end
 

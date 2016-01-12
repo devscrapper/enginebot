@@ -50,11 +50,9 @@ module Planning
         @building_behaviour_day = parameters.building_behaviour_day
         @building_behaviour_hour = parameters.building_behaviour_hour
         @building_behaviour_min = parameters.building_behaviour_min
-        @building_landing_pages_organic_day = parameters.building_landing_pages_organic_day
-        @building_landing_pages_organic_hour = parameters.building_landing_pages_organic_hour
-        @building_landing_pages_organic_min = parameters.building_landing_pages_organic_min
-
-
+        @building_objectives_day = parameters.building_objectives_day
+        @building_objectives_hour = parameters.building_objectives_hour
+        @building_objectives_min = parameters.building_objectives_min
       end
     end
 

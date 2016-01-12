@@ -10,7 +10,6 @@ module Tasking
       SEPARATOR4="|"
 
       attr :website_label,
-           :date,
            :count_visits,
            :visit_bounce_rate,
            :avg_time_on_site,
@@ -68,7 +67,6 @@ module Tasking
                      min_duration,
                      max_duration)
         @objective_id = UUID.generate(:compact)
-        @date = date
         @website_label = website_label
         @count_visits = count_visits
         @visit_bounce_rate=visit_bounce_rate
@@ -82,8 +80,8 @@ module Tasking
         @advertising_percent=advertising_percent
         @advertisers = advertisers
         @url_root = url_root
-        @periodicity =IceCube::Schedule.new(Time.local(@date.year, @date.month, @date.day),
-                                            :end_time => Time.local(@date.year, @date.month, @date.day)).to_yaml
+        @periodicity =IceCube::Schedule.new(Time.local(date.year, date.month, date.day),
+                                            :end_time => Time.local(date.year, date.month, date.day)).to_yaml
         @hourly_distribution=translate_to_count_visits_target(hourly_distribution, count_visits)
         @policy_id = policy_id
         @policy_type = policy_type
@@ -111,7 +109,6 @@ module Tasking
                 "policy_type" => @policy_type,
                 "count_weeks" => @count_weeks,
                 "count_visits" => @count_visits,
-                "building_date" => @date,
                 "url_root" => @url_root,
                 "direct_medium_percent" => @direct_medium_percent,
                 "organic_medium_percent" => @organic_medium_percent,
