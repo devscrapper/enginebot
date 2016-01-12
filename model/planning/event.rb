@@ -151,19 +151,6 @@ module Planning
       @key.to_s(*a)
     end
 
-    # def pre_tasks_to_html
-    #
-    #   @pre_tasks.map { |t|
-    #     if @pre_tasks_over.include?(t)
-    #       "<span class=\"green\">\"#{t}\"</span>"
-    #     elsif @pre_tasks_running.include?(t)
-    #       "<span class=\"purple\">\"#{t}\"</span>"
-    #     else
-    #       "<span class=\"pink\">\"#{t}\"</span>"
-    #           end
-    #        }.join("<br>")
-    #
-    # end
 
     # affiche au format html le contenu de l'event selon 2 niveau de details
     # :summary (par defaut)
@@ -193,6 +180,7 @@ module Planning
             <div class="bottom">
               <p>Website<br><span>#{@business[:website_label]}</span></p>
               <p>Policy id : <span>#{@key[:policy_id]}</span></p>
+              <p>Policy type : <span>#{@business[:policy_type].capitalize}</span></p>
               #{building_date_display}
           #{pre_task_or_start_time_display}
           #{btn_execute_display}

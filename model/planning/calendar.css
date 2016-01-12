@@ -48,6 +48,7 @@ ul li {
   background-color: #EAE9E4;
   height: 50px;
   margin-top: 0px;
+  color :BlueViolet;
 }
 .title h3{
   background-color: #EAE9E4;
@@ -61,6 +62,7 @@ ul li {
 }
 .top h5 {
   padding-top: 20px;
+
 }
 
 .circle {
@@ -92,6 +94,7 @@ ul li {
 .bottom p span {
       font-family: 'Droid Sans', sans-serif;
       font-weight: bold;
+      color:  DarkMagenta ;
 }
 
 .sign {

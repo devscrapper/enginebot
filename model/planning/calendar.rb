@@ -276,8 +276,7 @@ module Planning
 
         @logger.an_event.debug "register policy <#{policy}> data_event #{data_event}"
         require_relative "object2event/#{policy.downcase}"
-        events = eval(policy.capitalize!).new(data_event).to_event
-
+        events = eval(policy.capitalize).new(data_event).to_event
         @logger.an_event.debug "count #{events.size} events from policy #{policy}"
 
         @sem.synchronize {
@@ -316,11 +315,14 @@ module Planning
         @sem.synchronize {
           #suppression des objective existant de la policy : policy_id
           delete_objectives(data_event[:policy_id], data_event[:building_date])
+          @logger.an_event.debug "delete objectives for policy #{data_event[:policy_id]} and day #{data_event[:building_date]}"
 
           events.each { |e|
             add(e)
+            @logger.an_event.debug "add #{e} to calendar"
           }
           save
+          @logger.an_event.debug "save calendar"
         }
 
       rescue Exception => e
