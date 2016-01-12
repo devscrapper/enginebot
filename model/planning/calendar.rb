@@ -1,4 +1,5 @@
 require_relative '../../lib/logging'
+require_relative '../../lib/parameter'
 require_relative 'event'
 require 'date'
 require 'json'
@@ -382,10 +383,14 @@ module Planning
         end
       }
       str = ""
-      res.sort_by { |date, events| date }.each { |date, events|
+
+      res.sort_by { |date| date }.each { |date, events|
+        events_with_pre_task = sort_by_pre_task(events.select { |e| e.has_pre_tasks? })
+        events_with_start_time = sort_by_start_time(events.select { |e| !e.has_pre_tasks? })
         str += "<div class='day'><h3>#{date}</h3></div>" + '<div class="wrap"><div class="table"><ul>'
-        str += tri(events).map { |e| e.to_html }.join
-        str += '</ul>        </div>        </div>'
+        #     str += sort_by_pre_task(events).map { |e| e.to_html }.join
+        str += (events_with_start_time + events_with_pre_task).map { |e| e.to_html }.join
+        str += '</ul></div></div>'
       }
       str + ""
     end
@@ -492,9 +497,10 @@ module Planning
       events.empty? ? nil : events[0]
     end
 
-    # ordonne les events en fonction du cirtère pre_task :
+
+    # ordonne les events en fonction du critère pre_task :
     # si un event a des pre task il est placé derriere ses pre task
-    def tri(arr)
+    def sort(arr)
       begin
         i = 0
         while i < arr.size-1
@@ -511,6 +517,34 @@ module Planning
         end
       end
       arr
+    end
+
+    # ordonne les events en fonction dun critère passé par papramètre (Bloc)
+    def sort_by(arr, &bloc)
+      begin
+        i = 0
+        while i < arr.size-1
+          j = i + 1
+          while j < arr.size
+            if yield(arr[i], arr[j])
+              tmp = arr[i]
+              arr[i] = arr[j]
+              arr[j] = tmp
+            end
+            j +=1
+          end
+          i +=1
+        end
+      end
+      arr
+    end
+
+    def sort_by_pre_task(arr)
+      sort_by(arr) { |e, f| e.has_pre_task?(f) or !f.has_pre_tasks? }
+    end
+
+    def sort_by_start_time(arr)
+      sort_by(arr) { |e, f| f.is_before?(e) }
     end
   end
 end

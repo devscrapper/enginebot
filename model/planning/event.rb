@@ -126,6 +126,12 @@ module Planning
       !@business[:objective_id].nil?
     end
 
+    #self is before e
+    def is_before?(e)
+      (@periodicity.start_time.hour < e.periodicity.start_time.hour) or
+          (@periodicity.start_time.hour == e.periodicity.start_time.hour and @periodicity.start_time.min < e.periodicity.start_time.min)
+    end
+
     def is_started
       @state = START
       @pre_tasks_over = []
@@ -185,9 +191,10 @@ module Planning
             </div>
             <div class="bottom">
               <p>Website<br><span>#{@business[:website_label]}</span></p>
-              <p>Policy id<br><span>#{@key[:policy_id]}</span></p>
+              <p>Policy id : <span>#{@key[:policy_id]}</span></p>
               <p>Building date<br><span>#{@key[:building_date]}</span></p>
               <p>Pre tasks<br><span>#{@pre_tasks.join("<br>")}</span></p>
+              <p>Start time : <span>#{@periodicity.start_time.hour}h#{@periodicity.start_time.min}</span></p>
               <div class="sign">
                 <a href="/tasks/execute/?id=#{@id}" class='button'>Execute</a>
               </div>
@@ -229,6 +236,7 @@ module Planning
         raise "cannot execute event <#{@label}> for <#{@business[:website_label]}> : #{e.message}"
       end
     end
+
   end
 
 
