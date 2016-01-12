@@ -89,7 +89,7 @@ module Planning
       @min_pages_website = data[:min_pages_website]
       @statistics_type = data[:statistics_type]
       @max_duration_scraping = data[:max_duration_scraping]
-      if @statistics_type == :custom
+      if @statistics_type == "custom"
         @hourly_daily_distribution = data[:hourly_daily_distribution]
         @percent_new_visit = data[:percent_new_visit]
         @visit_bounce_rate = data[:visit_bounce_rate]
