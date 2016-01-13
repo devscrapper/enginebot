@@ -1,7 +1,7 @@
 require_relative '../communication'
 module Tasking
-  PARAMETERS = File.dirname(__FILE__) + "/../../parameter/tasks_server.yml"
-  ENVIRONMENT= File.dirname(__FILE__) + "/../../parameter/environment.yml"
+  PARAMETERS = "tasks_server.rb"
+
 
   class Task
 
@@ -16,21 +16,19 @@ module Tasking
       @cmd = cmd
       @data = data
       @tasks_server_port = 9151
-      begin
-        environment = YAML::load(File.open(ENVIRONMENT), "r:UTF-8")
-        staging = environment["staging"] unless environment["staging"].nil?
-      rescue Exception => e
-        $stderr << "loading parameter file #{ENVIRONMENT} failed : #{e.message}" << "\n"
-      end
-
-      begin
-        params = YAML::load(File.open(PARAMETERS), "r:UTF-8")
-        @tasks_server_port = params[staging]["tasks_server_port"] unless params[staging]["tasks_server_port"].nil?
-      rescue Exception => e
-        $stderr << "loading parameters file #{PARAMETERS} failed : #{e.message}" << "\n"
-      end
-
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
+      begin
+        parameters = Parameter.new(PARAMETERS)
+
+      rescue Exception => e
+        $stderr << e.message << "\n"
+
+      else
+        @tasks_server_port = parameters.listening_port #TODO remplacer par une variable passée à la Connectiontask qui la passera à l'object Task dont héritera toutes les actions
+        if @tasks_server_port.nil?
+          @logger.an_event.error "@tasks_server_port parameters not define"
+        end
+      end
 
     end
 

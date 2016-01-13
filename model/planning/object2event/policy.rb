@@ -183,7 +183,7 @@ module Planning
                     }),
           Event.new("Scraping_hourly_daily_distribution",
                     periodicity_scraping_hourly_distribution,
-                    @statistics_type == :custom ?
+                    @statistics_type == "custom" ?
                         {
 
                             :policy_type => @policy_type,
@@ -203,7 +203,7 @@ module Planning
                         }),
           Event.new("Scraping_behaviour",
                     periodicity_scraping_behaviour,
-                    @statistics_type == :custom ?
+                    @statistics_type == "custom" ?
                         {
 
                             :policy_type => @policy_type,
