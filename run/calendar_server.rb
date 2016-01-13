@@ -4,7 +4,7 @@ require 'yaml'
 require 'rufus-scheduler'
 require_relative '../lib/logging'
 require_relative '../model/planning/calendar'
-require_relative '../model/planning/calendar_connection_http'
+require_relative '../model/planning/connection'
 
 
 #--------------------------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ EventMachine.run {
   end
 
   logger.a_log.info "calendar server is running"
-  EventMachine.start_server "0.0.0.0", listening_port, CalendarConnection, logger, calendar
+  EventMachine.start_server "0.0.0.0", listening_port, Connection, logger, calendar
 }
 logger.a_log.info "calendar server stopped"
 

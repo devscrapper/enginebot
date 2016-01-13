@@ -7,7 +7,7 @@ require_relative 'event2task/statistic/statistic'
 require_relative 'event2task/statistic/chosens'
 require_relative 'event2task/statistic/default'
 require_relative 'event2task/statistic/custom'
-require_relative 'event2task/statistic/google_analytics'
+#require_relative 'event2task/statistic/google_analytics' #TODO ko with ruby 223
 require_relative 'event2task/traffic_source/chosens'
 require_relative 'event2task/traffic_source/default'
 require_relative 'event2task/traffic_source/organic'

@@ -58,15 +58,10 @@ set :application, "enginebot" # nom application (github)
 set :ftp_server_port, 9102 # port d"ecoute du serveur ftp"
 set :shared_children, ["archive",
                        "data",
-                       "jdd",
                        "log",
                        "tmp",
-                       "input",
                        "output"] # répertoire partagé entre chaque release
-set :server_list, ["authentification_#{application}",
-                   "calendar_#{application}",
-                   "ftpd_#{application}",
-                   "input_flows_#{application}",
+set :server_list, ["calendar_#{application}",
                    "tasks_#{application}",
                    "scheduler_#{application}"]
 
@@ -209,7 +204,7 @@ end
 #----------------------------------------------------------------------------------------------------------------------
 namespace :data do
   task :clear do
-    ['archive', 'data', 'output', 'tmp', 'input'].each { |dir|
+    ['archive', 'data', 'output', 'tmp'].each { |dir|
       begin
         run "rm #{File.join(current_path, dir, '*')} "
       rescue Exception => e
@@ -252,12 +247,6 @@ namespace :apres do
     # definition du type d'environement
     run "echo 'staging: #{staging}' >  #{File.join(current_path, 'parameter', 'environment.yml')}"
 
-    # parametrage du server FTP
-    run "rm #{File.join(current_path, 'config', 'config.rb')}"
-    config = "require '" + File.join(current_path, 'run', 'driver_em_ftpd.rb') + "'\n"
-    config += "driver     FTPDriver\n"
-    config += "port #{ftp_server_port}"
-    put config, File.join(current_path, 'config', 'config.rb')
   end
 end
 

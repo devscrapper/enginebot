@@ -1,8 +1,0 @@
-development:
-  listening_port: 9103
-  debugging: true
-test:
-  listening_port: 9103
-  debugging: false
-
-production:
