@@ -38,7 +38,6 @@ module Tasking
       execute(__method__) {
         case @data[:statistic_type].to_sym
           when :ga
-            #TODO executer dans un Defer
             Statistic::Googleanalytics.new.device_platform_resolution(@data[:website_label], @data[:building_date], @data[:profil_id_ga], @data[:website_id])
 
           when :default, :custom
@@ -52,7 +51,7 @@ module Tasking
 
       execute(__method__) {
         case @data[:statistic_type].to_sym
-          when :ga #TODO executer dans un Defer
+          when :ga
             Statistic::Googleanalytics.new.device_platform_plugin(@data[:website_label], @data[:building_date], @data[:profil_id_ga], @data[:website_id])
 
           when :default, :custom
@@ -67,8 +66,8 @@ module Tasking
 
       execute(__method__) {
         case @data[:statistic_type].to_sym
-          when :ga #TODO executer dans un Defer
-            Statistic::Googleanalytics.new.behaviour(@data[:website_label], @data[:building_date], @data[:profil_id_ga], @data[:website_id]) #TODO � corriger comme default
+          when :ga
+            Statistic::Googleanalytics.new.behaviour(@data[:website_label], @data[:building_date], @data[:profil_id_ga], @data[:website_id]) #TODO � corriger comme default ko with ruby 223
 
           when :default
             Statistic::Default.new(@data[:website_label], @data[:building_date], @data[:policy_type]).behaviour
@@ -88,8 +87,8 @@ module Tasking
 
       execute(__method__) {
         case @data[:statistic_type].to_sym
-          when :ga #TODO executer dans un Defer
-            Statistic::Googleanalytics.new.hourly_daily_distribution(@data[:website_label], @data[:building_date], @data[:profil_id_ga], @data[:website_id]) #TODO � corriger comme default
+          when :ga
+            Statistic::Googleanalytics.new.hourly_daily_distribution(@data[:website_label], @data[:building_date], @data[:profil_id_ga], @data[:website_id]) #TODO � corriger comme default   ko with ruby 223
 
           when :default
             Statistic::Default.new(@data[:website_label], @data[:building_date], @data[:policy_type]).hourly_daily_distribution

@@ -1,22 +1,21 @@
 
 development:
-  tasks_server_port: 9101
-  listening_port: 9101
-  ftp_server_port: 9102
-  authentification_server_port: 9103
-  statupweb_server_ip: localhost
-  statupweb_server_port: 3000
-  calendar_server_port: 9104
-  debugging: true
+  :listening_port: 9101
+  :calendar_server_port: 9104
+  :statupweb_server_ip: localhost
+  :statupweb_server_port: 3000
+  :debugging: true
 
 test:
-  tasks_server_port: 9101
-  listening_port: 9101
-  ftp_server_port: 9102
-  authentification_server_port: 9103
-  statupweb_server_ip: 192.168.1.11
-  statupweb_server_port: 3000
-  calendar_server_port: 9104
-  debugging: true
+  :listening_port: 9101
+  :calendar_server_port: 9104
+  :statupweb_server_ip: 192.168.1.88
+  :statupweb_server_port: 3000
+  :debugging: true
 
 production:
+  :listening_port: 9101
+  :calendar_server_port: 9104
+  :statupweb_server_ip: 192.168.1.88
+  :statupweb_server_port: 3000
+  :debugging: true
