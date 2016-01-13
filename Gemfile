@@ -16,11 +16,6 @@ gem 'rest-client', '~> 1.6.7'
 gem 'tzinfo', '~> 1.0.0'
 gem 'addressable', '2.3.8'
 gem 'em-http-server', '~> 0.1.8'
-
-
-#TODO à supprimer
-gem 'em-ftpd', '~> 0.0.1'
-
 # fin new gem
 
 #group :development
