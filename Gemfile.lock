@@ -9,8 +9,6 @@ GEM
       net-sftp (>= 2.0.0)
       net-ssh (>= 2.0.14)
       net-ssh-gateway (>= 1.1.0)
-    em-ftpd (0.0.1)
-      eventmachine (~> 1.0.0.beta1)
     em-http-server (0.1.8)
       eventmachine
     eventmachine (1.0.8)
@@ -59,7 +57,6 @@ DEPENDENCIES
   addressable (= 2.3.8)
   bundler (~> 1.10.6)
   capistrano (~> 2.15.5)
-  em-ftpd (~> 0.0.1)
   em-http-server (~> 0.1.8)
   eventmachine (~> 1.0.8)
   ice_cube (~> 0.13.0)
