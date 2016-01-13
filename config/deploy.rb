@@ -60,6 +60,7 @@ set :shared_children, ["archive",
                        "data",
                        "log",
                        "tmp",
+                       "input",
                        "output"] # répertoire partagé entre chaque release
 set :server_list, ["calendar_#{application}",
                    "tasks_#{application}",
@@ -204,7 +205,7 @@ end
 #----------------------------------------------------------------------------------------------------------------------
 namespace :data do
   task :clear do
-    ['archive', 'data', 'output', 'tmp'].each { |dir|
+    ['archive', 'data', 'output', 'tmp', 'input'].each { |dir|
       begin
         run "rm #{File.join(current_path, dir, '*')} "
       rescue Exception => e
