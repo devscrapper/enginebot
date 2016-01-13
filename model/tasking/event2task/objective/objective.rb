@@ -145,22 +145,7 @@ module Tasking
           @logger.an_event.error "Objective <#{info.join(",")}> not save => #{response.code}"
           raise "Objective <#{info.join(",")}> not save => #{response.code}"
         end
-        #
-        # try_count = 3
-        # begin
-        #
-        #   response = Question.new(@query).ask_to("localhost", $calendar_server_port)
-        #
-        # rescue Exception => e
-        #   try_count -= 1
-        #   retry if try_count > 0
-        #   raise e
-        # else
-        #
-        #   raise response[:error] if response[:state] == :ko
-        #   response[:data] if response[:state] == :ok and !response[:data].nil?
-        #
-        # end
+
 
       end
 

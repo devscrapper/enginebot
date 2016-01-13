@@ -146,7 +146,9 @@ module Planning
     def policy_id
       @key[:policy_id]
     end
-
+    def policy_type
+      @business[:policy_type]
+    end
     def to_s(*a)
       @key.to_s(*a)
     end
@@ -178,9 +180,6 @@ module Planning
               <div class="circle #{color}"> #{@state} </div>
             </div>
             <div class="bottom">
-              <p>Website<br><span>#{@business[:website_label]}</span></p>
-              <p>Policy id : <span>#{@key[:policy_id]}</span></p>
-              <p>Policy type : <span>#{@business[:policy_type].capitalize}</span></p>
               #{building_date_display}
           #{pre_task_or_start_time_display}
           #{btn_execute_display}
@@ -206,6 +205,10 @@ module Planning
 
 
     end
+    def website_label
+      @business[:website_label]
+    end
+
 
     def execute
       raise "event #{@label} already starting" if @state == START and $staging != 'development'

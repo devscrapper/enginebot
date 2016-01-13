@@ -6,8 +6,8 @@
 
 html, body {
   height: 100%;
-width: 100%;
-overflow-y: auto;
+  width: 100%;
+  overflow-y: auto;
 }
 
 body {
@@ -23,13 +23,12 @@ body {
   margin: 0 auto;
   text-align: left;
   color: #989A8F;
-overflow:auto;
+  overflow:auto;
 
 }
 
 .table {
- // background-color: #ffffff;
-  height: 270px;
+  height: 150px;
   width: 100%;
   margin-top: 10px;
 
@@ -37,10 +36,10 @@ overflow:auto;
 
 ul li {
   float: left;
-  width: 250px;
+  width: 300px;
   text-align: center;
   border-left: 1px solid #DDDCD8;
-     background-color: #ffffff;
+  background-color: #ffffff;
 
 }
 
@@ -54,6 +53,16 @@ ul li {
   background-color: #EAE9E4;
   height: 50px;
   margin-top: 20px;
+}
+.title h4{
+  background-color: #EAE9E4;
+  height: 100px;
+  margin-top: 10px;
+}
+.title h5{
+  background-color: #EAE9E4;
+  height: 90px;
+  margin-top: 10px;
 }
 .day h3{
   background-color: #EAE9E4;
@@ -74,31 +83,30 @@ ul li {
   line-height: 60px;
   text-align: center;
   background: #989A8F;
-  margin-left: 100px;
+  margin-left: 120px;
   margin-top: 10px;
 }
 
 .bottom {
   margin-top: 50px;
-  height: 290px;
+  height: 130px;
 }
 .bottom p {
-
   font-size: 13px;
   font-family: 'Droid Serif', sans-serif;
   padding: 10px;
 }
 .bottom p  {
-      font-family: 'Droid Sans', sans-serif;
+  font-family: 'Droid Sans', sans-serif;
 }
-.bottom p span {
-      font-family: 'Droid Sans', sans-serif;
-      font-weight: bold;
-      color:  DarkMagenta ;
+.title p span {
+  font-family: 'Droid Sans', sans-serif;
+  font-weight: bold;
+  color:  DarkMagenta ;
 }
 
 .sign {
-  margin-top: 50px;
+  margin-top: 30px;
 
 }
 .sign .button {

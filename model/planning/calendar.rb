@@ -98,7 +98,7 @@ module Planning
     #supprimer tous events produit par les objectives d'un policy
     def delete_objectives(policy_id, building_date)
       raise ArgumentError, policy_id if policy_id.nil?
-      @events.delete_if { |e| e.is_objective? and e.key[:policy_id] == policy_id and e.key[:building_date] == building_date}
+      @events.delete_if { |e| e.is_objective? and e.key[:policy_id] == policy_id and e.key[:building_date] == building_date }
     end
 
     # supprimer tous les events d'une policy => policy_id (integer)
@@ -378,23 +378,43 @@ module Planning
       events.each { |evt|
         date = Date.parse(evt.periodicity.first.to_s).to_s
         if res[date].nil?
-          res.merge!({date => [evt]})
+          res.merge!({date => {evt.key[:policy_id] => [evt]}})
         else
-          res[date] << evt
+          if res[date][evt.key[:policy_id]].nil?
+            res[date].merge!({evt.key[:policy_id] => [evt]})
+          else
+            res[date][evt.key[:policy_id]] << evt
+          end
+
         end
       }
       str = ""
 
-      res.sort_by { |date| date }.each { |date, events|
-        events_with_pre_task = sort_by_pre_task(events.select { |e| e.has_pre_tasks? })
-        events_with_start_time = sort_by_start_time(events.select { |e| !e.has_pre_tasks? })
-        events = events_with_start_time + events_with_pre_task
-        str += "<div class='day'><h3>#{date}(#{events.size})</h3></div>" + '<div class="wrap"><div class="table"><ul>'
-        #     str += sort_by_pre_task(events).map { |e| e.to_html }.join
-        str += events.map { |e| e.to_html }.join
-        str += '</ul></div></div>'
+      res.sort_by { |date| date }.each { |date, policies|
+        str += "<div class='day'><h3>#{date}</h3></div>"
+        str += '<div class="wrap">'
+        str += '<div class="table">'
+        policies.each { |policy, events|
+          str += '<ul><li>'
+          str += '<div class="title"><h5>'
+          str += "<p>Website<br><span>#{events[0].website_label}</span></p>"
+          str += "<p>Policy_type : <span>#{events[0].policy_type}</span></p>"
+          str += "<p>Policy_id : <span>#{events[0].policy_id}</span></p>"
+          str += "</h5></div>"
+          str += '<div class="wrap">'
+          str += '<div class="table">'
+          str += '<ul>'
+          events_with_pre_task = sort_by_pre_task(events.select { |e| e.has_pre_tasks? })
+          events_with_start_time = sort_by_start_time(events.select { |e| !e.has_pre_tasks? })
+          events = events_with_start_time + events_with_pre_task
+
+          str += events.map { |e| e.to_html }.join
+          str += '</ul></li></ul>'
+        }
+        str += '</div></div>'
       }
-      str + ""
+
+      str
     end
 
     # execute tous les events
