@@ -76,7 +76,7 @@ set :server_list, ["authentification_#{application}",
 require "rvm/capistrano" #  permet aussi d'installer rvm et ruby
 require "rvm/capistrano/alias_and_wrapp"
 require "rvm/capistrano/gem_install_uninstall"
-set :rvm_ruby_string, '1.9.3' # defini la version de ruby a installer
+set :rvm_ruby_string, '2.2.3' # defini la version de ruby a installer
 set :rvm_type, :system #RVM installed in /usr/local, multiuser installation
 set :rvm_autolibs_flag, :enable #permet d'installer automatiquement les composants (build_essential, libtool, libyaml) pour ruby
 set :bundle_dir, '' # on n'utilise pas bundle pour instaler les gem
