@@ -98,6 +98,7 @@ module Planning
     #supprimer tous events produit par les objectives d'un policy
     def delete_objectives(policy_id, building_date)
       raise ArgumentError, policy_id if policy_id.nil?
+      raise ArgumentError, building_date if building_date.nil?
       @events.delete_if { |e| e.is_objective? and e.key[:policy_id] == policy_id and e.key[:building_date] == building_date }
     end
 
@@ -314,7 +315,7 @@ module Planning
 
         @sem.synchronize {
           #suppression des objective existant de la policy : policy_id
-          delete_objectives(data_event[:policy_id], data_event[:building_date])
+          delete_objectives(events[0].policy_id, events[0].building_date)
           @logger.an_event.debug "delete objectives for policy #{data_event[:policy_id]} and day #{data_event[:building_date]}"
 
           events.each { |e|
@@ -407,7 +408,6 @@ module Planning
           events_with_pre_task = sort_by_pre_task(events.select { |e| e.has_pre_tasks? })
           events_with_start_time = sort_by_start_time(events.select { |e| !e.has_pre_tasks? })
           events = events_with_start_time + events_with_pre_task
-
           str += events.map { |e| e.to_html }.join
           str += '</ul></li></ul>'
         }

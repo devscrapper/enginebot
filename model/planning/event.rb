@@ -181,8 +181,8 @@ module Planning
             </div>
             <div class="bottom">
               #{building_date_display}
-          #{pre_task_or_start_time_display}
-          #{btn_execute_display}
+              #{pre_task_or_start_time_display}
+              #{btn_execute_display}
             </div>
           </li>
           _end_of_html_
@@ -240,7 +240,7 @@ module Planning
     def building_date_display
       if !@key[:building_date].nil?
         <<-_end_of_html_
-        <p>Building date<br><span>#{@key[:building_date]}</span></p>
+        <p>Building date : <span>#{@key[:building_date]}</span></p>
         _end_of_html_
       end
     end
