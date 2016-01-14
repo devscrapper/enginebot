@@ -154,7 +154,7 @@ module Tasking
 
         @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> <#{@date_building}> is starting"
         @logger.an_event.debug "count_visits_per_day #{count_visits_per_day}"
-        @logger.an_event.debug "count_visits_per_day #{monday_start}"
+        @logger.an_event.debug "monday_start #{monday_start}"
         @logger.an_event.debug "policy_id #{@policy_id}"
         @logger.an_event.debug "website_id #{@website_id}"
         @logger.an_event.debug "policy_type #{@policy_type}"

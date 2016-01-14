@@ -56,6 +56,48 @@ module Planning
       end
     end
 
+    def to_event
+      super
+      @events += [
+          Event.new("Building_objectives",
+                    IceCube::Schedule.new(@monday_start +
+                                              @building_objectives_day * IceCube::ONE_DAY +
+                                              @building_objectives_hour * IceCube::ONE_HOUR +
+                                              @building_objectives_min * IceCube::ONE_MINUTE,
+                                          :end_time => @monday_start +
+                                              @building_objectives_day * IceCube::ONE_DAY +
+                                              @building_objectives_hour * IceCube::ONE_HOUR +
+                                              @building_objectives_min * IceCube::ONE_MINUTE +
+                                              @count_weeks * IceCube::ONE_WEEK),
+                    {
+                        :website_id => @website_id,
+                        :website_label => @website_label,
+                        :policy_type => @policy_type,
+                        :policy_id => @policy_id,
+                        :change_bounce_visits_percent => @change_bounce_visits_percent,
+                        :monday_start => @monday_start,
+                        :count_weeks => @count_weeks,
+                        :url_root => @url_root,
+                        :count_visits_per_day => @count_visits_per_day,
+                        :min_count_page_advertiser => @min_count_page_advertiser,
+                        :max_count_page_advertiser => @max_count_page_advertiser,
+                        :min_duration_page_advertiser => @min_duration_page_advertiser,
+                        :max_duration_page_advertiser => @max_duration_page_advertiser,
+                        :percent_local_page_advertiser => @percent_local_page_advertiser,
+                        :duration_referral => @duration_referral,
+                        :min_count_page_organic => @min_count_page_organic,
+                        :max_count_page_organic => @max_count_page_organic,
+                        :min_duration_page_organic => @min_duration_page_organic,
+                        :max_duration_page_organic => @max_duration_page_organic,
+                        :min_duration => @min_duration,
+                        :max_duration => @max_duration,
+                        :min_duration_website => @min_duration_website,
+                        :min_pages_website => @min_pages_website
+                    },
+                    ["Building_hourly_daily_distribution", "Building_behaviour"])
+      ]
+    end
+
   end
 
 

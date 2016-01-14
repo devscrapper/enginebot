@@ -84,7 +84,7 @@ module Planning
         @building_landing_pages_direct_hour = parameters.building_landing_pages_direct_hour
         @building_landing_pages_direct_min = parameters.building_landing_pages_direct_min
 
-     end
+      end
 
     end
 
@@ -109,7 +109,6 @@ module Planning
                                                                                @count_weeks * IceCube::ONE_WEEK)
       periodicity_scraping_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +
                                                                                                        @count_weeks * IceCube::ONE_WEEK)
-
 
 
       @events += [
@@ -152,7 +151,48 @@ module Planning
                         :policy_id => @policy_id,
                         :policy_type => @policy_type
                     },
-                    ["Scraping_website"])
+                    ["Scraping_website"]),
+          Event.new("Building_objectives",
+                    IceCube::Schedule.new(@monday_start +
+                                              @building_objectives_day * IceCube::ONE_DAY +
+                                              @building_objectives_hour * IceCube::ONE_HOUR +
+                                              @building_objectives_min * IceCube::ONE_MINUTE,
+                                          :end_time => @monday_start +
+                                              @building_objectives_day * IceCube::ONE_DAY +
+                                              @building_objectives_hour * IceCube::ONE_HOUR +
+                                              @building_objectives_min * IceCube::ONE_MINUTE +
+                                              @count_weeks * IceCube::ONE_WEEK),
+                    {
+                        :website_id => @website_id,
+                        :website_label => @website_label,
+                        :policy_type => @policy_type,
+                        :policy_id => @policy_id,
+                        :change_count_visits_percent => @change_count_visits_percent,
+                        :change_bounce_visits_percent => @change_bounce_visits_percent,
+                        :direct_medium_percent => @direct_medium_percent,
+                        :organic_medium_percent => @organic_medium_percent,
+                        :referral_medium_percent => @referral_medium_percent,
+                        :advertising_percent => @advertising_percent,
+                        :advertisers => @advertisers,
+                        :monday_start => @monday_start,
+                        :count_weeks => @count_weeks,
+                        :url_root => @url_root,
+                        :min_count_page_advertiser => @min_count_page_advertiser,
+                        :max_count_page_advertiser => @max_count_page_advertiser,
+                        :min_duration_page_advertiser => @min_duration_page_advertiser,
+                        :max_duration_page_advertiser => @max_duration_page_advertiser,
+                        :percent_local_page_advertiser => @percent_local_page_advertiser,
+                        :duration_referral => @duration_referral,
+                        :min_count_page_organic => @min_count_page_organic,
+                        :max_count_page_organic => @max_count_page_organic,
+                        :min_duration_page_organic => @min_duration_page_organic,
+                        :max_duration_page_organic => @max_duration_page_organic,
+                        :min_duration => @min_duration,
+                        :max_duration => @max_duration,
+                        :min_duration_website => @min_duration_website,
+                        :min_pages_website => @min_pages_website
+                    },
+                    ["Building_hourly_daily_distribution", "Building_behaviour"])
 
 
       ]
