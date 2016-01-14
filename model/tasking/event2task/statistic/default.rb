@@ -6,7 +6,7 @@ require 'fileutils'
 
 require_relative '../../../../lib/logging'
 require_relative '../../../flow'
-require_relative '../../../authentification'
+
 require_relative 'statistic'
 #------------------------------------------------------------------------------------------
 # Pre requis gem

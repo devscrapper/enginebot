@@ -1,8 +1,7 @@
 require 'net/ftp'
-require_relative 'communication'
+
 require 'pathname'
 require 'ruby-progressbar'
-require_relative 'authentification'
 class Flow
 
 

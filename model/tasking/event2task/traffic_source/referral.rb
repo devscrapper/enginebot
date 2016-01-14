@@ -3,7 +3,7 @@ require 'rubygems'
 require 'ruby-progressbar'
 require 'addressable/uri'
 require_relative '../../../../lib/logging'
-require_relative '../../../communication'
+
 require_relative 'backlink'
 require_relative 'keyword'
 require_relative 'traffic_source'

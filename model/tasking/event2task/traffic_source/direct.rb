@@ -4,7 +4,6 @@ require 'rubygems'
 require "em-http-request"
 
 require_relative '../../../../lib/logging'
-require_relative '../../../communication'
 require_relative '../../../flow'
 require_relative 'traffic_source'
 

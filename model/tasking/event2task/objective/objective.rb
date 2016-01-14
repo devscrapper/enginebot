@@ -1,6 +1,6 @@
 require 'ice_cube'
 require 'uuid'
-require_relative '../../../communication'
+
 
 module Tasking
   module Objective

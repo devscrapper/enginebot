@@ -2,7 +2,7 @@ require_relative 'flow'
 require 'rufus-scheduler'
 require 'yaml'
 require 'eventmachine'
-require_relative 'communication'
+
 
 class Scheduler
   OUTPUT = File.expand_path(File.join("..", "..", "output"), __FILE__)
