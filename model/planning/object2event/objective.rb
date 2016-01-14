@@ -186,6 +186,7 @@ module Planning
                             periodicity_building_landing_pages_organic,
                             {
                                 :website_label => @website_label,
+                                :building_date => @objective_date.to_date,
                                 :objective_id => @objective_id,
                                 :website_id => @website_id,
                                 :policy_id => @policy_id,
@@ -240,6 +241,7 @@ module Planning
                   periodicity_building_landing_pages_referral,
                   {
                       :website_label => @website_label,
+                      :building_date => @objective_date.to_date,
                       :objective_id => @objective_id,
                       :website_id => @website_id,
                       :policy_id => @policy_id,
