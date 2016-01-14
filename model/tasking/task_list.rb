@@ -16,7 +16,7 @@ require_relative 'event2task/traffic_source/direct'
 require_relative '../planning/event'
 require 'rest-client'
 require 'json'
-
+# TODO a supprimer qd toutes les tasks auront été refondus
 module Tasking
   class Tasklist
     include Errors

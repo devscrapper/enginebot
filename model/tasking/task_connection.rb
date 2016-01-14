@@ -1,7 +1,7 @@
 require 'rubygems' # if you use RubyGems
 require 'eventmachine'
 require_relative 'task_list'
-
+#TODO à supprimer
 module Tasking
   class TaskConnection < EventMachine::Connection
     attr :logger

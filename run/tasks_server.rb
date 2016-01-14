@@ -3,8 +3,7 @@
 require 'yaml'
 require_relative '../lib/logging'
 require_relative '../lib/parameter'
-require_relative '../model/tasking/task_connection'
-
+require_relative '../model/tasking/connection'
 #--------------------------------------------------------------------------------------------------------------------
 # LOAD PARAMETER
 #--------------------------------------------------------------------------------------------------------------------
