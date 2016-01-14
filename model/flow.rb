@@ -481,8 +481,9 @@ class Flow
                    "last_volume" => last_volume}
     }
     begin
-
-      Information.new(data).send_to(ip_to, port_to)
+                  #TODO supprimer Information car n'appartient au projet et trouver une autre solution
+      raise "Object Information est deprecated"
+     # Information.new(data).send_to(ip_to, port_to)
 
     rescue Exception => e
 

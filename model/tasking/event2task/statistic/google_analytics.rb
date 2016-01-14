@@ -219,9 +219,10 @@ module Tasking
         else
           # informe statupweb que le scraping a été réalisé
           begin
-            options = {"path" => uri_update_querying_date,
-                       "scheme" => "http"}
-            Information.new({"date" => Date.today}).send_to($statupweb_server_ip, $statupweb_server_port, options)
+            # TODO object Information est deprecated et n'apportient au projet
+            # options = {"path" => uri_update_querying_date,
+            #            "scheme" => "http"}
+            # Information.new({"date" => Date.today}).send_to($statupweb_server_ip, $statupweb_server_port, options)
             @logger.an_event.info "update querying date <#{query}> for website <#{label}>"
           rescue Exception => e
             @logger.an_event.error "cannot update querying date <#{query}> to #{$statupweb_server_ip}:#{$statupweb_server_port} for Website <#{label}> : #{e.message}"
