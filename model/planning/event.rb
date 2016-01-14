@@ -1,10 +1,33 @@
 require 'ice_cube'
 require 'json'
 require 'uuid'
+require 'eventmachine'
 
+module TasksClient
+  include EM::P::ObjectProtocol
+
+  attr :event
+
+  def initialize(event)
+    @event = event
+  end
+
+  def post_init
+    begin
+      send_object @event
+
+    rescue Exception => e
+      raise "cannot send event to task_server : #{e.message}"
+
+    end
+  end
+
+end
 
 module Planning
   class Event
+
+    PARAMETERS = "tasks_server.rb"
 
     #states
     OVER = "over"
@@ -62,12 +85,6 @@ module Planning
     end
 
 
-    # retourne la date de building de la clé si c'est une Event quotidien
-    # sinon ""
-    def building_date
-      @key[:building_date].nil? ? "" : @key[:building_date]
-    end
-
     # retourne true si event est une pre-task de l'instance courante
     # il faut être de la même policy
     # il faut avoir la même building_date si l'event qui vient de se terminer en a une sinon non
@@ -88,10 +105,50 @@ module Planning
       @pre_tasks_running << event.label
     end
 
+    #retourne true si toutes les pre_task sont terminées
+    # intersecion des 2 array et comparaison des tailles pour s"assurer qu'ils sont identiques
+    def all_pre_tasks_over?
+      (@pre_tasks_over & @pre_tasks).size == @pre_tasks.size
+    end
+
+    #TODO à supprimer qd toutes les task auront été refondu avec un object Task dans Task_server
+    def business
+      @business
+    end
+
+    # retourne la date de building de la clé si c'est une Event quotidien
+    # sinon ""
+    def building_date
+      @key[:building_date].nil? ? "" : @key[:building_date]
+    end
 
     # supprime l'event du pre_rask_runing
     def delete_pre_task_running(event)
       @pre_tasks_running.delete(event.label)
+    end
+
+    def execute
+      begin
+        parameters = Parameter.new(PARAMETERS)
+
+      rescue Exception => e
+        raise "cannot get task_server port : #{e.message}"
+
+      else
+        tasks_server_port = parameters.listening_port #TODO remplacer par une variable passée à la Connectiontask qui la passera à l'object Task dont héritera toutes les actions
+        if tasks_server_port.nil?
+          raise "task_server port not define"
+
+        else
+          EventMachine.connect "localhost", tasks_server_port, TasksClient, self
+
+        end
+      end
+
+    end
+
+    def failed
+      @state = FAIL
     end
 
     #retourn true si event a au moins une pre_task
@@ -108,14 +165,10 @@ module Planning
       @id
     end
 
-    #retourne true si toutes les pre_task sont terminées
-    # intersecion des 2 array et comparaison des tailles pour s"assurer qu'ils sont identiques
-    def all_pre_tasks_over?
-      (@pre_tasks_over & @pre_tasks).size == @pre_tasks.size
-    end
-
-    def failed
-      @state = FAIL
+    #self is before e
+    def is_before?(e)
+      (@periodicity.start_time.hour < e.periodicity.start_time.hour) or
+          (@periodicity.start_time.hour == e.periodicity.start_time.hour and @periodicity.start_time.min < e.periodicity.start_time.min)
     end
 
     def is_finished
@@ -127,11 +180,6 @@ module Planning
       !@business[:objective_id].nil?
     end
 
-    #self is before e
-    def is_before?(e)
-      (@periodicity.start_time.hour < e.periodicity.start_time.hour) or
-          (@periodicity.start_time.hour == e.periodicity.start_time.hour and @periodicity.start_time.min < e.periodicity.start_time.min)
-    end
 
     def is_started
       @state = START
@@ -146,8 +194,13 @@ module Planning
     def policy_id
       @key[:policy_id]
     end
+
     def policy_type
       @business[:policy_type]
+    end
+
+    def task_label
+      @key[:task_label]
     end
     def to_s(*a)
       @key.to_s(*a)
@@ -181,8 +234,8 @@ module Planning
             </div>
             <div class="bottom">
               #{building_date_display}
-              #{pre_task_or_start_time_display}
-              #{btn_execute_display}
+          #{pre_task_or_start_time_display}
+          #{btn_execute_display}
             </div>
           </li>
           _end_of_html_
@@ -205,26 +258,11 @@ module Planning
 
 
     end
+
     def website_label
       @business[:website_label]
     end
 
-
-    def execute
-      raise "event #{@label} already starting" if @state == START and $staging != 'development'
-      require_relative 'task'
-      #TODO reviser l'envoie de la demande en remplacant communication.rb par un objet Task et mak de task_server en accepter un objet
-      begin
-        data = {
-            :event_id => @id,
-            :website_label => @business[:website_label],
-            :building_date => @key[:building_date] || Date.today}
-        data.merge!(@business)
-        Tasking::Task.new(@label, data).execute
-      rescue Exception => e
-        raise "cannot execute event <#{@label}> for <#{@business[:website_label]}> : #{e.message}"
-      end
-    end
 
     private
     def btn_execute_display
@@ -260,3 +298,4 @@ module Planning
 
   end
 end
+
