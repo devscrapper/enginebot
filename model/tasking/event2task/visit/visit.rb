@@ -165,7 +165,7 @@ module Tasking
           @start_date_time = Time.parse(visit.split(SEPARATOR1)[16])
 
         else
-          new_date = Date.parse(date)
+          new_date =  date.is_a?(String) ? Date.parse(date)  : date
           @start_date_time = Time.new(new_date.year,
                                       new_date.month,
                                       new_date.day,

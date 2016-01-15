@@ -173,7 +173,7 @@ module Tasking
                         0, #referral_medium_percent
                         100, #organic_medium_percent
                         0, #advertising_percent
-                        "none", #advertisers
+                        ["none"], #advertisers
                         url_root,
                         splitted_hourly_daily_distribution[1], #hour
                         @policy_id,

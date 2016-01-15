@@ -36,7 +36,7 @@ module Tasking
         chosen_landing_pages_file = Flow.new(TMP, "chosen-landing-pages", @policy_type, @label, @date_building) #output
 
         if organic_medium_percent > 0
-          organic_medium_count = (direct_medium_percent * count_visit / 100).to_i
+          organic_medium_count = (organic_medium_percent * count_visit / 100).to_i
 
           Choosing_landing_medium_in_mem("organic", organic_medium_count, chosen_landing_pages_file)
         else
