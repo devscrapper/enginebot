@@ -20,7 +20,7 @@ module Tasking
       #------------------------------------------------------------------------------------------
       REPOSITORY = "repository-organic" #dans TMP
       SCRAPED = "scraped-organic" #dans TMP
-      TRAFFIC_SOURCE = "scraping-traffic-source-organic" #dans OUTPUT
+      TRAFFIC_SOURCE = "scraping-traffic-source-organic" #dans TMP
       WORDS_COUNT_MAX_IN_KEYWORD = 5 # nombre de mot max dans un mot clÃ©
       SEPARATOR1 = "%SEP%"
       attr :max_duration, #durÃ©e d'exÃ©cution max que l'on laisse au scraping
@@ -103,7 +103,7 @@ module Tasking
 
             end
           }
-
+          @logger.an_event.warn "none keyword successful evaluated for #{@website_label} and #{@policy_type}"
         rescue Exception => e
           @logger.an_event.error "evaluate keywords for #{@website_label} and #{@date_building} : #{e.message}"
           raise e

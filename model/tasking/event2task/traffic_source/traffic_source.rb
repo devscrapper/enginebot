@@ -122,32 +122,7 @@ module Tasking
 
 
 
-      #--------------------------------------------------------------------------------------------------------------
-      # push_flow_to_engine_bot
-      #--------------------------------------------------------------------------------------------------------------
-      #
-      #--------------------------------------------------------------------------------------------------------------
-      # input :
-      # RAS
-      # output :
-      #
-      #--------------------------------------------------------------------------------------------------------------
-      #centre.epilation-laser-definitive.info;/6036.htm;/recherche/;sfr.fr;referral;(not set);1;
-      #--------------------------------------------------------------------------------------------------------------
-      def push_flow_to_engine_bot(id_file, last_volume = false)
-        begin
-          id_file.push($authentification_server_port,
-                       $input_flows_server_ip,
-                       $input_flows_server_port,
-                       $ftp_server_port,
-                       id_file.vol, # on pousse que ce volume
-                       last_volume)
-          @logger.an_event.info("push flow <#{id_file.basename}> to input flows server (#{$input_flows_server_ip}:#{$input_flows_server_port})")
-        rescue Exception => e
-          @logger.an_event.debug e
-          @logger.an_event.error("cannot push flow <#{id_file.basename}> to input flows server (#{$input_flows_server_ip}:#{$input_flows_server_port})")
-        end
-      end
+
 
 
     end

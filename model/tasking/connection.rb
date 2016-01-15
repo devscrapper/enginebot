@@ -2,6 +2,7 @@ require 'rubygems' # if you use RubyGems
 require 'eventmachine'
 require_relative 'task_list'
 require_relative '../planning/event'
+
 class Toto
   attr_reader :pre, :val
 
@@ -53,7 +54,6 @@ module Tasking
       close_connection
 
       begin
-        require_relative "event2task/#{event.task_label.downcase}"
         task = eval(event.task_label.capitalize).new(event).execute
       rescue Exception => e
         @logger.an_event.warn "event #{event.label} not manage with new task system : #{e.message}, use old one"

@@ -58,7 +58,24 @@ module Planning
 
     def to_event
       super
+      periodicity_scraping_traffic_source_organic = IceCube::Schedule.new(@registering_time + @scraping_traffic_source_organic_day * IceCube::ONE_DAY +
+                                                                              @scraping_traffic_source_organic_hour * IceCube::ONE_HOUR +
+                                                                              @scraping_traffic_source_organic_min * IceCube::ONE_MINUTE,
+                                                                          :end_time => @registering_time +
+                                                                              @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +
+                                                                                                      @count_weeks * IceCube::ONE_WEEK)
       @events += [
+          Event.new("Scraping_traffic_source_organic",
+                    periodicity_scraping_traffic_source_organic,
+                    {
+                        :policy_type => @policy_type,
+                        :policy_id => @policy_id,
+                        :website_label => @website_label,
+                        :url_root => @url_root,
+                        :keywords => @keywords,
+                        :website_id => @website_id
+                    }),
           Event.new("Building_objectives",
                     IceCube::Schedule.new(@monday_start +
                                               @building_objectives_day * IceCube::ONE_DAY +

@@ -22,7 +22,6 @@ module Tasking
 
 
       def initialize(website_label, date,policy_type)
-        @repository_tf = REPOSITORY
         @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
         super(website_label, date,policy_type)
       end
@@ -46,14 +45,14 @@ module Tasking
       #--------------------------------------------------------------------------------------------------------------
       def make_repository(keywords)
         begin
-          @repository_f = Flow.new(TMP, @repository_tf,@policy_type, @website_label, @date, 1, ".txt")
+          @repository_f = Flow.new(TMP, REPOSITORY,@policy_type, @website_label, @date_building, 1, ".txt")
           @repository_f.write("#{keywords}#{EOFLINE}")
 
         rescue Exception => e
-          @logger.an_event.fatal "repository organic for #{@website_label} and #{@date} : #{e.message}"
+          @logger.an_event.fatal "repository organic for #{@website_label} and #{@date_building} : #{e.message}"
           raise e
         else
-          @logger.an_event.info "repository organic for #{@website_label} and #{@date}"
+          @logger.an_event.info "repository organic for #{@website_label} and #{@date_building}"
 
         ensure
 
