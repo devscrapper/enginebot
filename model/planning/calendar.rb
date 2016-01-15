@@ -349,8 +349,11 @@ module Planning
        <title>#{title}</title>
     </HEAD>
       <BODY>
-        #{header(title)}
-      #{display(results)}
+        <div class="header">#{header(title)}</div>
+        <div class="content">#{display(results)}</div>
+        <div class="footer">#{footer}</div>
+
+
       </BODY>
     </HTML>
       _end_of_html_
@@ -389,7 +392,7 @@ module Planning
 
         end
       }
-      str = ""
+      str = "<div id='top'></div>"
 
       res.sort_by { |date| date }.each { |date, policies|
         str += "<div class='day'><h3>#{date}</h3></div>"
@@ -411,7 +414,7 @@ module Planning
           str += events.map { |e| e.to_html }.join
           str += '</ul></li></ul>'
         }
-        str += '</div></div>'
+        str += '</div></div></div>'
       }
 
       str
@@ -435,17 +438,22 @@ module Planning
 
     end
 
+    def footer
+      <<-_end_of_html_
+      <a  class="button" href="#top">Top</a>
+      _end_of_html_
+    end
+
     def header(title)
       <<-_end_of_html_
+
     <p>
-      <div class="shortcut">
       <a class="button" href="/tasks/all">All tasks</a>
       <a class="button" href="/tasks/today">Today tasks</a>
       <a class="button" href="/tasks/running">Running tasks</a>
-      </div>
     </p>
+    <br><br>
     <p>
-      <div class="shortcut">
       <a class="button" href="/tasks/monday">Monday tasks</a>
       <a class="button" href="/tasks/tuesday">Tuesday tasks</a>
       <a class="button" href="/tasks/wednesday">Wednesday tasks</a>
@@ -454,8 +462,9 @@ module Planning
       <a class="button" href="/tasks/saturday">Saturday tasks</a>
       <a class="button" href="/tasks/sunday">Sunday tasks</a>
     </p>
-    </div>
+
     <div class='title'><h3>#{title}</h3></div>
+
       _end_of_html_
 
     end
