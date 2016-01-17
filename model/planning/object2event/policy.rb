@@ -37,7 +37,7 @@ module Planning
          :policy_type,
          :count_weeks,
          :monday_start,
-         :registering_time,
+         :registering_date,
          :url_root,
          :min_count_page_advertiser,
          :max_count_page_advertiser,
@@ -61,14 +61,16 @@ module Planning
          :statistic_type,
          :max_duration_scraping,
          :key,
-         :events,
-         :registering_time
+         :events
 
     def initialize(data)
       @website_label = data[:website_label]
       d = Date.parse(data[:monday_start])
       @monday_start = Time.local(d.year, d.month, d.day) # iceCube a besoin d'un Time et pas d'un Date
-      @registering_time = Time.local(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min)
+      @registering_date = $staging == "development" ?
+          Time.local(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min)
+      :
+          Time.local(Date.today.year, Date.today.month, Date.today.day, 0, 0)
       @count_weeks = data[:count_weeks]
       @website_id = data[:website_id]
       @policy_id = data[:policy_id]
@@ -98,8 +100,6 @@ module Planning
       end
 
       @events = []
-      @registering_time = Time.local(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min)
-
     end
 
     def to_event
@@ -141,7 +141,6 @@ module Planning
                                                                                   @count_weeks * IceCube::ONE_WEEK)
       periodicity_scraping_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
                                                                                                          @count_weeks * IceCube::ONE_WEEK)
-
 
 
       business.merge!({"profil_id_ga" => @profil_id_ga}) if @statistics_type == :ga

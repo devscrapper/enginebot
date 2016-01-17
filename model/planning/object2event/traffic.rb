@@ -90,31 +90,31 @@ module Planning
 
     def to_event
       super
-      periodicity_scraping_traffic_source_organic = IceCube::Schedule.new(@registering_time + @scraping_traffic_source_organic_day * IceCube::ONE_DAY +
+      periodicity_scraping_traffic_source_organic = IceCube::Schedule.new(@registering_date + @scraping_traffic_source_organic_day * IceCube::ONE_DAY +
                                                                               @scraping_traffic_source_organic_hour * IceCube::ONE_HOUR +
                                                                               @scraping_traffic_source_organic_min * IceCube::ONE_MINUTE,
-                                                                          :end_time => @registering_time +
+                                                                          :end_time => @registering_date +
                                                                               @count_weeks * IceCube::ONE_WEEK)
-      periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +
+      periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
                                                                                                       @count_weeks * IceCube::ONE_WEEK)
 
-      periodicity_scraping_traffic_source_website = IceCube::Schedule.new(@registering_time +
+      periodicity_scraping_traffic_source_website = IceCube::Schedule.new(@registering_date +
                                                                               @scraping_traffic_source_website_day * IceCube::ONE_DAY +
                                                                               @scraping_traffic_source_website_hour * IceCube::ONE_HOUR +
                                                                               @scraping_traffic_source_website_min * IceCube::ONE_MINUTE,
-                                                                          :end_time => @registering_time +
+                                                                          :end_time => @registering_date +
                                                                               @count_weeks * IceCube::ONE_WEEK)
-      periodicity_scraping_traffic_source_website.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +
+      periodicity_scraping_traffic_source_website.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
                                                                                                       @count_weeks * IceCube::ONE_WEEK)
 
 
-      periodicity_scraping_traffic_source_referral = IceCube::Schedule.new(@registering_time +
+      periodicity_scraping_traffic_source_referral = IceCube::Schedule.new(@registering_date +
                                                                                @scraping_traffic_source_referral_day * IceCube::ONE_DAY +
                                                                                @scraping_traffic_source_referral_hour * IceCube::ONE_HOUR +
                                                                                @scraping_traffic_source_referral_min * IceCube::ONE_MINUTE,
-                                                                           :end_time => @registering_time +
+                                                                           :end_time => @registering_date +
                                                                                @count_weeks * IceCube::ONE_WEEK)
-      periodicity_scraping_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +
+      periodicity_scraping_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
                                                                                                        @count_weeks * IceCube::ONE_WEEK)
 
 
@@ -152,11 +152,11 @@ module Planning
                         :types => @types
                     }),
           Event.new("Building_landing_pages_direct",
-                    IceCube::Schedule.new(@registering_time.to_date +
+                    IceCube::Schedule.new(@registering_date.to_date +
                                               @building_landing_pages_direct_day * IceCube::ONE_DAY +
                                               @building_landing_pages_direct_hour * IceCube::ONE_HOUR +
                                               @building_landing_pages_direct_min * IceCube::ONE_MINUTE,
-                                          :end_time => @registering_time +
+                                          :end_time => @registering_date +
                                               @building_landing_pages_direct_day * IceCube::ONE_DAY +
                                               @building_landing_pages_direct_hour * IceCube::ONE_HOUR +
                                               @building_landing_pages_direct_min * IceCube::ONE_MINUTE +
