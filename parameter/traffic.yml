@@ -39,14 +39,14 @@ development:
 
 test:
   :scraping_traffic_source_organic_day: 0
-  :scraping_traffic_source_organic_hour: 0
-  :scraping_traffic_source_organic_min: 15
+  :scraping_traffic_source_organic_hour: 20
+  :scraping_traffic_source_organic_min: 0
   :scraping_traffic_source_referral_day: 0
-  :scraping_traffic_source_referral_hour: 0
+  :scraping_traffic_source_referral_hour: 20
   :scraping_traffic_source_referral_min: 30
   :scraping_traffic_source_website_day: 0
-  :scraping_traffic_source_website_hour: 0
-  :scraping_traffic_source_website_min: 45
+  :scraping_traffic_source_website_hour: 21
+  :scraping_traffic_source_website_min: 0
   :scraping_device_platform_plugin_day: -2
   :scraping_device_platform_plugin_hour: 1
   :scraping_device_platform_plugin_min: 30
