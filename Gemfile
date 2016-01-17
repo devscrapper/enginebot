@@ -24,7 +24,7 @@ group :development do
   gem 'capistrano', '~> 2.15.5'
   gem 'rvm-capistrano', '~> 1.5.3'
   gem 'tzinfo-data', '~>1.2014.5'
-  gem "bundler", '~> 1.10.6'
+  gem "bundler"
 end
 
 group :production      do
