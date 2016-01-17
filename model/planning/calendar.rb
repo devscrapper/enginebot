@@ -398,6 +398,7 @@ module Planning
         str += "<div class='day'><h3>#{date}</h3></div>"
         str += '<div class="wrap">'
         str += '<div class="table">'
+
         policies.each { |policy, events|
           str += '<ul><li>'
           str += '<div class="title"><h5>'

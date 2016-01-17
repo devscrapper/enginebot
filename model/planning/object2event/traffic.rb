@@ -37,7 +37,7 @@ module Planning
       @max_duration_scraping = data[:max_duration_scraping]
       unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
         delay = (@monday_start.to_date - Time.now.to_date).to_i
-        raise "#{delay} day(s) remaining before start policy, it is too short to prepare #{@policy_type} policy, #{@max_duration_scraping} day(s) are require !" if delay < @max_duration_scraping
+        raise "#{delay} day(s) remaining before start policy, it is too short to prepare #{@policy_type} policy, #{@max_duration_scraping} day(s) are require !" if delay <= @max_duration_scraping
       end
       # iceCube a besoin d'un Time et pas d'un Date
 
