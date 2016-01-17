@@ -1,7 +1,6 @@
 #encoding:utf-8
 require 'i18n'
 require 'net/http'
-require 'nokogiri'
 require 'hpricot'
 require 'addressable/uri'
 require 'selenium-webdriver'

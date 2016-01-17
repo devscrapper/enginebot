@@ -27,5 +27,6 @@ group :development do
 end
 
 group :production      do
-
+ # gem "bundler", '~> 1.11.2'
+  gem 'i18n', '~> 0.7.0'
 end

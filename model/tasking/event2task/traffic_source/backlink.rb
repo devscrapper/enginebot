@@ -1,6 +1,5 @@
 #encoding:utf-8
 require 'net/http'
-require 'nokogiri'
 require 'addressable/uri'
 require 'ruby-progressbar'
 require 'thread'
