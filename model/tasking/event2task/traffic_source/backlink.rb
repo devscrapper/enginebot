@@ -6,7 +6,6 @@ require 'thread'
 require 'csv'
 require 'open-uri'
 require 'openssl'
-require 'user_agent_randomizer'
 require_relative '../../../../lib/parameter'
 require_relative '../../../../lib/error'
 #TODO supprimer ce quin'est pas nécessaire et deplacer dans /Traffic_source
