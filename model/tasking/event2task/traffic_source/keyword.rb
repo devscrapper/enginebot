@@ -1,10 +1,7 @@
 #encoding:utf-8
 require 'i18n'
 require 'net/http'
-require 'hpricot'
 require 'addressable/uri'
-require 'selenium-webdriver'
-require 'csv'
 require 'open-uri'
 require 'thwait'
 require 'yaml'
