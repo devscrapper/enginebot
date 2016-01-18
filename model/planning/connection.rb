@@ -31,6 +31,7 @@ module Planning
       #------------------------------------------------------------------------------------------------------------------
       # REST : uri disponibles
       # GET
+      # http://localhost:9104/calendar/online
       # http://localhost:9104/tasks/all
       # http://localhost:9104/tasks/today
       # http://localhost:9104/tasks/now
@@ -71,6 +72,10 @@ module Planning
 
               @logger.an_event.info "list #{ress_id} events from repository"
               case ress_type
+                when "calendar"
+                  tasks = "OK"
+                  @@title_html = "calendar online"
+
                 when "tasks"
                   if ["monday", "tuesday", "wednesday", "friday", "thursday", "saturday", "sunday"].include?(ress_id)
                     tasks = @calendar.all_events_on_date(Calendar.next_day(ress_id))
@@ -262,7 +267,8 @@ module Planning
         if @http[:accept].include?("text/html") and response.status == 200
           # formatage des données en html si aucune erreur et si accès avec un navigateur
           response.content_type 'text/html'
-          response.content = @calendar.to_html(results, @@title_html)
+          response.content = @calendar.to_html(results, @@title_html) if results.is_a?(Array)
+          response.content = results unless results.is_a?(Array)
         else
           response.content_type 'application/json'
           response.content = results.to_json

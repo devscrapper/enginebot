@@ -9,5 +9,5 @@ test:
   :debugging: true
 production:
   :listening_port: 9104
-  :periodicity: "0 15 * * * * Europe/Paris"   #toutes les 15 minutes sur le fuseau hoare GMT+2
+  :periodicity: "0 * * * * * Europe/Paris"   #toutes les 15 minutes sur le fuseau hoare GMT+2
   :debugging: false
