@@ -143,6 +143,10 @@ module Tasking
         @hostname = URI.parse(@url_root).hostname
         @domain = "#{@hostname.split(".")[1]}.#{@hostname.split(".")[2]}"
         @max_duration = max_duration * DAY
+        @logger.an_event.debug "max duration #{@max_duration}"
+        @logger.an_event.debug "domain #{@domain}"
+        @logger.an_event.debug "hostname #{@hostname}"
+        @logger.an_event.debug "url root #{@url_root}"
         begin
           scrape_as_saas
           suggest_as_saas
