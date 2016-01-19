@@ -47,6 +47,7 @@ include Tasking
 #--------------------------------------------------------------------------------------------------------------------
 # MAIN
 #--------------------------------------------------------------------------------------------------------------------
+begin
 EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
@@ -55,6 +56,11 @@ EventMachine.run {
   logger.a_log.info "tasks server is running"
   EventMachine.start_server "localhost", listening_port, TaskConnection, logger
 }
+rescue Exception => e
+  logger.a_log.fatal e.message
+  logger.a_log.warn "tasks server restart"
+  retry
+end
 logger.a_log.info "tasks server stopped"
 
 
