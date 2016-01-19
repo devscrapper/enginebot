@@ -1,7 +1,5 @@
 
 development:
-  :authentification_server_port: 9103
-  :ftp_server_port: 9102
   :delay_periodic_scan: 5  #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
   :debugging: true
@@ -15,8 +13,6 @@ development:
             :port: 9201
 
 test:
-  :authentification_server_port: 9103
-  :ftp_server_port: 9102
   :delay_periodic_scan: 5 #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
   :debugging: true
@@ -42,8 +38,6 @@ test:
             :port: 9201
 
 production:
-  :authentification_server_port: 9103
-  :ftp_server_port: 9102
   :delay_periodic_scan: 5 #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
   :debugging: false

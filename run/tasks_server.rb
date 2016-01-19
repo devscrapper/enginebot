@@ -52,7 +52,7 @@ EventMachine.run {
   Signal.trap("INT") { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
 
-
+  #TODO interger une supervision qui envoie toutes les 15mn par un evt vers statupweb
   logger.a_log.info "tasks server is running"
   EventMachine.start_server "localhost", listening_port, TaskConnection, logger
 }

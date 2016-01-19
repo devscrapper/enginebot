@@ -200,10 +200,10 @@ module Tasking
         super(visit)
         if advert.nil? and device_platform.nil?
           splitted = visit.split(SEPARATOR1)
-          @browser = splitted[17]
-          @browser_version = splitted[18]
-          @operating_system = splitted[19]
-          @operating_system_version = splitted[20]
+          @operating_system = splitted[17]
+          @operating_system_version = splitted[18]
+          @browser = splitted[19]
+          @browser_version = splitted[20]
           @screen_resolution = splitted[21]
           @advert = splitted[22]
           @type = splitted[23]

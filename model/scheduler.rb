@@ -2,7 +2,7 @@ require_relative 'flow'
 require 'rufus-scheduler'
 require 'yaml'
 require 'eventmachine'
-
+require 'restclient'
 
 class Scheduler
   OUTPUT = File.expand_path(File.join("..", "..", "output"), __FILE__)
@@ -13,19 +13,17 @@ class Scheduler
        :pattern,
        :pool,
        :delay_periodic_scan,
-       :logger,
-       :authentification_server_port,
-       :ftp_server_port
+       :logger
 
 
-  def initialize(os, version, input_flow_servers, delay_periodic_scan, authentification_server_port, ftp_server_port, logger)
+  def initialize(os, version, input_flow_servers, delay_periodic_scan, logger)
     @os = os
     @version = version
     @pattern = input_flow_servers[:pattern]
     @pool = EM::Pool.new
     @delay_periodic_scan = delay_periodic_scan
-    @authentification_server_port = authentification_server_port
-    @ftp_server_port = ftp_server_port
+
+
     @logger = logger
     @scheduler = Rufus::Scheduler.start_new
 
@@ -79,7 +77,12 @@ class Scheduler
   def plan_visit_file(flow_visit)
     if flow_visit.exist?
       year, month, day, hour, min, sec = flow_visit.date.split(/-/)
-      start_date_time = Time.new(year.to_i, month.to_i, day.to_i, hour.to_i, min.to_i, sec.to_i)
+      if $staging == "development"
+        start_date_time = Time.now + 30
+         #decale la planification de 30s
+      else
+        start_date_time = Time.new(year.to_i, month.to_i, day.to_i, hour.to_i, min.to_i, sec.to_i)
+      end
 
       if start_date_time > Time.now
         @logger.an_event.info "flow_visit #{flow_visit.basename} is plan at #{start_date_time}"
@@ -97,6 +100,7 @@ class Scheduler
     end
   end
 
+
   def send_visit_to_statupbot(visit)
     ip, port = nil, nil
     begin
@@ -105,19 +109,22 @@ class Scheduler
           ip = details[:ip]
           port = details[:port]
           @logger.an_event.info "visit file name #{visit.absolute_path}"
-          visit.push(@authentification_server_port,
-                     ip,
-                     port,
-                     @ftp_server_port,
-                     visit.vol,
-                     true)
+          visit_details = visit.read
+
+          response = RestClient.post "http://#{ip}:#{port}/visits/new",
+                                     visit_details,
+                                     :content_type => :json,
+                                     :accept => :json
+
+          raise response.content if response.code != 200
+          @logger.an_event.info "push visit flow #{visit.basename} to #{@os}/#{@version} input flow server #{ip}:#{port}"
         end
       end
     rescue Exception => e
       @logger.an_event.error "visit flow #{visit.basename} not push to #{@os}/#{@version} input flow server #{ip}:#{ip} : #{e.message}"
     else
-      @logger.an_event.info "push visit flow #{visit.basename} to #{@os}/#{@version} input flow server #{ip}:#{port}"
-      #pas besoin d'archiver les flow car ils automatiquement supprimés lors du download vers le statupbot
+      visit.archive
+
     end
   end
 

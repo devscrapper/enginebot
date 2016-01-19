@@ -12,12 +12,6 @@ require 'ruby-progressbar'
 
 module Tasking
   module Visit
-    #TODO calculer visit[:referrer][:durations] pour organic en fonction des parametres fournis par statupweb
-    #TODO calculer visit[:referrer][:duration] pour referral en fonction des parametres fournis par statupweb
-    #TODO calculer visit[:advertising][:advertser][durations] et [around] en fonction des parametres fournis par statupweb
-    #TODO calculer visit[:landing][duration]
-    #TODO calculer visit[:durations]
-
     class Visits
 
 

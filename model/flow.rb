@@ -469,28 +469,7 @@ class Flow
     end
   end
 
-  def put(ip_to, port_to, port_ftp_server, user, pwd, last_volume = false)
-    # informe l'input-flow server qu'il doit telecharger le flow
-    data = {
-        "type_flow" => @type_flow,
-        "data" => {"port_ftp_server" => port_ftp_server,
-                   "user" => user,
-                   "pwd" => pwd,
-                   "basename" => basename,
-                   "last_volume" => last_volume}
-    }
-    begin
-                  #TODO supprimer Information car n'appartient au projet et trouver une autre solution
-      raise "Object Information est deprecated"
-     # Information.new(data).send_to(ip_to, port_to)
 
-    rescue Exception => e
-
-      raise StandardError, "cannot send properties flow <#{basename}> to #{ip_to}:#{port_to} : #{e.message}"
-    else
-
-    end
-  end
 
   def read
     #retourne tout le contenu du fichier dans un string
