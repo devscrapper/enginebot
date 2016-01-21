@@ -445,8 +445,7 @@ module Tasking
         raise response.content if response.code != 200
 
       rescue Exception => e
-        @logger.an_event.error "task <#{info.join(",")}> not update state : #{state} => #{e.message}"
-
+        raise StandardError, "task <#{info.join(",")}> not update state : #{state} => #{e.message}"
       else
 
       end

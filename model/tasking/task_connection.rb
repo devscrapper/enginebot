@@ -28,7 +28,7 @@ module Tasking
         @logger.an_event.debug "context <#{context}>"
         Tasklist.new(data_cmd).method(cmd).call()
       rescue Exception => e
-        @logger.an_event.error "cannot execute cmd <#{cmd}> : #{e.message}"
+        @logger.an_event.fatal "tasks_server not execute task <#{cmd}> : #{e}"
 
       end
 

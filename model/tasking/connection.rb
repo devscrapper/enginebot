@@ -3,39 +3,8 @@ require 'eventmachine'
 require_relative 'task_list'
 require_relative '../planning/event'
 
-class Toto
-  attr_reader :pre, :val
-
-  def initialize(val, pre=[])
-    @val = val
-    @pre = pre
-  end
 
 
-  def self.tri(arr)
-
-
-    begin
-      i =0
-      change = 0
-      while i < arr.size-1
-        j = i + 1
-        while j < arr.size
-          if arr[i].pre.include?(arr[j].val) or arr[j].pre.empty?
-            tmp = arr[i]
-            arr[i] = arr[j]
-            arr[j] = tmp
-            change +=1
-          end
-          j+=1
-        end
-        i +=1
-      end
-      p arr
-    end while change > 0
-    arr
-  end
-end
 
 module Tasking
 
