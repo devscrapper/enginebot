@@ -17,6 +17,7 @@ gem 'tzinfo', '~> 1.0.0'
 gem 'addressable', '2.3.8'
 gem 'em-http-server', '~> 0.1.8'
 gem 'em-http-request', '~> 1.0.3'
+gem 'htmlentities', '~> 4.3', '>= 4.3.4'
 # fin new gem
 
 #group :development

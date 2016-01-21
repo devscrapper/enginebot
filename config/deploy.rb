@@ -55,7 +55,6 @@
 #----------------------------------------------------------------------------------------------------------------------
 
 set :application, "enginebot" # nom application (github)
-set :ftp_server_port, 9102 # port d"ecoute du serveur ftp"
 set :shared_children, ["archive",
                        "data",
                        "log",

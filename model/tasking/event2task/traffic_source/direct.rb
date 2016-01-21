@@ -2,7 +2,7 @@
 # encoding: UTF-8
 require 'rubygems'
 require "em-http-request"
-
+require 'htmlentities' #decode html special caracter to caracter
 require_relative '../../../../lib/logging'
 require_relative '../../../flow'
 require_relative 'traffic_source'
@@ -37,7 +37,7 @@ module Tasking
         @id = id
         @url = url
         @title = title
-        @links = links
+        @links = links.nil? ? [] : links # si pas de line recuperer lors du scrape alors []
       end
 
 
@@ -97,7 +97,7 @@ module Tasking
 #--------------------------------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------
-      def initialize(website_label, date_building, policy_type,event_id)
+      def initialize(website_label, date_building, policy_type, event_id)
         super(website_label, date_building, policy_type)
         @event_id = event_id
         @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
@@ -180,7 +180,7 @@ module Tasking
         options = proxy(@geolocation.to_json) unless @geolocation.nil?
 
         url_saas = "http://#{@saas_host}:#{@saas_port}/?action=scrape&"
-        url_saas += "&url=#{url}"
+        url_saas += "&url=#{HTMLEntities.new.decode(url)}"
         url_saas += "&host=#{@host}"
         url_saas += "&schemes=#{@schemes.join(SEPARATOR1)}"
         url_saas += "&types=#{@types.join(SEPARATOR1)}"
@@ -193,35 +193,40 @@ module Tasking
           # http.reponse = {'url' => @url,
           #                 'title' => @title,
           #                 'links' => @links}
-          id = @known_url[url]
-          result = JSON.parse(http.response)
-          scraped_page = Page.new(id, url, result['title'], result['links'])
+          begin
+            id = @known_url[url]
+            result = JSON.parse(http.response)
+            scraped_page = Page.new(id, url, result['title'], result['links'])
 
-          if @count_page > @idpage or @count_page == 0
-            $sem.synchronize {
-              scraped_page.links.each { |link|
-                if @known_url[link] == 0
-                  urls << [link, 1]
-                  @idpage += 1
-                  @known_url[link] = @idpage
-                end
-              } }
+            if @count_page > @idpage or @count_page == 0
+              $sem.synchronize {
+                scraped_page.links.each { |link|
+                  if @known_url[link] == 0
+                    urls << [link, 1]
+                    @idpage += 1
+                    @known_url[link] = @idpage
+                  end
+                }
+              }
+            end
+            scraped_page.links.map! { |link| @known_url[link] }
+
+            output(scraped_page)
+
+            @nbpage += 1
+            display(urls)
+            if urls.size > 0 and
+                (@count_page > @nbpage or @count_page == 0) and
+                Time.now - @start_time < @max_duration
+
+              @run_spawn.notify urls
+            else
+              @stop_spawn.notify
+            end
+          rescue Exception => e
+            @logger.an_event.error "scraping direct function run : #{e.message}"
+
           end
-          scraped_page.links.map! { |link| @known_url[link] } unless scraped_page.links.nil?
-
-          output(scraped_page)
-
-          @nbpage += 1
-          display(urls)
-          if urls.size > 0 and
-              (@count_page > @nbpage or @count_page == 0) and
-              Time.now - @start_time < @max_duration
-
-            @run_spawn.notify urls
-          else
-            @stop_spawn.notify
-          end
-
         }
 
         http.errback {
@@ -259,8 +264,6 @@ module Tasking
         end
 
       end
-
-
 
 
       def push_file(id_file, last_volume = false)

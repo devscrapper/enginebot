@@ -272,6 +272,7 @@ module Tasking
 
                   keywords_arr.each { |referral_uri_search, keywords|
                     @repository_f.write("#{[ll, referral_uri_search, keywords, bl].join(SEPARATOR1)}#{EOFLINE}")
+                    @logger.an_event.debug "add referral #{uri_bl.hostname}#{uri_bl.path} with keyword #{keywords} to repository"
                   }
                   known_bl << "#{uri_bl.hostname}#{uri_bl.path}"
                 end
@@ -288,6 +289,7 @@ module Tasking
 
                   keywords_arr.each { |referral_uri_search, keywords|
                     @repository_f.write("#{[ll, referral_uri_search, keywords, bl].join(SEPARATOR1)}#{EOFLINE}")
+                    @logger.an_event.debug "add referral #{uri_bl.hostname} with keyword #{keywords} to repository"
                   }
                   known_bl << uri_bl.hostname
                 end
