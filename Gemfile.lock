@@ -9,10 +9,22 @@ GEM
       net-sftp (>= 2.0.0)
       net-ssh (>= 2.0.14)
       net-ssh-gateway (>= 1.1.0)
+    cookiejar (0.3.2)
+    em-http-request (1.0.3)
+      addressable (>= 2.2.3)
+      cookiejar
+      em-socksify
+      eventmachine (>= 1.0.0.beta.4)
+      http_parser.rb (>= 0.5.3)
     em-http-server (0.1.8)
       eventmachine
+    em-socksify (0.3.1)
+      eventmachine (>= 1.0.0.beta.4)
     eventmachine (1.0.8)
     highline (1.7.6)
+    htmlentities (4.3.4)
+    http_parser.rb (0.6.0)
+    i18n (0.7.0)
     ice_cube (0.13.0)
     json (1.8.3)
     little-plugger (1.1.4)
@@ -55,10 +67,13 @@ PLATFORMS
 
 DEPENDENCIES
   addressable (= 2.3.8)
-  bundler (~> 1.10.6)
+  bundler
   capistrano (~> 2.15.5)
+  em-http-request (~> 1.0.3)
   em-http-server (~> 0.1.8)
   eventmachine (~> 1.0.8)
+  htmlentities (~> 4.3, >= 4.3.4)
+  i18n (~> 0.7.0)
   ice_cube (~> 0.13.0)
   json (~> 1.8)
   logging (~> 2.0.0)

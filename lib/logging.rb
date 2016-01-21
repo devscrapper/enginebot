@@ -118,16 +118,16 @@ module Logging
                                :from => "error@log.com",
                                :to => "olinouane@gmail.com",
                                :subject => "Application Error []",
-                               :address => "smtp.gmail.com",
-                               :port => 587,
-                               :domain => "google.com",
-                               :user_name => "olinouane",
-                               :password => "Brembo01",
-                               :authentication => :plain,
+                               :address => @address,
+                               :port => @port,
+                               :domain => @domain,
+                               :user_name => @user_name,
+                               :password => @password,
+                               :authentication => :@authentification,
                                :enable_starttls_auto => true,
-                               :auto_flushing => 200, # send an email after 200 messages have been buffered
-                               :flush_period => 60, # send an email after one minute
-                               :level => :fatal # only process log events that are "error" or "fatal"
+                               :auto_flushing => 2, # send an email after 2 messages have been buffered
+                               :flush_period => 2, # send an email after 2 s
+                               :level => :fatal # only process log events that are "fatal"
       )
     end
 
