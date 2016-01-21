@@ -42,37 +42,44 @@ include Planning
 #--------------------------------------------------------------------------------------------------------------------
 # MAIN
 #--------------------------------------------------------------------------------------------------------------------
-EventMachine.run {
-  Signal.trap("INT") { EventMachine.stop }
-  Signal.trap("TERM") { EventMachine.stop }
+begin
+  EventMachine.run {
+    Signal.trap("INT") { EventMachine.stop }
+    Signal.trap("TERM") { EventMachine.stop }
 
-  calendar = Calendar.new
-  scheduler = Rufus::Scheduler.start_new
-  scheduler.cron periodicity do
-    now = Time.now #
-    start_date = Date.new(now.year, now.month, now.day)
-    hour = now.hour
-    min = now.min
-    begin
-      calendar.execute_all_events_at(start_date, hour, min)
+    calendar = Calendar.new
+    scheduler = Rufus::Scheduler.start_new
+    scheduler.cron periodicity do
+      now = Time.now #
+      start_date = Date.new(now.year, now.month, now.day)
+      hour = now.hour
+      min = now.min
+      begin
+        calendar.execute_all_events_at(start_date, hour, min)
 
-    rescue Exception => e
-      logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
+      rescue Exception => e
+        logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
 
+      end
+      begin
+        # en developpement, afin de tester plus facilement, on n'attend pas le jour de décenchement des events
+        calendar.execute_all_events_which_all_pre_tasks_are_over($staging == 'development' ? nil : start_date)
+
+      rescue Exception => e
+        logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
+
+      end
     end
-    begin
-      # en developpement, afin de tester plus facilement, on n'attend pas le jour de décenchement des events
-      calendar.execute_all_events_which_all_pre_tasks_are_over($staging == 'development' ? nil : start_date)
 
-    rescue Exception => e
-      logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
-
-    end
-  end
-
-  logger.a_log.info "calendar server is running"
-  EventMachine.start_server "0.0.0.0", listening_port, Connection, logger, calendar
-}
+    logger.a_log.info "calendar server is running"
+    EventMachine.start_server "0.0.0.0", listening_port, Connection, logger, calendar
+  }
+rescue Exception => e
+  logger.a_log.fatal e
+  logger.a_log.warn "calendar server restart"
+  retry
+else
+end
 logger.a_log.info "calendar server stopped"
 
 

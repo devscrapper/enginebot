@@ -57,7 +57,7 @@ EventMachine.run {
   EventMachine.start_server "localhost", listening_port, TaskConnection, logger
 }
 rescue Exception => e
-  logger.a_log.fatal e.message
+  logger.a_log.fatal e
   logger.a_log.warn "tasks server restart"
   retry
 end

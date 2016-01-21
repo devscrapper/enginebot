@@ -44,17 +44,16 @@ else
 #--------------------------------------------------------------------------------------------------------------------
 # MAIN
 #--------------------------------------------------------------------------------------------------------------------
-  logger.a_log.info "scheduler server is running"
+
   begin
     EM.run do
-
+      logger.a_log.info "scheduler server is running"
       Signal.trap("INT") { EventMachine.stop; }
       Signal.trap("TERM") { EventMachine.stop; }
       #TODO interger une supervision qui envoie toutes les 15mn par un evt vers statupweb
 
       #TODO solution à revisiter de publication des geolocations qd la ou les solution finales de recuperation des geolocations
       #TODO seront terminées
-
       Geolocation.send(inputflow_factories, logger)
       EM.add_periodic_timer(delay_periodic_send_geolocation * 60) do
        Geolocation.send(inputflow_factories, logger)
@@ -67,9 +66,11 @@ else
         }
       }
     end
+
   rescue Exception => e
-    logger.a_log.error e.message
+    logger.a_log.fatal e
+    logger.a_log.warn "scheduler server restart"
     retry
   end
-  logger.a_log.info "calendar server stopped"
+  logger.a_log.info "scheduler server stopped"
 end
