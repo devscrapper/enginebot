@@ -14,7 +14,9 @@ class MailSender
        :from,
        :to,
        :subject,
-       :body
+       :body,
+       :domain,
+       :authentification
 
   def initialize(from = "mail@localhost.fr", to, subject, body)
     raise ArgumentError, "to is undefine" if  to.nil?
@@ -34,10 +36,14 @@ class MailSender
       @port = parameters.port
       @user_name = parameters.user_name
       @password = parameters.password
+      @domain = parameters.domain
+      @authentification = parameters.authentification
       raise ArgumentError, "parameter <address> is undefine" if  @address.nil?
       raise ArgumentError, "parameter <user_name> is undefine" if  @user_name.nil?
       raise ArgumentError, "parameter <password> is undefine" if  @password.nil?
       raise ArgumentError, "parameter <port> is undefine" if  @port.nil?
+      raise ArgumentError, "parameter <domain> is undefine" if  @domain.nil?
+      raise ArgumentError, "parameter <authentification> is undefine" if  @authentification.nil?
     end
   end
 
@@ -62,8 +68,8 @@ class MailSender
                      :port => @port,
                      :user_name => @user_name,
                      :password => @password,
-                     :authentication => :plain, # :plain, :login, :cram_md5, no auth by default
-                     :domain => "localhost.localdomain" # the HELO domain provided by the client to the server
+                     :authentication => @authentification, # :plain, :login, :cram_md5, no auth by default
+                     :domain => @domain # the HELO domain provided by the client to the server
                  }
                 }.merge!(options))
     rescue Exception => e

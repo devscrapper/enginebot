@@ -40,7 +40,14 @@ module Logging
          :debugging,
          :main,
          :id_file,
-         :class_name
+         :class_name,
+         :address,
+         :port,
+         :user_name,
+         :password,
+         :domain,
+         :authentification
+
     alias :a_log :logger
     alias :an_event :logger
 
@@ -56,6 +63,28 @@ module Logging
         @debugging = opts.fetch(:debugging, false)
         @class_name = obj.class.name.gsub("::", "_")
         @main = @class_name == Object.name
+
+        begin
+          parameters = Parameter.new("mail_sender.rb")
+
+        rescue Exception => e
+          raise e
+
+        else
+          @address = parameters.address
+          @port = parameters.port
+          @user_name = parameters.user_name
+          @password = parameters.password
+          @domain = parameters.domain
+          @authentification = parameters.authentification
+          raise ArgumentError, "parameter <address> is undefine" if @address.nil?
+          raise ArgumentError, "parameter <user_name> is undefine" if @user_name.nil?
+          raise ArgumentError, "parameter <password> is undefine" if @password.nil?
+          raise ArgumentError, "parameter <port> is undefine" if @port.nil?
+          raise ArgumentError, "parameter <domain> is undefine" if @domain.nil?
+          raise ArgumentError, "parameter <authentification> is undefine" if @authentification.nil?
+        end
+
         param_1(opts) if @debugging and [STAGING_TEST, STAGING_PROD].include?(@staging) and @main
         param_4(opts) if !@debugging and [STAGING_TEST, STAGING_PROD].include?(@staging) and @main
 
@@ -78,12 +107,13 @@ module Logging
     def email()
       #TODO valider le parametrage de l'appender mail
 
-#      port 25 : sans authentificationnote 2, connexion non sécurisée
-#      port 465 : authentification permettant l'envoi d'e-mails depuis n'importe quel point d'accès, connexion sécurisée
-#      port 587 : authentification permettant l'envoi d'e-mails depuis n'importe quel point d'accès, connexion non sécurisée
-#      Si une méthode de sécurité vous est proposée, choisissez SSL / TLS port 465 (ou MD5 port 587).
-#      L'authentification SMTP est strictement inutile si la connexion utilisée lors de l'envoi d'eMails appartient au réseau Free.
-#      Cette option est clairement destinée à l'envoi d'eMails depuis une connexion appartenant à un opérateur différent.
+      #      port 25 : sans authentificationnote 2, connexion non sécurisée
+      #      port 465 : authentification permettant l'envoi d'e-mails depuis n'importe quel point d'accès, connexion sécurisée
+      #      port 587 : authentification permettant l'envoi d'e-mails depuis n'importe quel point d'accès, connexion non sécurisée
+      #      Si une méthode de sécurité vous est proposée, choisissez SSL / TLS port 465 (ou MD5 port 587).
+      #      L'authentification SMTP est strictement inutile si la connexion utilisée lors de l'envoi d'eMails appartient au réseau Free.
+      #      Cette option est clairement destinée à l'envoi d'eMails depuis une connexion appartenant à un opérateur différent.
+
       Logging::appenders.email('email',
                                :from => "error@log.com",
                                :to => "olinouane@gmail.com",
@@ -93,7 +123,7 @@ module Logging
                                :domain => "google.com",
                                :user_name => "olinouane",
                                :password => "Brembo01",
-                               :authentication => :cram_md5,
+                               :authentication => :plain,
                                :enable_starttls_auto => true,
                                :auto_flushing => 200, # send an email after 200 messages have been buffered
                                :flush_period => 60, # send an email after one minute
@@ -108,7 +138,7 @@ module Logging
 
     def rollfile()
       opt = {:truncate => true, :size => 5000000, :keep => 10, :roll_by => :number} if @debugging
-      opt = {:age => :daily, :keep => 7, :roll_by => :date} unless  @debugging
+      opt = {:age => :daily, :keep => 7, :roll_by => :date} unless @debugging
       Logging::Appenders.rolling_file(File.join(DIR_LOG, "#{@id_file}.log"), opt)
     end
 
@@ -127,9 +157,9 @@ module Logging
       )
 
       Logging::Appenders.stdout(:level => :info, :layout => Logging.layouts.pattern(
-          :pattern => '[%d] %-5l %c: %m\n',
-          :color_scheme => 'bright'
-      ))
+                                                   :pattern => '[%d] %-5l %c: %m\n',
+                                                   :color_scheme => 'bright'
+                                               ))
     end
 
     def debfile
@@ -156,7 +186,7 @@ module Logging
       @logger = Logging.logger["root"]
       @logger.level = :debug
       @logger.add_appenders(email)
-      @logger.add_appenders(syslog)  if HAVE_SYSLOG
+      @logger.add_appenders(syslog) if HAVE_SYSLOG
       @logger.add_appenders(debfile)
       @logger.add_appenders(ymlfile)
     end
@@ -185,7 +215,7 @@ module Logging
       @logger = Logging.logger["root"]
       @logger.level = :info
       @logger.add_appenders(email)
-      @logger.add_appenders(syslog)  if HAVE_SYSLOG
+      @logger.add_appenders(syslog) if HAVE_SYSLOG
       @logger.add_appenders(rollfile)
     end
 
