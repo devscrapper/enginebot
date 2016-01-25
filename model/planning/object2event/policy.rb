@@ -58,6 +58,7 @@ module Planning
          :visit_bounce_rate,
          :avg_time_on_site,
          :page_views_per_visit,
+         :count_visits_per_day,
          :statistic_type,
          :max_duration_scraping,
          :key,
@@ -97,6 +98,7 @@ module Planning
         @visit_bounce_rate = data[:visit_bounce_rate]
         @avg_time_on_site = data[:avg_time_on_site]
         @page_views_per_visit = data[:page_views_per_visit]
+        @count_visits_per_day = data[:count_visits_per_day]
       end
 
       @events = []
@@ -198,7 +200,8 @@ module Planning
                             :percent_new_visit => @percent_new_visit,
                             :visit_bounce_rate => @visit_bounce_rate,
                             :avg_time_on_site => @avg_time_on_site,
-                            :page_views_per_visit => @page_views_per_visit
+                            :page_views_per_visit => @page_views_per_visit,
+                            :count_visits_per_day => @count_visits_per_day
                         }
                     :
                         {

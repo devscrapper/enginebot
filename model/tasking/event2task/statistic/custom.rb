@@ -95,7 +95,7 @@ module Tasking
 # day;percent_new_visit;visit_bounce_rate;avg_time_on_site;page_views_per_visit;count_visits
 
 # --------------------------------------------------------------------------------------------------------------
-      def behaviour (percent_new_visit, visit_bounce_rate, avg_time_on_site, page_views_per_visit)
+      def behaviour (percent_new_visit, visit_bounce_rate, avg_time_on_site, page_views_per_visit, count_visit)
         data = []
 
         7.times { |i| data << [i + 1,
@@ -104,7 +104,7 @@ module Tasking
                                visit_bounce_rate, #visit_bounce_rate
                                avg_time_on_site, #avg_time_on_site
                                page_views_per_visit, #page_views_per_visit
-                               "not use"] }
+                               count_visit] }
 
         execute("scraping-behaviour",
                 data)

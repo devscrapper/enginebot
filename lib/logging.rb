@@ -46,7 +46,9 @@ module Logging
          :user_name,
          :password,
          :domain,
-         :authentification
+         :authentification,
+         :auto_flushing,
+         :level
 
     alias :a_log :logger
     alias :an_event :logger
@@ -77,12 +79,16 @@ module Logging
           @password = parameters.password
           @domain = parameters.domain
           @authentification = parameters.authentification
+          @auto_flushing = parameters.auto_flushing
+          @level = parameters.level
           raise ArgumentError, "parameter <address> is undefine" if @address.nil?
           raise ArgumentError, "parameter <user_name> is undefine" if @user_name.nil?
           raise ArgumentError, "parameter <password> is undefine" if @password.nil?
           raise ArgumentError, "parameter <port> is undefine" if @port.nil?
           raise ArgumentError, "parameter <domain> is undefine" if @domain.nil?
           raise ArgumentError, "parameter <authentification> is undefine" if @authentification.nil?
+          raise ArgumentError, "parameter <auto_flushing> is undefine" if @auto_flushing.nil?
+          raise ArgumentError, "parameter <level> is undefine" if @level.nil?
         end
 
         param_1(opts) if @debugging and [STAGING_TEST, STAGING_PROD].include?(@staging) and @main
@@ -125,9 +131,9 @@ module Logging
                                :password => @password,
                                :authentication => :@authentification,
                                :enable_starttls_auto => true,
-                               :auto_flushing => 2, # send an email after 2 messages have been buffered
+                               :auto_flushing => @auto_flushing, # send an email after 2 messages have been buffered
                                :flush_period => 2, # send an email after 2 s
-                               :level => :fatal # only process log events that are "fatal"
+                               :level => @level # only process log events that are "fatal" and error
       )
     end
 

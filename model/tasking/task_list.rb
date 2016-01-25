@@ -78,7 +78,8 @@ module Tasking
                                   @data[:policy_type]).behaviour(@data[:percent_new_visit],
                                                                  @data[:visit_bounce_rate],
                                                                  @data[:avg_time_on_site],
-                                                                 @data[:page_views_per_visit])
+                                                                 @data[:page_views_per_visit],
+                                                                 @data[:count_visits_per_day])
         end
       }
     end
@@ -382,7 +383,7 @@ module Tasking
           # perform a long-running operation here, such as a database query.
           send_state_to_calendar(@data[:event_id], Planning::Event::START, info)
           @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is start"
-          yield  (@data[:event_id])
+          yield (@data[:event_id])
 
         rescue Error => e
           results = e
