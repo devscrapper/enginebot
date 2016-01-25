@@ -248,7 +248,7 @@ module Tasking
             } unless planed_visits_file.zero?
             planed_visits_file.close
             final_visits_by_hour_file.close
-            planed_visits_file.archive
+            planed_visits_file.archive_previous # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
           }
           device_platform_file.close
 
@@ -380,7 +380,7 @@ module Tasking
               @logger.an_event.error e.message
             end
           } unless final_visits_file.zero?
-          final_visits_file.archive
+          final_visits_file.archive_previous # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
         rescue Exception => e
 
           @logger.an_event.error ("Publishing  at #{current_time} visits for <#{@policy_type}> #{@website_label} #{@date_building}:#{hour}:00 is over => #{e.message}")

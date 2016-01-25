@@ -77,10 +77,10 @@ module Tasking
             total += device.count_visits
             device_platform_file.write("#{device.to_s}#{EOFLINE}")
           }
-          device_resolution.archive
-          device_plugin.archive
+          device_resolution.archive_previous # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
+          device_plugin.archive_previous     # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
           device_platform_file.close
-          device_platform_file.archive_previous
+          device_platform_file.archive_previous # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
         rescue Exception => e
           @logger.an_event.error("Building device platform for <#{@policy_type}> <#{@website_label}> is over #{e.message}")
             raise e
@@ -126,7 +126,7 @@ module Tasking
           }
           tmp_distribution_count.write("#{distribution_per_day[0..distribution_per_day.size - 2]}#{EOFLINE}")
 
-          input_distribution.archive
+          input_distribution.archive_previous # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
           tmp_distribution_count.close
           tmp_distribution_count.archive_previous
         rescue Exception => e
@@ -161,7 +161,7 @@ module Tasking
             i +=1
             p.increment
           }
-          input_behaviour.archive
+          input_behaviour.archive_previous # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
           tmp_behaviour.close
           tmp_behaviour.archive_previous
         rescue Exception => e
