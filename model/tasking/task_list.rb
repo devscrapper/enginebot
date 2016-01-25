@@ -356,7 +356,7 @@ module Tasking
                                                                        @data[:duration_referral],
                                                                        @data[:min_count_page_organic],
                                                                        @data[:max_count_page_organic],
-                                                                       @data[:min_duration_page_organic],
+                                                                       @data[:min_duration_page_orgcaanic],
                                                                        @data[:max_duration_page_organic],
                                                                        @data[:min_duration],
                                                                        @data[:max_duration])

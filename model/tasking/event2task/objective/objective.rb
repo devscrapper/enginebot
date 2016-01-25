@@ -149,6 +149,40 @@ module Tasking
 
       end
 
+      def to_s(*a)
+        "website_label: #{@website_label}\n\r" \
+            "objective_id: #{@objective_id}\n\r" \
+            "policy_id: #{@policy_id}\n\r" \
+            "website_id: #{@website_id}\n\r" \
+            "policy_type: #{@policy_type}\n\r" \
+            "count_weeks: #{@count_weeks}\n\r" \
+            "count_visits: #{@count_visits}\n\r" \
+            "url_root: #{@url_root}\n\r" \
+            "direct_medium_percent: #{@direct_medium_percent}\n\r" \
+            "organic_medium_percent: #{@organic_medium_percent}\n\r" \
+            "referral_medium_percent: #{@referral_medium_percent}\n\r" \
+            "visit_bounce_rate: #{@visit_bounce_rate}\n\r" \
+            "page_views_per_visit: #{@page_views_per_visit}\n\r" \
+            "avg_time_on_site: #{@avg_time_on_site}\n\r" \
+            "min_durations: #{@min_durations}\n\r" \
+            "min_pages: #{@min_pages}\n\r" \
+            "hourly_distribution: #{@hourly_distribution}\n\r" \
+            "advertisers: #{@advertisers}\n\r" \
+            "advertising_percent: #{@advertising_percent}\n\r" \
+            "periodicity: #{@periodicity}\n\r" \
+            "min_count_page_advertiser: #{@min_count_page_advertiser}\n\r" \
+            "max_count_page_advertiser: #{@max_count_page_advertiser}\n\r" \
+            "min_duration_page_advertiser: #{@min_duration_page_advertiser}\n\r" \
+            "max_duration_page_advertiser: #{@max_duration_page_advertiser}\n\r" \
+            "percent_local_page_advertiser: #{@percent_local_page_advertiser}\n\r" \
+            "duration_referral: #{@duration_referral}\n\r" \
+            "min_count_page_organic: #{@min_count_page_organic}\n\r" \
+            "max_count_page_organic: #{@max_count_page_organic}\n\r" \
+            "min_duration_page_organic: #{@min_duration_page_organic}\n\r" \
+            "max_duration_page_organic: #{@max_duration_page_organic}\n\r" \
+            "min_duration: #{@min_duration}\n\r" \
+            "max_duration: #{@max_duration}"
+      end
 
       private
       def translate_to_count_visits_target(distribution, count_visits_of_day_target)
