@@ -96,7 +96,7 @@ set :branch, "master" # version à déployer
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
-#set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
+set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
 set :password, "Brembo01"
@@ -206,7 +206,7 @@ namespace :data do
   task :clear do
     ['archive', 'data', 'output', 'tmp', 'input'].each { |dir|
       begin
-        run "rm #{File.join(current_path, dir, '*')} "
+        run "rm -f #{File.join(current_path, dir, '*') }"
       rescue Exception => e
          p "#{dir} not clear : #{e.message}"
       end
