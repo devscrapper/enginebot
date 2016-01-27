@@ -62,7 +62,9 @@ module Planning
          :statistic_type,
          :max_duration_scraping,
          :key,
-         :events
+         :events,
+         :building_behaviour, #utiliser pour passer l'event aux class Trafficn et Rank pour affecter la var pre_task
+         :building_hourly_daily_distribution #utiliser pour passer l'event aux class Trafficn et Rank pour affecter la var pre_task
 
     def initialize(data)
       @website_label = data[:website_label]
@@ -149,7 +151,7 @@ module Planning
 
       @events += [
 
-          Event.new("Scraping_device_platform_plugin",
+          scraping_device_platform_plugin = Event.new("Scraping_device_platform_plugin",
                     periodicity_scraping_device_platform_plugin,
                     {
                         :policy_type => @policy_type,
@@ -158,7 +160,7 @@ module Planning
                         :website_id => @website_id,
                         :statistic_type => @statistics_type
                     }),
-          Event.new("Scraping_device_platform_resolution",
+          scraping_device_platform_resolution = Event.new("Scraping_device_platform_resolution",
                     periodicity_scraping_device_platform_resolution,
                     {
                         :policy_type => @policy_type,
@@ -167,7 +169,7 @@ module Planning
                         :website_id => @website_id,
                         :statistic_type => @statistics_type
                     }),
-          Event.new("Scraping_hourly_daily_distribution",
+          scraping_hourly_daily_distribution = Event.new("Scraping_hourly_daily_distribution",
                     periodicity_scraping_hourly_distribution,
                     @statistics_type == "custom" ?
                         {
@@ -187,7 +189,7 @@ module Planning
                             :website_id => @website_id,
                             :statistic_type => @statistics_type
                         }),
-          Event.new("Scraping_behaviour",
+          scraping_behaviour = Event.new("Scraping_behaviour",
                     periodicity_scraping_behaviour,
                     @statistics_type == "custom" ?
                         {
@@ -227,9 +229,9 @@ module Planning
                         :policy_id => @policy_id,
                         :policy_type => @policy_type
                     },
-                    ["Scraping_device_platform_plugin", "Scraping_device_platform_resolution"]),
+                    [scraping_device_platform_plugin, scraping_device_platform_resolution]),
 
-          Event.new("Building_hourly_daily_distribution",
+          @building_hourly_daily_distribution = Event.new("Building_hourly_daily_distribution",
                     IceCube::Schedule.new(@monday_start +
                                               @building_hourly_distribution_day * IceCube::ONE_DAY +
                                               @building_hourly_distribution_hour * IceCube::ONE_HOUR +
@@ -245,8 +247,8 @@ module Planning
                         :policy_id => @policy_id,
                         :policy_type => @policy_type
                     },
-                    ["Scraping_hourly_daily_distribution"]),
-          Event.new("Building_behaviour",
+                    [scraping_hourly_daily_distribution]),
+          @building_behaviour = Event.new("Building_behaviour",
                     IceCube::Schedule.new(@monday_start +
                                               @building_behaviour_day * IceCube::ONE_DAY +
                                               @building_behaviour_hour * IceCube::ONE_HOUR +
@@ -262,7 +264,7 @@ module Planning
                         :policy_id => @policy_id,
                         :policy_type => @policy_type
                     },
-                    ["Scraping_behaviour"])
+                    [scraping_behaviour])
 
       ]
     end

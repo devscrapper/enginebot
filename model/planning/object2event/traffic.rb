@@ -138,7 +138,7 @@ module Planning
                         :website_id => @website_id,
                         :url_root => @url_root
                     }),
-          Event.new("Scraping_website",
+          scraping_website = Event.new("Scraping_website",
                     periodicity_scraping_traffic_source_website,
                     {
                         :policy_type => @policy_type,
@@ -167,7 +167,7 @@ module Planning
                         :policy_id => @policy_id,
                         :policy_type => @policy_type
                     },
-                    ["Scraping_website"]),
+                    [scraping_website]),
           Event.new("Building_objectives",
                     IceCube::Schedule.new(@monday_start +
                                               @building_objectives_day * IceCube::ONE_DAY +
@@ -208,7 +208,7 @@ module Planning
                         :min_duration_website => @min_duration_website,
                         :min_pages_website => @min_pages_website
                     },
-                    ["Building_hourly_daily_distribution", "Building_behaviour"])
+                    [@building_hourly_daily_distribution, @building_behaviour])
 
 
       ]

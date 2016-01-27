@@ -48,16 +48,20 @@ module Planning
                 :label #String
 
     # cree un objet Event (utilisé lors de la conversion d'un objet Objective/Traffic/Rank en liste d'Events)
+    # pre_tasks est un Array de object Event
     def initialize(label, periodicity, business, pre_tasks=[])
       raise "argument missing" if label.empty? or label.nil? or
           periodicity.nil? or
           business.empty? or business.nil?
 
+      pre_tasks.each{|pt| raise "one pre_tasks is not Event class" unless pt.is_a?(Event)}
 
       @label = label
       @periodicity = periodicity
       @business = business
-      @pre_tasks = pre_tasks
+      # les pre-tasks contiennent l'id de l'event et pas le label, cela permet d'être assuré que l'event référence est lebon
+      # independemment des dates et de la policy, des task qui sont a cheval sur plusieurs jours
+      @pre_tasks = pre_tasks.map{|pt| pt.id}
 
 
       @id = UUID.generate(:compact)
@@ -86,23 +90,20 @@ module Planning
 
 
     # retourne true si event est une pre-task de l'instance courante
-    # il faut être de la même policy
-    # il faut avoir la même building_date si l'event qui vient de se terminer en a une sinon non
+    # il faut posseder l'id de vent pre-task
     def has_pre_task?(event)
-      @key[:policy_id] == event.policy_id and
-          @pre_tasks.include?(event.label) and
-          (event.building_date == "" or @key[:building_date] == event.building_date)
+      @pre_tasks.include?(event.id)
     end
 
     # deplace la task de l'event de pre_tasks_running vers pre_tasks_over
     def add_pre_task_over(event)
-      @pre_tasks_over << event.label
-      @pre_tasks_running.delete(event.label)
+      @pre_tasks_over << event.id
+      delete_pre_task_running(event)
     end
 
     # affect l'event dans le pre_rask_runing
     def add_pre_task_running(event)
-      @pre_tasks_running << event.label
+      @pre_tasks_running << event.id
     end
 
     #retourne true si toutes les pre_task sont terminées
@@ -124,7 +125,7 @@ module Planning
 
     # supprime l'event du pre_rask_runing
     def delete_pre_task_running(event)
-      @pre_tasks_running.delete(event.label)
+      @pre_tasks_running.delete(event.id)
     end
 
     def execute

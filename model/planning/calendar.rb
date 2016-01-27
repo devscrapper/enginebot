@@ -205,10 +205,10 @@ module Planning
     end
 
     # permet l'execution de tous les events qui ont des pré_task qui sont terminés
-    def execute_all_events_which_all_pre_tasks_are_over(date)
+    def execute_all_events_which_all_pre_tasks_are_over
 
       begin
-        tasks = all_events_which_all_pre_tasks_are_over(date)
+        tasks = all_events_which_all_pre_tasks_are_over
 
       rescue Exception => e
         @logger.an_event.debug "cannot list events to execute : #{e.message}"
@@ -221,7 +221,7 @@ module Planning
           execute_tasks(tasks)
 
         else
-          @logger.an_event.info "none event to execute the day #{date} which pre task are over"
+          @logger.an_event.info "none event to execute which pre task are over"
 
         end
       end

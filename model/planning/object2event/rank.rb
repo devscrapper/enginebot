@@ -111,7 +111,7 @@ module Planning
                         :min_duration_website => @min_duration_website,
                         :min_pages_website => @min_pages_website
                     },
-                    ["Building_hourly_daily_distribution", "Building_behaviour"])
+                    [@building_hourly_daily_distribution, @building_behaviour])
       ]
     end
 

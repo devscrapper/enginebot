@@ -62,8 +62,7 @@ begin
 
       end
       begin
-        # en developpement, afin de tester plus facilement, on n'attend pas le jour de décenchement des events
-        calendar.execute_all_events_which_all_pre_tasks_are_over($staging == 'development' ? nil : start_date)
+        calendar.execute_all_events_which_all_pre_tasks_are_over
 
       rescue Exception => e
         logger.a_log.fatal "cannot execute events at date : #{start_date}, and hour #{hour} : #{e.message}"
