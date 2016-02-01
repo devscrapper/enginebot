@@ -71,8 +71,9 @@ module Tasking
 
         data = []
         7.times { |i|
+          hour = 0
           hourly_daily_distribution.each { |d|
-            data << [i + 1, d[0], "not use", d[1]]
+            data << [i + 1, hour += 1, "not use", d]
           }
         }
 

@@ -207,8 +207,8 @@ module Tasking
                                   event_id).scraping_pages(@data[:url_root],
                                                            $staging == "development" ? 10 : @data[:count_page],
                                                            @data[:max_duration],
-                                                           @data[:schemes].split,
-                                                           @data[:types].split)
+                                                           @data[:schemes],
+                                                           @data[:types])
       }
     end
 
