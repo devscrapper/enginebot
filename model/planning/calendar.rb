@@ -104,20 +104,21 @@ module Planning
 
     # supprimer tous les events d'une policy => policy_id (integer)
     # si obj recherché est absent => RAS ; pas besoin de tester existance de obj.
-    def delete_policy(policy_id)
+    def delete_policy(policy_id, policy_type)
       raise ArgumentError, policy_id if policy_id.nil?
+      raise ArgumentError, policy_type if policy_type.nil?
       begin
         @sem.synchronize {
-          @events.delete_if { |e| e.key[:policy_id] == policy_id }
+          @events.delete_if { |e| e.key[:policy_id] == policy_id and e.policy_type == policy_type }
           save
         }
 
       rescue Exception => e
-        @logger.an_event.debug "cannot delete events policy #{policy_id} in calendar : #{e.message}"
-        raise "cannot delete events policy #{policy_id} in calendar : #{e.message}"
+        @logger.an_event.debug "cannot delete events #{policy_type} policy #{policy_id} in calendar : #{e.message}"
+        raise "cannot delete events #{policy_type} policy #{policy_id} in calendar : #{e.message}"
 
       else
-        @logger.an_event.debug "delete events policy #{policy_id} in calendar"
+        @logger.an_event.debug "delete events #{policy_type} policy #{policy_id} in calendar"
 
       end
     end
@@ -273,7 +274,7 @@ module Planning
       begin
         @logger.an_event.debug "delete policy <#{policy}:#{data_event[:policy_id]}>"
 
-        delete_policy(data_event[:policy_id])
+        delete_policy(data_event[:policy_id], policy.downcase)
 
         @logger.an_event.debug "register policy <#{policy}> data_event #{data_event}"
         require_relative "object2event/#{policy.downcase}"

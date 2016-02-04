@@ -207,14 +207,15 @@ module Planning
             #--------------------------------------------------------------------------------------------------------------
             # DELETE
             #--------------------------------------------------------------------------------------------------------------
-
+            #TODO remplacer la ressources policies par Traffics et Ranks car les id des policies dna srails ne sont pas disjoints, il peut y avoir le même id car 2 tables differente=> impact /lib/publication
             when "DELETE"
               # pas de respect de http, car maj ne renvoient pas la ressource maj
-              @logger.an_event.info "delete events of the #{ress_id} policy to repository"
+              @logger.an_event.info "delete events of the #{ress_type} policy id=#{ress_id} to repository"
               case ress_type
-                when "policies"
-                  @calendar.delete_policy(ress_id.to_i)
-
+                when "traffics"
+                  @calendar.delete_policy(ress_id.to_i, "traffic")
+                when "ranks"
+                  @calendar.delete_policy(ress_id.to_i, "rank")
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
               end
