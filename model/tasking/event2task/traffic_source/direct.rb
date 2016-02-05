@@ -91,15 +91,17 @@ module Tasking
            :saas_port, #host et port du serveur de scraping en mode saas
            :time_out, #time out de la requet de scraping
            :calendar_server_port,
-           :event_id #utiliser pour identifier event qui a déclencher la task pour maj le state de l'event
+           :event_id, #utiliser pour identifier event qui a déclencher la task pour maj le state de l'event
+           :policy_id #utiliser pour identifier la task chez statupweb
 #--------------------------------------------------------------------------------------------------------------
 # scraping_device_platform_plugin
 #--------------------------------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------
-      def initialize(website_label, date_building, policy_type, event_id)
+      def initialize(website_label, date_building, policy_type, event_id, policy_id)
         super(website_label, date_building, policy_type)
         @event_id = event_id
+        @policy_id = policy_id
         @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       end
 
@@ -261,8 +263,25 @@ module Tasking
           @logger.an_event.error "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER => #{e.message}"
         else
           @logger.an_event.info "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} is OVER."
-        end
 
+        end
+        begin
+          task = {:policy_id => @policy_id,
+                  :policy_type => @policy_type,
+                  :label => "Scraping_website",
+                  :state => "over",
+                  :time => Time.now
+          }
+          response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/tasks/",
+                                     JSON.generate(task),
+                                     :content_type => :json,
+                                     :accept => :json
+          raise response.content if response.code != 201
+        rescue Exception => e
+          @logger.an_event.warn "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER to statupweb => #{e.message}"
+          @logger.an_event.warn "task #{task}"
+        else
+        end
       end
 
 

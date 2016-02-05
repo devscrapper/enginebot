@@ -200,15 +200,16 @@ module Tasking
     def Scraping_website
 
       execute(__method__) { |event_id|
-
+        $stderr << @data[:policy_id] << '\n'
         TrafficSource::Direct.new(@data[:website_label],
                                   @data[:building_date],
                                   @data[:policy_type],
-                                  event_id).scraping_pages(@data[:url_root],
-                                                           $staging == "development" ? 10 : @data[:count_page],
-                                                           @data[:max_duration],
-                                                           @data[:schemes],
-                                                           @data[:types])
+                                  event_id,
+                                  @data[:policy_id]).scraping_pages(@data[:url_root],
+                                                                    $staging == "development" ? 10 : @data[:count_page],
+                                                                    @data[:max_duration],
+                                                                    @data[:schemes],
+                                                                    @data[:types])
       }
     end
 
@@ -383,6 +384,8 @@ module Tasking
           # perform a long-running operation here, such as a database query.
           send_state_to_calendar(@data[:event_id], Planning::Event::START, info)
           @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is start"
+          send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, Planning::Event::START, info)
+
           yield (@data[:event_id])
 
         rescue Error => e
@@ -405,11 +408,15 @@ module Tasking
 
         if results.is_a?(Error)
           send_state_to_calendar(@data[:event_id], Planning::Event::FAIL, info)
+          send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, Planning::Event::FAIL, info)
 
         else
           # scraping website utilise spawn => tout en asycnhrone => il enverra l'Event::over à calendar
           # il n'enverra jamais Event::Fail à calendar.
-          send_state_to_calendar(@data[:event_id], Planning::Event::OVER, info) if task != :Scraping_website
+          if task != :Scraping_website
+            send_state_to_calendar(@data[:event_id], Planning::Event::OVER, info)
+            send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, Planning::Event::OVER, info)
+          end
 
         end
 
@@ -452,6 +459,30 @@ module Tasking
       end
     end
 
+    def send_task_to_statupweb(policy_id, policy_type, label, state, info)
+      # informe statupweb du nouvel etat d'un task
+      # en cas d'erreur on ne leve pas une exception car cela ne met en peril le comportement fonctionnel de derouelement de lexecution de la policy.
+      # on peut identifier avec event_id la task déjà pésente dans statupweb pour faire un update plutot que d'jouter une nouvelle task
+      # avoir si le besoin se fait sentir en terme de présention IHM (plus lisible)
+      begin
+        task = {:policy_id => policy_id,
+                :policy_type => policy_type,
+                :label => label,
+                :state => state,
+                :time => Time.now
+        }
+        response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/tasks/",
+                                   JSON.generate(task),
+                                   :content_type => :json,
+                                   :accept => :json
+        raise response.content if response.code != 201
+
+      rescue Exception => e
+        @logger.an_event.warn "task <#{info.join(",")}> not update state : #{state} to statupweb #{$statupweb_server_ip}:#{$statupweb_server_port}=> #{e.message}"
+      else
+
+      end
+    end
 
     def is_nil_or_empty?
       @logger.an_event.debug yield
