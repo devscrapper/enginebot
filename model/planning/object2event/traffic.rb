@@ -1,10 +1,11 @@
 require_relative 'policy'
 require_relative '../../../lib/parameter'
-
+require_relative '../../../lib/error'
 module Planning
 
   class Traffic < Policy
-
+    include Errors
+    DURATION_TOO_SHORT = 2100
     attr :scraping_traffic_source_referral_day,
          :scraping_traffic_source_referral_hour,
          :scraping_traffic_source_referral_min,
@@ -37,7 +38,10 @@ module Planning
       @max_duration_scraping = data[:max_duration_scraping]
       unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
         delay = (@monday_start.to_date - Time.now.to_date).to_i
-        raise "#{delay} day(s) remaining before start policy, it is too short to prepare #{@policy_type} policy, #{@max_duration_scraping} day(s) are require !" if delay <= @max_duration_scraping
+        raise Error.new(DURATION_TOO_SHORT,
+                  :values => {:delay => delay,
+                              :policy_type => @policy_type,
+                              :max_duration_scraping => @max_duration_scraping}) if delay <= @max_duration_scraping
       end
       # iceCube a besoin d'un Time et pas d'un Date
 
@@ -139,18 +143,18 @@ module Planning
                         :url_root => @url_root
                     }),
           scraping_website = Event.new("Scraping_website",
-                    periodicity_scraping_traffic_source_website,
-                    {
-                        :policy_type => @policy_type,
-                        :policy_id => @policy_id,
-                        :website_label => @website_label,
-                        :website_id => @website_id,
-                        :url_root => @url_root,
-                        :count_page => @count_page,
-                        :max_duration => @max_duration_scraping, #en jours
-                        :schemes => @schemes,
-                        :types => @types
-                    }),
+                                       periodicity_scraping_traffic_source_website,
+                                       {
+                                           :policy_type => @policy_type,
+                                           :policy_id => @policy_id,
+                                           :website_label => @website_label,
+                                           :website_id => @website_id,
+                                           :url_root => @url_root,
+                                           :count_page => @count_page,
+                                           :max_duration => @max_duration_scraping, #en jours
+                                           :schemes => @schemes,
+                                           :types => @types
+                                       }),
           Event.new("Building_landing_pages_direct",
                     IceCube::Schedule.new(@registering_date.to_date +
                                               @building_landing_pages_direct_day * IceCube::ONE_DAY +

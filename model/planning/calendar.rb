@@ -1,5 +1,6 @@
 require_relative '../../lib/logging'
 require_relative '../../lib/parameter'
+require_relative '../../lib/error'
 require_relative 'event'
 require 'date'
 require 'json'
@@ -8,7 +9,7 @@ require 'json'
 module Planning
 
   class Calendar
-
+    include Errors
     EVENTS_FILE = File.dirname(__FILE__) + "/../../data/" + File.basename(__FILE__, ".rb") + ".yml"
     CALENDAR_CSS = File.dirname(__FILE__) + "/" + File.basename(__FILE__, ".rb") + ".css"
     attr :events,
@@ -290,6 +291,10 @@ module Planning
           @logger.an_event.debug "save calendar"
         }
 
+      rescue Error => e
+        @logger.an_event.debug "cannot register events policy #{policy} in calendar : #{e.message}"
+        raise e
+        []
       rescue Exception => e
         @logger.an_event.debug "cannot register events policy #{policy} in calendar : #{e.message}"
         raise "cannot register events policy #{policy} in calendar : #{e.message}"

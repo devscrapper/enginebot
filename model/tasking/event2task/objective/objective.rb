@@ -142,11 +142,39 @@ module Tasking
 
         response = RestClient.post "http://localhost:#{$calendar_server_port}/objectives/objective/", data.to_json, :content_type => :json, :accept => :json
         if response.code != 200
-          @logger.an_event.error "Objective <#{info.join(",")}> not save => #{response.code}"
           raise "Objective <#{info.join(",")}> not save => #{response.code}"
         end
 
 
+      end
+
+      def send_to_statupweb
+        # informe statupweb du nouvel etat d'un task
+        # en cas d'erreur on ne leve pas une exception car cela ne met en peril le comportement fonctionnel de derouelement de lexecution de la policy.
+        # on peut identifier avec event_id la task d�j� p�sente dans statupweb pour faire un update plutot que d'jouter une nouvelle task
+        # avoir si le besoin se fait sentir en terme de pr�sention IHM (plus lisible)
+        begin
+
+          obj = {:count_visits => @count_visits,
+                 :visit_bounce_rate => @visit_bounce_rate,
+                 :avg_time_on_site => @avg_time_on_site,
+                 :page_views_per_visit => @page_views_per_visit,
+                 :hourly_distribution => @hourly_distribution,
+                 :policy_id => @policy_id,
+                 :policy_type => @policy_type,
+                 :day => IceCube::Schedule.load(@periodicity).start_time.to_date
+          }
+          response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/objectives/",
+                                     JSON.generate(obj),
+                                     :content_type => :json,
+                                     :accept => :json
+          raise response.content if response.code != 201
+
+        rescue Exception => e
+          raise "#{$statupweb_server_ip}:#{$statupweb_server_port} => #{e.message}"
+        else
+
+        end
       end
 
       def to_s(*a)

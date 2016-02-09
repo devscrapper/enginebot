@@ -228,10 +228,17 @@ module Tasking
               obj.send_to_calendar
 
 
+
             rescue Exception => e
               raise StandardError, "cannot send objective <#{@policy_type}> <#{@website_label}> at date <#{day}> to calendar => #{e.message}"
             else
               @logger.an_event.debug "send objective for <#{@policy_type}> <#{@website_label}> at date <#{day}> to calendar)"
+
+              begin
+                obj.send_to_statupweb
+              rescue Exception => e
+                @logger.an_event.warn "cannot send objective <#{@policy_type}> <#{@website_label}> at date <#{day}> to statupweb #{e.message}"
+              end
             end
             p.increment
             day = day.next_day(1)
