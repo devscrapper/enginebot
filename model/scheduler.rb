@@ -79,13 +79,15 @@ class Scheduler
       year, month, day, hour, min, sec = flow_visit.date.split(/-/)
       if $staging == "development"
         start_date_time = Time.now + 30
-         #decale la planification de 30s
+        #decale la planification de 30s
       else
         start_date_time = Time.new(year.to_i, month.to_i, day.to_i, hour.to_i, min.to_i, sec.to_i)
       end
 
       if start_date_time > Time.now
         @logger.an_event.info "flow_visit #{flow_visit.basename} is plan at #{start_date_time}"
+
+        change_state_visit_to_statupweb(flow_visit)
 
         @scheduler.at start_date_time.to_s do
           send_visit_to_statupbot(flow_visit)
@@ -127,6 +129,27 @@ class Scheduler
 
     end
   end
+
+  def change_state_visit_to_statupweb(visit_flow)
+    #informe statupweb de la creation d'une nouvelle visite
+    # en cas d'erreur on ne leve as de'exception car c'est de la communication
+    begin
+      visit = visit_flow.read
+
+      response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:id]}",
+                                  JSON.generate({:state => :scheduled}),
+                                  :content_type => :json,
+                                  :accept => :json
+      raise response.content if response.code != 201
+
+    rescue Exception => e
+      @logger.an_event.warn "#{$statupweb_server_ip}:#{$statupweb_server_port} => #{e.message}"
+    else
+    ensure
+      visit_flow.close
+    end
+  end
+
 
 end
 

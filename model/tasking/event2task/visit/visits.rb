@@ -20,7 +20,7 @@ module Tasking
 # Globals variables
 #------------------------------------------------------------------------------------------
       OUTPUT = File.dirname(__FILE__) + "/../../../../output"
-      TMP = File.expand_path(File.join("..", "..","..", "..", "..","tmp"), __FILE__)
+      TMP = File.expand_path(File.join("..", "..", "..", "..", "..", "tmp"), __FILE__)
       PROGRESS_BAR_SIZE = 180
       SEPARATOR1=";"
       SEPARATOR2="|"
@@ -117,7 +117,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error ("Building visits for <#{@policy_type}> <#{@website_label}> is over =>  #{e.message}")
-            raise e
+          raise e
         else
           @logger.an_event.debug("Building visits for <#{@policy_type}> <#{@website_label}> is over")
         end
@@ -374,6 +374,7 @@ module Tasking
               published_visits_to_yaml_file = Flow.new(TMP, "#{v.operating_system}-#{v.operating_system_version}", @policy_type, @website_label, start_date_time, v.id_visit, ".yml")
               published_visits_to_yaml_file.write(v.to_yaml)
               published_visits_to_yaml_file.close
+              send_to_statupweb(published_visits_to_yaml_file, @policy_id)
               p.increment
             rescue Exception => e
               @logger.an_event.debug visit
@@ -505,7 +506,35 @@ module Tasking
         a < b ? a : b
       end
 
+      def send_to_statupweb(visit_flow, policy_id)
+        #informe statupweb de la creation d'une nouvelle visite
+        # en cas d'erreur on ne leve as de'exception car c'est de la communication
+        begin
+          visit_tmp = visit_flow.read
+          visit = {:policy_id => policy_id,
+                   :policy_type => visit_tmp[:visit][:type].to_s,
+                   :id_visit => visit_tmp[:visit][:id],
+                   :start_time => visit_tmp[:visit][:start_date_time],
+                   :landing_url => "#{visit_tmp[:visit][:landing][:scheme]}://#{visit_tmp[:visit][:landing][:fqdn]}#{visit_tmp[:visit][:landing][:path]}",
+                   :durations => visit_tmp[:visit][:durations],
+                   :referrer => visit_tmp[:visit][:referrer],
+                   :advert => visit_tmp[:visit][:advert]
+          }
+          visit_tmp.close
 
+          response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/",
+                                     JSON.generate(visit),
+                                     :content_type => :json,
+                                     :accept => :json
+          raise response.content if response.code != 201
+
+        rescue Exception => e
+          @logger.an_event.warn "#{$statupweb_server_ip}:#{$statupweb_server_port} => #{e.message}"
+        else
+        ensure
+          visit_flow.close
+        end
+      end
     end
   end
 end
