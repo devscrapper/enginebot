@@ -1,24 +1,15 @@
 
 development:
-  :listening_port: 9101
-  :calendar_server_port: 9104
   :statupweb_server_ip: localhost
   :statupweb_server_port: 3000
-  :periodicity_supervision: 15m  #(minute)
   :debugging: true
 
 test:
-  :listening_port: 9101
-  :calendar_server_port: 9104
   :statupweb_server_ip: 192.168.1.88
   :statupweb_server_port: 3000
-  :periodicity_supervision: 15m #(minute)
   :debugging: true
 
 production:
-  :listening_port: 9101
-  :calendar_server_port: 9104
   :statupweb_server_ip: 192.168.1.88
   :statupweb_server_port: 3000
-  :periodicity_supervision: 15m  #(minute)
   :debugging: true

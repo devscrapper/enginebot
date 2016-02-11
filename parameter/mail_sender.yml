@@ -8,7 +8,7 @@ development:
   :user_name: olinouane     #utilisé par /lib/logging /lib/mail_sender
   :password: Brembo01       #utilisé par /lib/logging /lib/mail_sender
   :domain: gmail.com        #utilisé par /lib/logging /lib/mail_sender
-  :authentification: :login #utilisé par /lib/logging /lib/mail_sender
+  :authentification: :plain #utilisé par /lib/logging /lib/mail_sender
   :auto_flushing: 2         #utilisé par /lib/logging
   :level: :error            #log les fatal et error message ; utilisé par /lib/logging
   :from: engine@gmail.com     #emtteur ; utilisé par /lib/logging

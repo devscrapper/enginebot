@@ -2,12 +2,15 @@
 development:
   :listening_port: 9104
   :periodicity: "0 * * * * * Europe/Paris"   #toutes les minutes sur le fuseau hoare GMT+2
+  :periodicity_supervision: 15m    #(minute)
   :debugging: true
 test:
   :listening_port: 9104
   :periodicity: "0 * * * * * Europe/Paris"   #toutes les minutes sur le fuseau hoare GMT+2
+  :periodicity_supervision: 15m   #(minute)
   :debugging: true
 production:
   :listening_port: 9104
-  :periodicity: "0 * * * * * Europe/Paris"   #toutes les 15 minutes sur le fuseau hoare GMT+2
+  :periodicity: "0 * * * * * Europe/Paris"   #toutes les minutes sur le fuseau hoare GMT+2
+  :periodicity_supervision: 15m   #(minute)
   :debugging: false

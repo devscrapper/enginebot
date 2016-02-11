@@ -2,6 +2,7 @@
 development:
   :delay_periodic_scan: 5  #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
+  :periodicity_supervision: 15m #(minute)
   :debugging: true
   :inputflow_factories:
     :windows:
@@ -15,6 +16,7 @@ development:
 test:
   :delay_periodic_scan: 5 #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
+  :periodicity_supervision: 15m   #(minute)
   :debugging: true
   :inputflow_factories:
     :windows:
@@ -40,6 +42,7 @@ test:
 production:
   :delay_periodic_scan: 5 #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
+  :periodicity_supervision: 15m #(minute)
   :debugging: false
   :inputflow_factories:
     :windows:
