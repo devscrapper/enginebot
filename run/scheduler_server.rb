@@ -53,6 +53,7 @@ else
   begin
     EM.run do
       logger.a_log.info "scheduler server is running"
+      Supervisor.send_online(File.basename(__FILE__, '.rb'))
       Signal.trap("INT") { EventMachine.stop; }
       Signal.trap("TERM") { EventMachine.stop; }
       # supervision

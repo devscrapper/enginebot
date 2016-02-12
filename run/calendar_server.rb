@@ -79,6 +79,7 @@ begin
         end
 
     logger.a_log.info "calendar server is running"
+    Supervisor.send_online(File.basename(__FILE__, '.rb'))
     EventMachine.start_server "0.0.0.0", listening_port, Connection, logger, calendar
 
   }

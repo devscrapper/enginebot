@@ -63,6 +63,7 @@ EventMachine.run {
     end
 
   logger.a_log.info "tasks server is running"
+  Supervisor.send_online(File.basename(__FILE__, '.rb'))
   EventMachine.start_server "localhost", listening_port, TaskConnection, logger
 
 }

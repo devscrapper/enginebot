@@ -1,6 +1,6 @@
 require 'rest-client'
 require 'socket'
-
+require 'json'
 
 module Supervisor
 
@@ -58,15 +58,15 @@ module Supervisor
     begin
 
       response = RestClient.post "http://#{statupweb_server_ip}:#{statupweb_server_port}/activity_servers/",
-                                JSON.generate(activity),
-                                :content_type => :json,
-                                :accept => :json
+                                 JSON.generate(activity),
+                                 :content_type => :json,
+                                 :accept => :json
       raise response.content if response.code != 201
 
     rescue Exception => e
       $stderr << "not send activity #{activity} to statupweb #{statupweb_server_ip}:#{statupweb_server_port}=> #{e.message}"
     else
-
+      $stdout << "send activity #{activity} to statupweb #{statupweb_server_ip}:#{statupweb_server_port}" if $staging == "development"
     end
   end
 
