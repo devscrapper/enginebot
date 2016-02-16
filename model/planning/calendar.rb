@@ -480,7 +480,9 @@ module Planning
     # retourne un nouvel Array contenant les event sélectionné
     # retourne un Array vide si aucun event satisfait les critères
     def on_period(start_time, end_time) # end_time exclue
-      @events.select { |evt| !evt.periodicity.occurrences_between(start_time, end_time - IceCube::ONE_SECOND).empty? }
+      @events.select { |evt| !evt.has_pre_tasks? and
+          !evt.periodicity.occurrences_between(start_time, end_time - IceCube::ONE_SECOND).empty?
+      }
     end
 
     # supprime de pre_tasks_running l'event pour tous les events dont event est pre_task

@@ -430,9 +430,7 @@ module Planning
                                           :end_time => @objective_date +
                                               @start_publishing_visits_day * IceCube::ONE_DAY +
                                               @start_publishing_visits_hour * IceCube::ONE_HOUR)
-      periodicity.add_recurrence_rule IceCube::Rule.hourly.until(@objective_date +
-                                                                     @start_publishing_visits_day * IceCube::ONE_DAY +
-                                                                     @start_publishing_visits_hour * IceCube::ONE_HOUR)
+      periodicity.add_recurrence_rule IceCube::Rule.hourly
 
       @events << Event.new("Publishing_visits",
                            periodicity,
