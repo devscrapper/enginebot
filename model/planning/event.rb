@@ -54,14 +54,22 @@ module Planning
           periodicity.nil? or
           business.empty? or business.nil?
 
-      pre_tasks.each{|pt| raise "one pre_tasks is not Event class" unless pt.is_a?(Event)}
+      #les events qui n'ont pas de pre_tasks ont une heure et un jour de plainificiartion alors on
+      #controle que leur periodicity est dans le futur : now + 1mn (car toutes les minutes le calendar declenche des events) + 1mn (par securité)
+      #pour les autres la peridicity n'est pas utilisé pour le déclenchement.
+      # TODO : reflechirr à l'interet de ne pas affecter de periodicité pour les event qui ont des pre tasks => à mon avis on peut supprimer.
+      # TODO : faire 2 class : Event(attribut commun) EventScheduled(periodicity), EventSorted(pre_tasks)
+      if pre_tasks.empty? and periodicity.start_time <= Time.now + (1+ 1) * IceCube::ONE_MINUTE
+        raise "start time (#{periodicity.start_time}) of event (#{label}) is in the past, so event is not plan"
+      end
+      pre_tasks.each { |pt| raise "one pre_tasks is not Event class" unless pt.is_a?(Event) }
 
       @label = label
       @periodicity = periodicity
       @business = business
       # les pre-tasks contiennent l'id de l'event et pas le label, cela permet d'être assuré que l'event référence est lebon
       # independemment des dates et de la policy, des task qui sont a cheval sur plusieurs jours
-      @pre_tasks = pre_tasks.map{|pt| pt.id}
+      @pre_tasks = pre_tasks.map { |pt| pt.id }
 
 
       @id = UUID.generate(:compact)
@@ -203,6 +211,7 @@ module Planning
     def task_label
       @key[:task_label]
     end
+
     def to_s(*a)
       @key.to_s(*a)
     end
