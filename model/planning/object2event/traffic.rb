@@ -39,9 +39,9 @@ module Planning
       unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
         delay = (@monday_start.to_date - Time.now.to_date).to_i
         raise Error.new(DURATION_TOO_SHORT,
-                  :values => {:delay => delay,
-                              :policy_type => @policy_type,
-                              :max_duration_scraping => @max_duration_scraping}) if delay <= @max_duration_scraping
+                        :values => {:delay => delay,
+                                    :policy_type => @policy_type,
+                                    :max_duration_scraping => @max_duration_scraping}) if delay <= @max_duration_scraping
       end
       # iceCube a besoin d'un Time et pas d'un Date
 
@@ -94,13 +94,48 @@ module Planning
 
     def to_event
       super
-      periodicity_scraping_traffic_source_organic = IceCube::Schedule.new(@registering_date + @scraping_traffic_source_organic_day * IceCube::ONE_DAY +
-                                                                              @scraping_traffic_source_organic_hour * IceCube::ONE_HOUR +
-                                                                              @scraping_traffic_source_organic_min * IceCube::ONE_MINUTE,
-                                                                          :end_time => @registering_date +
-                                                                              @count_weeks * IceCube::ONE_WEEK)
-      periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
-                                                                                                      @count_weeks * IceCube::ONE_WEEK)
+      if @organic_medium_percent > 0
+        periodicity_scraping_traffic_source_organic = IceCube::Schedule.new(@registering_date + @scraping_traffic_source_organic_day * IceCube::ONE_DAY +
+                                                                                @scraping_traffic_source_organic_hour * IceCube::ONE_HOUR +
+                                                                                @scraping_traffic_source_organic_min * IceCube::ONE_MINUTE,
+                                                                            :end_time => @registering_date +
+                                                                                @count_weeks * IceCube::ONE_WEEK)
+        periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
+                                                                                                        @count_weeks * IceCube::ONE_WEEK)
+
+        @events << Event.new("Scraping_traffic_source_organic",
+                             periodicity_scraping_traffic_source_organic,
+                             {
+                                 :policy_type => @policy_type,
+                                 :policy_id => @policy_id,
+                                 :website_label => @website_label,
+                                 :url_root => @url_root,
+                                 :max_duration => @max_duration_scraping, #en jours
+                                 :website_id => @website_id
+                             })
+      end
+
+
+      if @referral_medium_percent > 0
+        periodicity_scraping_traffic_source_referral = IceCube::Schedule.new(@registering_date +
+                                                                                 @scraping_traffic_source_referral_day * IceCube::ONE_DAY +
+                                                                                 @scraping_traffic_source_referral_hour * IceCube::ONE_HOUR +
+                                                                                 @scraping_traffic_source_referral_min * IceCube::ONE_MINUTE,
+                                                                             :end_time => @registering_date +
+                                                                                 @count_weeks * IceCube::ONE_WEEK)
+        periodicity_scraping_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
+                                                                                                         @count_weeks * IceCube::ONE_WEEK)
+
+        @events << Event.new("Scraping_traffic_source_referral",
+                             periodicity_scraping_traffic_source_referral,
+                             {
+                                 :policy_type => @policy_type,
+                                 :policy_id => @policy_id,
+                                 :website_label => @website_label,
+                                 :website_id => @website_id,
+                                 :url_root => @url_root
+                             })
+      end
 
       periodicity_scraping_traffic_source_website = IceCube::Schedule.new(@registering_date +
                                                                               @scraping_traffic_source_website_day * IceCube::ONE_DAY +
@@ -111,37 +146,8 @@ module Planning
       periodicity_scraping_traffic_source_website.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
                                                                                                       @count_weeks * IceCube::ONE_WEEK)
 
-
-      periodicity_scraping_traffic_source_referral = IceCube::Schedule.new(@registering_date +
-                                                                               @scraping_traffic_source_referral_day * IceCube::ONE_DAY +
-                                                                               @scraping_traffic_source_referral_hour * IceCube::ONE_HOUR +
-                                                                               @scraping_traffic_source_referral_min * IceCube::ONE_MINUTE,
-                                                                           :end_time => @registering_date +
-                                                                               @count_weeks * IceCube::ONE_WEEK)
-      periodicity_scraping_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
-                                                                                                       @count_weeks * IceCube::ONE_WEEK)
-
-
       @events += [
-          Event.new("Scraping_traffic_source_organic",
-                    periodicity_scraping_traffic_source_organic,
-                    {
-                        :policy_type => @policy_type,
-                        :policy_id => @policy_id,
-                        :website_label => @website_label,
-                        :url_root => @url_root,
-                        :max_duration => @max_duration_scraping, #en jours
-                        :website_id => @website_id
-                    }),
-          Event.new("Scraping_traffic_source_referral",
-                    periodicity_scraping_traffic_source_referral,
-                    {
-                        :policy_type => @policy_type,
-                        :policy_id => @policy_id,
-                        :website_label => @website_label,
-                        :website_id => @website_id,
-                        :url_root => @url_root
-                    }),
+
           scraping_website = Event.new("Scraping_website",
                                        periodicity_scraping_traffic_source_website,
                                        {
