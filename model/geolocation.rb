@@ -30,7 +30,7 @@ class Geolocation
             raise response.content if response.code != 200
 
           rescue Exception => e
-            logger.a_log.error "geolocations flow <#{File.join(TMP, geo_file_source)}> not push to input flow server #{input_flow_server[:ip]}:#{input_flow_server[:port]} : #{e.message}"
+            logger.a_log.warn "geolocations flow <#{File.join(TMP, geo_file_source)}> not push to input flow server #{input_flow_server[:ip]}:#{input_flow_server[:port]} : #{e.message}"
           else
             logger.a_log.info "geolocations flow <#{File.join(TMP, geo_file_source)}> push to input flow server #{input_flow_server[:ip]}:#{input_flow_server[:port]}"
           end
