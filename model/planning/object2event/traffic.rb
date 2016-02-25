@@ -137,13 +137,18 @@ module Planning
                              })
       end
 
-      periodicity_scraping_traffic_source_website = IceCube::Schedule.new(@registering_date +
+      # la task de scraping website n'est pas liée à semrush, ni makestic, et donc ne requiert pas un compte pour
+      # recuperer les infos. Les compte semrush et majestic ne sont pas utilisables en journée car utiliséer par M.
+      # en conséwuence la task scraping_website epeut se déclencher à tout moment et ne pas attendre les horaires hors boulot de M.
+      # on remplace @registering_date qui affecte heure et min à zero, par le time courant auquel on affecte le parametrage
+      now = Time.now
+      periodicity_scraping_traffic_source_website = IceCube::Schedule.new(now +
                                                                               @scraping_traffic_source_website_day * IceCube::ONE_DAY +
                                                                               @scraping_traffic_source_website_hour * IceCube::ONE_HOUR +
                                                                               @scraping_traffic_source_website_min * IceCube::ONE_MINUTE,
-                                                                          :end_time => @registering_date +
+                                                                          :end_time => now +
                                                                               @count_weeks * IceCube::ONE_WEEK)
-      periodicity_scraping_traffic_source_website.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
+      periodicity_scraping_traffic_source_website.add_recurrence_rule IceCube::Rule.monthly.until(now +
                                                                                                       @count_weeks * IceCube::ONE_WEEK)
 
       @events += [

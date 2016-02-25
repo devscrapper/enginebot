@@ -45,8 +45,8 @@ test:
   :scraping_traffic_source_referral_hour: 20
   :scraping_traffic_source_referral_min: 30
   :scraping_traffic_source_website_day: 0
-  :scraping_traffic_source_website_hour: 21
-  :scraping_traffic_source_website_min: 0
+  :scraping_traffic_source_website_hour: 0
+  :scraping_traffic_source_website_min: 5
   :scraping_device_platform_plugin_day: -2
   :scraping_device_platform_plugin_hour: 1
   :scraping_device_platform_plugin_min: 30
@@ -83,8 +83,8 @@ production:
   :scraping_traffic_source_referral_hour: 20
   :scraping_traffic_source_referral_min: 30
   :scraping_traffic_source_website_day: 0
-  :scraping_traffic_source_website_hour: 21
-  :scraping_traffic_source_website_min: 00
+  :scraping_traffic_source_website_hour: 0
+  :scraping_traffic_source_website_min: 5
   :scraping_building_hourly_distribution_day: -2
   :scraping_building_hourly_distribution_hour: 2
   :scraping_building_hourly_distribution_min: 30
