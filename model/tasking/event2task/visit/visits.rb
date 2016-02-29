@@ -510,7 +510,8 @@ module Tasking
         #informe statupweb de la creation d'une nouvelle visite
         # en cas d'erreur on ne leve as de'exception car c'est de la communication
         begin
-          visit_tmp = visit_flow.read
+          visit_tmp = YAML::load(visit_flow.read)
+
           visit = {:policy_id => policy_id,
                    :policy_type => visit_tmp[:visit][:type].to_s,
                    :id_visit => visit_tmp[:visit][:id],
@@ -520,7 +521,7 @@ module Tasking
                    :referrer => visit_tmp[:visit][:referrer],
                    :advert => visit_tmp[:visit][:advert]
           }
-          visit_tmp.close
+
 
           response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/",
                                      JSON.generate(visit),
@@ -529,7 +530,7 @@ module Tasking
           raise response.content if response.code != 201
 
         rescue Exception => e
-          @logger.an_event.warn "#{$statupweb_server_ip}:#{$statupweb_server_port} => #{e.message}"
+          @logger.an_event.warn "cannot send to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
         else
         ensure
           visit_flow.close
