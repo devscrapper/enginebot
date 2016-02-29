@@ -134,16 +134,16 @@ class Scheduler
     #informe statupweb de la creation d'une nouvelle visite
     # en cas d'erreur on ne leve as de'exception car c'est de la communication
     begin
-      visit = visit_flow.read
+      visit = YAML::load(visit_flow.read)
 
-      response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:id]}",
+      response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:visit][:id]}",
                                   JSON.generate({:state => :scheduled}),
                                   :content_type => :json,
                                   :accept => :json
       raise response.content if response.code != 201
 
     rescue Exception => e
-      @logger.an_event.warn "#{$statupweb_server_ip}:#{$statupweb_server_port} => #{e.message}"
+      @logger.an_event.warn "cannot send scheduled state of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
     else
     ensure
       visit_flow.close

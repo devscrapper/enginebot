@@ -1,5 +1,7 @@
 
 development:
+  :statupweb_server_ip: localhost
+  :statupweb_server_port: 3000
   :delay_periodic_scan: 5  #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
   :periodicity_supervision: 15m #(minute)
@@ -14,6 +16,8 @@ development:
             :port: 9201
 
 test:
+  :statupweb_server_ip: 192.168.1.88
+  :statupweb_server_port: 3000
   :delay_periodic_scan: 5 #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
   :periodicity_supervision: 15m   #(minute)
@@ -40,6 +44,8 @@ test:
             :port: 9201
 
 production:
+  :statupweb_server_ip: 192.168.1.88
+  :statupweb_server_port: 3000
   :delay_periodic_scan: 5 #(seconde)
   :delay_periodic_send_geolocation: 60 #(minute)
   :periodicity_supervision: 15m #(minute)

@@ -374,11 +374,22 @@ module Tasking
               published_visits_to_yaml_file = Flow.new(TMP, "#{v.operating_system}-#{v.operating_system_version}", @policy_type, @website_label, start_date_time, v.id_visit, ".yml")
               published_visits_to_yaml_file.write(v.to_yaml)
               published_visits_to_yaml_file.close
-              send_to_statupweb(published_visits_to_yaml_file, @policy_id)
-              p.increment
+
             rescue Exception => e
               @logger.an_event.debug visit
-              @logger.an_event.error e.message
+              @logger.an_event.error "cannot generate yaml published visit file for visit #{v.id_visit} : #{e.message}"
+            else
+              @logger.an_event.debug "generate yaml published visit file for visit #{v.id_visit}"
+              begin
+                send_to_statupweb(published_visits_to_yaml_file, @policy_id)
+
+              rescue Exception => e
+                @logger.an_event.error "cannot push to statupweb reporting of yaml published visit file for visit #{v.id_visit} : #{e}"
+              else
+
+              end
+            ensure
+              p.increment
             end
           } unless final_visits_file.zero?
           final_visits_file.archive_previous # conserve le dernier fichier pour reconstuire le JDD qd il y a un pb
@@ -530,7 +541,7 @@ module Tasking
           raise response.content if response.code != 201
 
         rescue Exception => e
-          @logger.an_event.warn "cannot send to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
+          @logger.an_event.warn "cannot send visit to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
         else
         ensure
           visit_flow.close

@@ -24,12 +24,15 @@ else
   delay_periodic_scan = parameters.delay_periodic_scan
   delay_periodic_send_geolocation = parameters.delay_periodic_send_geolocation
   periodicity_supervision = parameters.periodicity_supervision
-
+  $statupweb_server_ip = parameters.statupweb_server_ip
+  $statupweb_server_port = parameters.statupweb_server_port
 
   if inputflow_factories.nil? or
       $debugging.nil? or
       $staging.nil? or
       periodicity_supervision.nil?
+    $statupweb_server_ip.nil? or
+    $statupweb_server_port.nil? or
     $stderr << "some parameters not define" << "\n"
     exit(1)
   end
@@ -38,6 +41,8 @@ else
   logger = Logging::Log.new(self, :staging => $staging, :id_file => File.basename(__FILE__, ".rb"), :debugging => $debugging)
 
   logger.a_log.info "parameters of scheduler server :"
+  logger.a_log.info "statupweb server ip : #{$statupweb_server_ip}"
+  logger.a_log.info "statupweb server port : #{$statupweb_server_port}"
   logger.a_log.info "inputflow factories : #{inputflow_factories}"
   logger.a_log.info "delay_periodic_scan (second): #{delay_periodic_scan}"
   logger.a_log.info "delay_periodic_send_geolocation (minute): #{delay_periodic_send_geolocation}"
