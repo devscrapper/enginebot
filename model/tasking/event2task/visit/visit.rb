@@ -1,5 +1,5 @@
 require 'uuid'
-
+require_relative 'page'
 module Tasking
   module Visit
     class Visit
@@ -329,7 +329,6 @@ module Tasking
             visit[:visit][:referrer][:durations] = Array.new(@referral_index_page_results.to_i).fill { Random.rand(@min_duration_page_organic..@max_duration_page_organic) }
             visit[:visit][:referrer][:referral_path] = @referral_path
             visit[:visit][:referrer][:referral_hostname] = @source
-            visit[:visit][:referrer][:duration] = @duration_referral
             visit[:visit][:referrer][:referral_uri_search] = @referral_uri_search
             visit[:visitor][:browser][:engine_search] = @referral_search_engine.to_sym
 
