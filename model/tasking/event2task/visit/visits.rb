@@ -529,10 +529,15 @@ module Tasking
                    :start_time => visit_tmp[:visit][:start_date_time],
                    :landing_url => "#{visit_tmp[:visit][:landing][:scheme]}://#{visit_tmp[:visit][:landing][:fqdn]}#{visit_tmp[:visit][:landing][:path]}",
                    :durations => visit_tmp[:visit][:durations],
-                   :referrer => visit_tmp[:visit][:referrer],
-                   :advert => visit_tmp[:visit][:advert]
+                   :referrer => visit_tmp[:visit][:referrer][:medium],
+                   :advert => visit_tmp[:visit][:advert][:advertising]
           }
 
+          # Parameters: {"policy_id"=>2, "policy_type"=>"traffic", "id_visit"=>"e7509f90-bfd3-0133-e402-000854505ddf", "start_time"=>"2016-02-29 12:53:00 +0100",
+          #              "landing_url"=>"http://meshumeursinformatiques.blogspot.fr/2014/07/construction-dun-environnement-de.html",
+          #              "durations"=>[164, 196, 152, 85, 107, 142, 132, 142],
+          #              "referrer"=>{"medium"=>"none"},
+          #              "advert"=>{"advertising"=>"none"}, "visit"=>{"policy_id"=>2, "policy_type"=>"traffic", "id_visit"=>"e7509f90-bfd3-0133-e402-000854505ddf", "start_time"=>"2016-02-29 12:53:00 +0100", "landing_url"=>"http://meshumeursinformatiques.blogspot.fr/2014/07/construction-dun-environnement-de.html", "durations"=>[164, 196, 152, 85, 107, 142, 132, 142], "referrer"=>{"medium"=>"none"}, "advert"=>{"advertising"=>"none"}}}
 
           response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/",
                                      JSON.generate(visit),
@@ -541,7 +546,7 @@ module Tasking
           raise response.content if response.code != 201
 
         rescue Exception => e
-          @logger.an_event.warn "cannot send visit to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
+          @logger.an_event.warn "cannot send visit to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.response}"
         else
         ensure
           visit_flow.close
