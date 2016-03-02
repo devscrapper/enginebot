@@ -55,15 +55,18 @@ module Planning
       #------------------------------------------------------------------------------------------------------------------
       action = proc {
         begin
-          nul, ress_type, ress_id = @http_request_uri.split("/")
-
-          raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_type"}) if ress_type.nil? or ress_type.empty?
-          raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
-
           @logger.an_event.debug "@http_request_method : #{@http_request_method}"
+          @logger.an_event.debug "@http_request_uri : #{@http_request_uri}"
+
+          nul, ress_type, ress_id = @http_request_uri.split("/")
 
           @logger.an_event.debug "ress_type : #{ress_type}"
           @logger.an_event.debug "ress_id : #{ress_id}"
+
+          raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_type"}) if ress_type.nil? or ress_type.empty?
+
+
+
           case @http_request_method
             #--------------------------------------------------------------------------------------------------------------
             # GET
@@ -77,6 +80,8 @@ module Planning
                   @@title_html = "calendar online"
 
                 when "tasks"
+                  raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
+
                   if ["monday", "tuesday", "wednesday", "friday", "thursday", "saturday", "sunday"].include?(ress_id)
                     tasks = @calendar.all_events_on_date(Calendar.next_day(ress_id))
                     @@title_html = "On #{ress_id} tasks"
@@ -137,7 +142,7 @@ module Planning
                   end
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
-
+                  @logger.an_event.warn "ressource #{ress_type} unmanage"
               end
               @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
             #--------------------------------------------------------------------------------------------------------------
@@ -146,7 +151,7 @@ module Planning
             when "POST"
               @http_content = JSON.parse(@http_content, {:symbolize_names => true})
               @logger.an_event.debug "@http_content : #{@http_content}"
-
+              raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
               case ress_type
                 when "policies"
                   tasks = @calendar.register_policy(ress_id, @http_content)
@@ -172,7 +177,7 @@ module Planning
 
             when "PATCH"
               # pas de respect de http, car maj ne renvoient pas la ressource maj
-
+              raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
               raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "query string"}) if @http_query_string.nil?
 
               query_values = Addressable::URI.parse("?#{@http_query_string}").query_values
@@ -209,6 +214,7 @@ module Planning
             #--------------------------------------------------------------------------------------------------------------
             when "DELETE"
               # pas de respect de http, car maj ne renvoient pas la ressource maj
+              raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
               @logger.an_event.info "delete events of the #{ress_type} policy id=#{ress_id} to repository"
               case ress_type
                 when "traffics"
