@@ -89,7 +89,7 @@ module Tasking
                              {:read_timeout => time_out})
 
         rescue Exception => e
-          @logger.an_event.warn "scrape keywords as saas for #{hostname} : #{e.message}"
+          @logger.an_event.warn "try #{try_count} scrape keywords as saas for #{hostname} : #{e.message}"
           sleep 5
           try_count -= 1
           retry if try_count > 0

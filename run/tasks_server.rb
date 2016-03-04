@@ -47,6 +47,9 @@ logger.a_log.info "calendar server port : #{$calendar_server_port}"
 logger.a_log.info "periodicity supervision : #{periodicity_supervision}"
 logger.a_log.info "debugging : #{$debugging}"
 logger.a_log.info "staging : #{$staging}"
+#--------------------------------------------------------------------------------------------------------------------
+# INCLUDE
+#--------------------------------------------------------------------------------------------------------------------
 
 include Tasking
 #--------------------------------------------------------------------------------------------------------------------

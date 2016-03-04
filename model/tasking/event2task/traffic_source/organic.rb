@@ -158,7 +158,7 @@ module Tasking
           @logger.an_event.info "repository organic for #{@website_label} and #{@date_building}"
         end
       end
-
+      private
 
       #--------------------------------------------------------------------------------------------------------------
       # scrape
@@ -194,12 +194,12 @@ module Tasking
 
 
         ensure
-          @repository_f.close
+
 
         end
       end
 
-      private
+
 
 
       #--------------------------------------------------------------------------------------------------------------
@@ -306,7 +306,7 @@ module Tasking
                   header_converters: :symbol}).map.each { |row|
           @repository_f.write("#{row[:keyword]}#{EOFLINE}")
         }
-
+        @repository_f.close
       end
 
       #--------------------------------------------------------------------------------------------------------------
