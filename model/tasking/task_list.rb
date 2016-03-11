@@ -23,10 +23,11 @@ module Tasking
 
 
     ACTION_NOT_EXECUTE = 1802
-    attr :data, :logger
+    attr :data, :logger, :delay
 
     def initialize(data)
       @data = data
+      @delay = Random.new
       @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     end
 
@@ -178,7 +179,7 @@ module Tasking
             TrafficSource::Organic.new(@data[:website_label],
                                        @data[:building_date],
                                        @data[:policy_type]).make_repository(@data[:url_root], # 10mn de suggesting
-                                                                            $staging == "development" ? 10 /(24 * 60) : @data[:max_duration])
+                                                                            $staging == "development" ? (10.0 /(24 * 60)) : @data[:max_duration])
           when :rank
             #Si il y a de smot cl� param�trer dans la tache alors elle est issue dune policy Rank
             TrafficSource::Default.new(@data[:website_label], @data[:building_date], @data[:policy_type]).make_repository(@data[:keywords])
@@ -406,20 +407,24 @@ module Tasking
       callback = proc { |results|
         # do something with result here, such as send it back to a network client.
 
-        if results.is_a?(Error)
-          send_state_to_calendar(@data[:event_id], Planning::Event::FAIL, info)
-          send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, Planning::Event::FAIL, info)
+        state =  results.is_a?(Error) ? Planning::Event::FAIL : Planning::Event::OVER
 
-        else
+
+        begin
           # scraping website utilise spawn => tout en asycnhrone => il enverra l'Event::over à calendar
           # il n'enverra jamais Event::Fail à calendar.
-          if task != :Scraping_website
-            send_state_to_calendar(@data[:event_id], Planning::Event::OVER, info)
-            send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, Planning::Event::OVER, info)
-          end
+          send_state_to_calendar(@data[:event_id], state, info) if task != :Scraping_website
+
+        rescue Exception => e
+          results = e
+
+        else
+          @logger.an_event.info "update state #{state} task <#{task}> for <#{info.join(",")}> in calendar"
+
+        ensure
+          send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, state, info) if task != :Scraping_website
 
         end
-
       }
 
       if $staging == "development" #en dev tout ext exécuté hors thread pour pouvoir debugger
@@ -434,6 +439,7 @@ module Tasking
           callback.call(results)
 
         end
+
       else # en test & production tout est executé dans un thread
         EM.defer(action, callback)
       end
@@ -446,14 +452,23 @@ module Tasking
     def send_state_to_calendar(event_id, state, info)
       # informe le calendar du nouvelle etat de la tache (start/over/fail).
 
-      begin
+      try_count = 3
 
+      begin
         response = RestClient.patch "http://localhost:#{$calendar_server_port}/tasks/#{event_id}/?state=#{state}", :content_type => :json, :accept => :json
 
-        raise response.content if response.code != 200
+        raise response.content unless [200, 201].include?(response.code)
 
       rescue Exception => e
-        raise StandardError, "task <#{info.join(",")}> not update state : #{state} => #{e.message}"
+        @logger.an_event.error "cannot update state #{state} for #{info.join(",")} in calendar : #{e.message}"
+
+      rescue RestClient::RequestTimeout => e
+        @logger.an_event.warn "try #{try_count}, cannot update state #{state} for #{info.join(",")} in calendar : #{e.message}"
+        try_count -= 1
+        sleep @delay.rand(10..50)
+        retry if try_count > 0
+        @logger.an_event.error "cannot update state #{state} for #{info.join(",")} in calendar : #{e.message}"
+
       else
 
       end
@@ -475,7 +490,7 @@ module Tasking
                                    JSON.generate(task),
                                    :content_type => :json,
                                    :accept => :json
-        raise response.content if response.code != 201
+        raise response.content unless [200, 201].include?(response.code)
 
       rescue Exception => e
         @logger.an_event.warn "task <#{info.join(",")}> not update state : #{state} to statupweb #{$statupweb_server_ip}:#{$statupweb_server_port}=> #{e.message}"

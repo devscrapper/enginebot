@@ -73,7 +73,8 @@ module Tasking
            :ferror, # fichier contenant les links en erreur
            :fleaves #fichier contenant les id des links ne contenant pas de lien
 # Private
-      attr :start_time, # heure de dÃ©part
+      attr :delay, #temporisation pour retry update state in calendar
+           :start_time, # heure de dÃ©part
            :nbpage, # nbr de page du site
            :idpage, # clÃ© d'identification d'une page
            :known_url, # contient les liens identifiÃ©s
@@ -102,6 +103,7 @@ module Tasking
         super(website_label, date_building, policy_type)
         @event_id = event_id
         @policy_id = policy_id
+        @delay = Random.new
         @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       end
 
@@ -253,16 +255,24 @@ module Tasking
         @f.close
         @ferror.close
 
-
+        try_count = 3
         begin
 
           response = RestClient.patch "http://localhost:#{@calendar_server_port}/tasks/#{@event_id}/?state=over", :content_type => :json, :accept => :json
-          raise response.content if response.code != 200
+          raise response.content unless [200, 201].include?(response.code)
 
         rescue Exception => e
-          @logger.an_event.error "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER => #{e.message}"
+          @logger.an_event.error "cannot update state over task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} in calendar : #{e.message}"
+
+        rescue RestClient::RequestTimeout => e
+          @logger.an_event.warn "try #{try_count}, cannot update state over task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building}  in calendar"
+          try_count -= 1
+          sleep @delay.rand(10..50)
+          retry if try_count > 0
+          @logger.an_event.error "cannot update state over task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} in calendar : #{e.message}"
+
         else
-          @logger.an_event.info "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} is OVER."
+          @logger.an_event.info "update state over task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} in calendar."
 
         end
         begin
