@@ -184,17 +184,14 @@ class Flow
 
   def archive_previous
     # N'ARCHIVE PAS L'INSTANCE COURANTE
-    # archive le flow ou les flows qui sont antérieurs à l'instance courante
+    # archive le flow ou les flows dont le jour est antierieur à celui de l'instance courante
     # en prenant en compte le multivolume
     # l'objectif est de faire le ménage dans le répertoire qui contient l'instance courante
     # le ou les flow sont déplacés dans ARCHIVE
-    Flow.list(@dir, {:type_flow => @type_flow, :policy => @policy, :label => @label, :ext => @ext}).each { |flow|
-      if self != flow
-        flow.archive
-
-      end
-
-    }
+    Flow.list(@dir, {:type_flow => @type_flow,
+                     :policy => @policy,
+                     :label => @label,
+                     :ext => @ext}).each { |flow| flow.archive if flow.is_yesterday?(self) }
 
   end
 
@@ -271,7 +268,39 @@ class Flow
   def exist?
     File.exist?(absolute_path)
   end
-
+  def is_today?(flow)
+    # Self is today as flow
+    # est utilisé pour ordonner les flow dans le temps en utilisant que la DATE
+    # les dates sont des chaine de caracteres
+    @dir == flow.dir &&
+        @type_flow == flow.type_flow &&
+        @policy == flow.policy &&
+        @label == flow.label &&
+        @ext == flow.ext &&
+        Date.parse(@date) == Date.parse(flow.date)
+  end
+  def is_tomorrow?(flow)
+    # self is tomorrow after flow
+    # est utilisé pour ordonner les flow dans le temps en utilisant que la DATE
+    # les dates sont des chaine de caracteres
+    @dir == flow.dir &&
+        @type_flow == flow.type_flow &&
+        @policy == flow.policy &&
+        @label == flow.label &&
+        @ext == flow.ext &&
+        Date.parse(@date) > Date.parse(flow.date)
+  end
+  def is_yesterday?(flow)
+      # Self is yesterday before flow
+      # est utilisé pour ordonner les flow dans le temps en utilisant que la DATE
+      # les dates sont des chaine de caracteres
+      @dir == flow.dir &&
+          @type_flow == flow.type_flow &&
+          @policy == flow.policy &&
+          @label == flow.label &&
+          @ext == flow.ext &&
+          Date.parse(@date) < Date.parse(flow.date)
+    end
   def foreach (eofline, &bloc)
     # parcours toutes les lignes d'un flow
     raise StandardError, "Flow <#{absolute_path}> not exist" unless exist?
@@ -468,7 +497,6 @@ class Flow
     else
     end
   end
-
 
 
   def read
