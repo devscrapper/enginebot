@@ -13,6 +13,7 @@ module Planning
     ACTION_NOT_EXECUTE = 1802
     RESSOURCE_NOT_MANAGE = 1803
     VERBE_HTTP_NOT_MANAGE = 1804
+    RESSOURCE_UNKNOWN = 1805
     DURATION_TOO_SHORT = 2100
 
     @@title_html = ""
@@ -64,7 +65,6 @@ module Planning
           @logger.an_event.debug "ress_id : #{ress_id}"
 
           raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_type"}) if ress_type.nil? or ress_type.empty?
-
 
 
           case @http_request_method
@@ -136,13 +136,13 @@ module Planning
                         @@title_html = "Running tasks(#{tasks.size})"
 
                       else
-                        raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_id})
+                        raise Error.new(RESSOURCE_UNKNOWN, :values => {:ressource => ress_id})
 
                     end
                   end
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
-                  @logger.an_event.warn "ressource #{ress_type} unmanage"
+
               end
               @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
             #--------------------------------------------------------------------------------------------------------------
@@ -229,8 +229,12 @@ module Planning
               raise Error.new(VERBE_HTTP_NOT_MANAGE, :values => {:verb => @http_request_method})
           end
 
-        rescue Error, Exception => e
-          @logger.an_event.fatal e.message
+        rescue Error => e
+          @logger.an_event.error e.message
+          results = e
+
+        rescue Exception => e
+          @logger.an_event.fatal e
           results = e
 
         else
@@ -252,7 +256,7 @@ module Planning
             when ARGUMENT_NOT_DEFINE, DURATION_TOO_SHORT
               response.status = 400
 
-            when RESSOURCE_NOT_MANAGE
+            when RESSOURCE_NOT_MANAGE, RESSOURCE_UNKNOWN
               response.status = 404
 
             when VERBE_HTTP_NOT_MANAGE

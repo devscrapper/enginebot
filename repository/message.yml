@@ -135,6 +135,7 @@
 1802: "action [action] not execute"
 1803: "ressource [ressource] not manage"
 1804: "http verb [verb] not manage"
+1805: "ressource [ressource] unknown"
 2000: "links of url [url] not scraped"
 2001: "scheme [scheme] is not acceptable scheme [:http, :https] in url [url]"
 2100: "[delay] day(s) remaining before start policy, it is too short to prepare [policy_type] policy, at least [max_duration_scraping] day(s) is(are) required !"
