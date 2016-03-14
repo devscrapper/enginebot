@@ -99,9 +99,10 @@ module Planning
                                                                                 @scraping_traffic_source_organic_hour * IceCube::ONE_HOUR +
                                                                                 @scraping_traffic_source_organic_min * IceCube::ONE_MINUTE,
                                                                             :end_time => @registering_date +
-                                                                                @count_weeks * IceCube::ONE_WEEK)
+                                                                                (@count_weeks * IceCube::ONE_WEEK) - IceCube::ONE_DAY)
+        # on anticipe la fin de periode d'une journée pour ne pas declencher des actions pour rien
         periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
-                                                                                                        @count_weeks * IceCube::ONE_WEEK)
+                                                                                                        (@count_weeks * IceCube::ONE_WEEK) - IceCube::ONE_DAY)
 
         @events << Event.new("Scraping_traffic_source_organic",
                              periodicity_scraping_traffic_source_organic,
@@ -122,9 +123,10 @@ module Planning
                                                                                  @scraping_traffic_source_referral_hour * IceCube::ONE_HOUR +
                                                                                  @scraping_traffic_source_referral_min * IceCube::ONE_MINUTE,
                                                                              :end_time => @registering_date +
-                                                                                 @count_weeks * IceCube::ONE_WEEK)
+                                                                                 (@count_weeks * IceCube::ONE_WEEK) - IceCube::ONE_DAY)
+        # on anticipe la fin de periode d'une journée pour ne pas declencher des actions pour rien
         periodicity_scraping_traffic_source_referral.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
-                                                                                                         @count_weeks * IceCube::ONE_WEEK)
+                                                                                                         (@count_weeks * IceCube::ONE_WEEK) - IceCube::ONE_DAY)
 
         @events << Event.new("Scraping_traffic_source_referral",
                              periodicity_scraping_traffic_source_referral,
@@ -147,9 +149,10 @@ module Planning
                                                                               @scraping_traffic_source_website_hour * IceCube::ONE_HOUR +
                                                                               @scraping_traffic_source_website_min * IceCube::ONE_MINUTE,
                                                                           :end_time => now +
-                                                                              @count_weeks * IceCube::ONE_WEEK)
+                                                                              (@count_weeks * IceCube::ONE_WEEK) - IceCube::ONE_DAY)
+      # on anticipe la fin de periode d'une journée pour ne pas declencher des actions pour rien
       periodicity_scraping_traffic_source_website.add_recurrence_rule IceCube::Rule.monthly.until(now +
-                                                                                                      @count_weeks * IceCube::ONE_WEEK)
+                                                                                                      (@count_weeks * IceCube::ONE_WEEK) - IceCube::ONE_DAY)
 
       @events += [
 
