@@ -191,7 +191,7 @@ class Flow
     Flow.list(@dir, {:type_flow => @type_flow,
                      :policy => @policy,
                      :label => @label,
-                     :ext => @ext}).each { |flow| flow.archive if flow.is_yesterday?(self) }
+                     :ext => @ext}).each { |flow| flow.archive if flow.is_before_day?(self) }
 
   end
 
@@ -279,7 +279,7 @@ class Flow
         @ext == flow.ext &&
         Date.parse(@date) == Date.parse(flow.date)
   end
-  def is_tomorrow?(flow)
+  def is_after_day?(flow)
     # self is tomorrow after flow
     # est utilisé pour ordonner les flow dans le temps en utilisant que la DATE
     # les dates sont des chaine de caracteres
@@ -290,7 +290,7 @@ class Flow
         @ext == flow.ext &&
         Date.parse(@date) > Date.parse(flow.date)
   end
-  def is_yesterday?(flow)
+  def is_before_day?(flow)
       # Self is yesterday before flow
       # est utilisé pour ordonner les flow dans le temps en utilisant que la DATE
       # les dates sont des chaine de caracteres
