@@ -333,7 +333,7 @@ module Planning
         }
 
       rescue Exception => e
-        @logger.an_event.debug "cannot register #{events.size} events #{events} in calendar : #{e.message}"
+        @logger.an_event.debug "cannot register  events #{events} in calendar : #{e.message}"
         raise "cannot register events object #{object} in calendar : #{e.message}"
         []
 

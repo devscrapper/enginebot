@@ -92,7 +92,7 @@ module Tasking
            :saas_port, #host et port du serveur de scraping en mode saas
            :time_out, #time out de la requet de scraping
            :calendar_server_port,
-           :event_id, #utiliser pour identifier event qui a déclencher la task pour maj le state de l'event
+           :event_id, #utiliser pour identifier event qui a déclencher la task pour maj le state de l'event chez calendar et staupweb
            :policy_id #utiliser pour identifier la task chez statupweb
 #--------------------------------------------------------------------------------------------------------------
 # scraping_device_platform_plugin
@@ -276,17 +276,15 @@ module Tasking
 
         end
         begin
-          task = {:policy_id => @policy_id,
-                  :policy_type => @policy_type,
-                  :label => "Scraping_website",
-                  :state => "over",
-                  :time => Time.now
+          task = {:state => "over",
+                  :finish_time => Time.now
           }
-          response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/tasks/",
-                                     JSON.generate(task),
-                                     :content_type => :json,
-                                     :accept => :json
-          raise response.content if response.code != 201
+          response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/tasks/#{@event_id}",
+                                      JSON.generate(task),
+                                      :content_type => :json,
+                                      :accept => :json
+          raise response.content unless [200, 201].include?(response.code)
+
         rescue Exception => e
           @logger.an_event.warn "task <Scraping_website> for #{@website_label}/#{@policy_type}/#{@date_building} not update with OVER to statupweb => #{e.message}"
           @logger.an_event.warn "task #{task}"

@@ -385,7 +385,12 @@ module Tasking
           # perform a long-running operation here, such as a database query.
           send_state_to_calendar(@data[:event_id], Planning::Event::START, info)
           @logger.an_event.info "task <#{task}> for <#{info.join(",")}> is start"
-          send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, Planning::Event::START, info)
+          send_task_to_statupweb(@data[:policy_id],
+                                 @data[:policy_type],
+                                 task,
+                                 @data[:building_date],
+                                 @data[:event_id],
+                                 info)
 
           yield (@data[:event_id])
 
@@ -405,25 +410,36 @@ module Tasking
         end
       }
       callback = proc { |results|
-        # do something with result here, such as send it back to a network client.
-
-        state =  results.is_a?(Error) ? Planning::Event::FAIL : Planning::Event::OVER
-
+        # on considere que la maj du calendar fait partie de lexecution complete d'une task.
+        # donc si une task echoue et que la maj du calendart échoué egalement, on ne publie que la maj du calendar
+        # vers statupweb.
+        # qd le pb de maj du calendar sera résolu on recuperera lerreur originelle.
 
         begin
+          state = results.is_a?(Error) ? Planning::Event::FAIL : Planning::Event::OVER
+
           # scraping website utilise spawn => tout en asycnhrone => il enverra l'Event::over à calendar
           # il n'enverra jamais Event::Fail à calendar.
-          send_state_to_calendar(@data[:event_id], state, info) if task != :Scraping_website
+          send_state_to_calendar(@data[:event_id],
+                                 state, info) if task != :Scraping_website
 
         rescue Exception => e
+          @logger.an_event.error "update state #{state} task <#{task}> for <#{info.join(",")}> in calendar"
           results = e
 
         else
           @logger.an_event.info "update state #{state} task <#{task}> for <#{info.join(",")}> in calendar"
 
         ensure
-          send_task_to_statupweb(@data[:policy_id], @data[:policy_type], task, state, info) if task != :Scraping_website
+          if task != :Scraping_website
+            if results.is_a?(Error)
+              send_fail_task_to_statupweb(@data[:event_id], results.message, info)
 
+            else
+              send_over_task_to_statupweb(@data[:event_id], info)
+
+            end
+          end
         end
       }
 
@@ -474,17 +490,15 @@ module Tasking
       end
     end
 
-    def send_task_to_statupweb(policy_id, policy_type, label, state, info)
-      # informe statupweb du nouvel etat d'un task
-      # en cas d'erreur on ne leve pas une exception car cela ne met en peril le comportement fonctionnel de derouelement de lexecution de la policy.
-      # on peut identifier avec event_id la task déjà pésente dans statupweb pour faire un update plutot que d'jouter une nouvelle task
-      # avoir si le besoin se fait sentir en terme de présention IHM (plus lisible)
+    def send_task_to_statupweb(policy_id, policy_type, label, building_date, task_id, info)
       begin
         task = {:policy_id => policy_id,
                 :policy_type => policy_type,
                 :label => label,
-                :state => state,
-                :time => Time.now
+                :state => Planning::Event::START,
+                :time => Time.now,
+                :building_date => building_date,
+                :task_id => task_id
         }
         response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/tasks/",
                                    JSON.generate(task),
@@ -493,7 +507,44 @@ module Tasking
         raise response.content unless [200, 201].include?(response.code)
 
       rescue Exception => e
-        @logger.an_event.warn "task <#{info.join(",")}> not update state : #{state} to statupweb #{$statupweb_server_ip}:#{$statupweb_server_port}=> #{e.message}"
+        @logger.an_event.warn "task <#{info.join(",")}> not send to statupweb #{$statupweb_server_ip}:#{$statupweb_server_port}=> #{e.message}"
+      else
+
+      end
+    end
+
+    def send_over_task_to_statupweb(task_id, info)
+      begin
+        task = {:state => Planning::Event::OVER,
+                :finish_time => Time.now
+        }
+        response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/tasks/#{task_id}",
+                                    JSON.generate(task),
+                                    :content_type => :json,
+                                    :accept => :json
+        raise response.content unless [200, 201].include?(response.code)
+
+      rescue Exception => e
+        @logger.an_event.warn "task <#{info.join(",")}> not update state : #{Planning::Event::OVER} to statupweb #{$statupweb_server_ip}:#{$statupweb_server_port}=> #{e.message}"
+      else
+
+      end
+    end
+
+    def send_fail_task_to_statupweb(task_id, error_label, info)
+      begin
+        task = {:state => Planning::Event::FAIL,
+                :finish_time => Time.now,
+                :error_label => error_label
+        }
+        response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/tasks/#{task_id}",
+                                    JSON.generate(task),
+                                    :content_type => :json,
+                                    :accept => :json
+        raise response.content unless [200, 201].include?(response.code)
+
+      rescue Exception => e
+        @logger.an_event.warn "task <#{info.join(",")}> not update state : #{Planning::Event::FAIL} to statupweb #{$statupweb_server_ip}:#{$statupweb_server_port}=> #{e.message}"
       else
 
       end
