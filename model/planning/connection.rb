@@ -37,8 +37,11 @@ module Planning
       # http://localhost:9104/tasks/today
       # http://localhost:9104/tasks/now
       # http://localhost:9104/tasks/monday ... sunday
+      # http://localhost:9104/tasks/date/?date=#{date}&policy_type=#{policy_type}&policy_id=#{policy_id}
+      # http://localhost:9104/tasks/id?task_id=#{task_id}
       # http://localhost:9104/pre_task_over/all
       # http://localhost:9104/pre_task_over/today
+
       # POST
       # http://localhost:9104/policies/traffic  payload = { ... }
       # http://localhost:9104/policies/rank     payload = { ... }
@@ -103,9 +106,18 @@ module Planning
                     query_values = Addressable::URI.parse("?#{@http_query_string}").query_values
 
                     case ress_id
+                      when "id"
+                        # http://localhost:9104/tasks/id?task_id=#{task_id}
+                        raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "task_id"}) if query_values["task_id"].nil? or query_values["task_id"].empty?
+                        tasks = @calendar.event(query_values["task_id"]).to_hash
+
                       when "date"
+                        # http://localhost:9104/tasks/date/?date=#{date}&policy_type=#{policy_type}&policy_id=#{policy_id}
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
-                        tasks = @calendar.all_events_on_date(Date.parse(query_values["date"]))
+                        tasks = @calendar.all_events_on_date(Date.parse(query_values["date"]),
+                                                             :policy_type => query_values["policy_type"],
+                                                             :policy_id => query_values["policy_id"])
+                        tasks.map! { |task| task.to_hash }
                         @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]}"
 
                       when "hour"

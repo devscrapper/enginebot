@@ -212,6 +212,14 @@ module Planning
       @key[:task_label]
     end
 
+    def to_hash
+      {:id => @id,
+       :label => @label,
+       :state => @state,
+       :pre_tasks => @pre_tasks
+      }
+    end
+
     def to_s(*a)
       @key.to_s(*a)
     end
