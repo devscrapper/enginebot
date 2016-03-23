@@ -69,6 +69,7 @@ module Planning
       @events += [
           Event.new("Scraping_traffic_source_organic",
                     periodicity_scraping_traffic_source_organic,
+                    @execution_mode,
                     {
                         :policy_type => @policy_type,
                         :policy_id => @policy_id,

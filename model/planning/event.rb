@@ -42,14 +42,15 @@ module Planning
          :state, #String
          :pre_tasks_over, #Array
          :pre_tasks_running, #Array
-         :pre_tasks #Array
+         :pre_tasks, #Array
+         :execution_mode #mode d'execution de la policy : manuel (Piloté au moyen de statupweb) ou autom (piloté par Calendar)
 
     attr_reader :id, #UUID
                 :label #String
 
     # cree un objet Event (utilisé lors de la conversion d'un objet Objective/Traffic/Rank en liste d'Events)
     # pre_tasks est un Array de object Event
-    def initialize(label, periodicity, business, pre_tasks=[])
+    def initialize(label, periodicity, execution_mode, business, pre_tasks=[])
       raise "argument missing" if label.empty? or label.nil? or
           periodicity.nil? or
           business.empty? or business.nil?
@@ -66,11 +67,13 @@ module Planning
 
       @label = label
       @periodicity = periodicity
+      # si event possède des pre-task alors, même si le execution_mode est manual alors il sera executé en auto et ne pourra pas être décle,cher manuellement à partir de statupweb
+      # le controle est realisé dan sl'interface /calendar/task
+      @execution_mode = execution_mode
       @business = business
       # les pre-tasks contiennent l'id de l'event et pas le label, cela permet d'être assuré que l'event référence est lebon
       # independemment des dates et de la policy, des task qui sont a cheval sur plusieurs jours
       @pre_tasks = pre_tasks.map { |pt| pt.id }
-
 
       @id = UUID.generate(:compact)
       @state = INIT
@@ -216,6 +219,7 @@ module Planning
       {:id => @id,
        :label => @label,
        :state => @state,
+       :execution_mode => @execution_mode,
        :pre_tasks => @pre_tasks
       }
     end

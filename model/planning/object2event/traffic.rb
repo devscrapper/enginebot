@@ -106,6 +106,7 @@ module Planning
 
         @events << Event.new("Scraping_traffic_source_organic",
                              periodicity_scraping_traffic_source_organic,
+                             @execution_mode,
                              {
                                  :policy_type => @policy_type,
                                  :policy_id => @policy_id,
@@ -130,6 +131,7 @@ module Planning
 
         @events << Event.new("Scraping_traffic_source_referral",
                              periodicity_scraping_traffic_source_referral,
+                             @execution_mode,
                              {
                                  :policy_type => @policy_type,
                                  :policy_id => @policy_id,
@@ -158,6 +160,7 @@ module Planning
 
           scraping_website = Event.new("Scraping_website",
                                        periodicity_scraping_traffic_source_website,
+                                       @execution_mode,
                                        {
                                            :policy_type => @policy_type,
                                            :policy_id => @policy_id,
@@ -179,6 +182,7 @@ module Planning
                                               @building_landing_pages_direct_hour * IceCube::ONE_HOUR +
                                               @building_landing_pages_direct_min * IceCube::ONE_MINUTE +
                                               @count_weeks * IceCube::ONE_WEEK),
+                    @execution_mode,
                     {
                         :website_label => @website_label,
                         :website_id => @website_id,
@@ -196,6 +200,7 @@ module Planning
                                               @building_objectives_hour * IceCube::ONE_HOUR +
                                               @building_objectives_min * IceCube::ONE_MINUTE +
                                               @count_weeks * IceCube::ONE_WEEK),
+                    @execution_mode,
                     {
                         :website_id => @website_id,
                         :website_label => @website_label,
