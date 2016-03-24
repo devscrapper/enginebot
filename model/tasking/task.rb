@@ -15,7 +15,8 @@ module Tasking
          :event_id, # identifiant de la event pour maj le calendar
          :website_label, #labe di site pour lequel on bosse, intervient dans le libelle des flow
          :policy_type, #type de policy géree : Traffic, Rank, intervient dans le libelle des flow
-         :building_date #date d'exécution de la tache qui intervient dans le libelle des flow
+         :building_date, #date d'exécution de la tache qui intervient dans le libelle des flow
+         :execution_mode # mode auto (piloté par Calendar), manual (piloté par statupweb)
     # les données business specificque à chaque task sotn déclarées dans la tache elle meme
     # qui héritera de Task
 
@@ -27,6 +28,7 @@ module Tasking
       @event_id = event.id
       @website_label = event.website_label
       @policy_type = event.policy_type
+      @execution_mode = event.execution_mode
       @building_date = (event.building_date.empty? or event.building_date.nil?) ? Date.today : event.building_date
       @logger = logger || Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
     end

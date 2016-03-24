@@ -37,7 +37,8 @@ module Tasking
            :min_duration_page_organic,
            :max_duration_page_organic,
            :min_duration,
-           :max_duration
+           :max_duration,
+           :execution_mode
 
       def initialize(website_label, date,
                      count_visits =nil,
@@ -53,7 +54,7 @@ module Tasking
                      advertisers = nil,
                      url_root = nil,
                      hourly_distribution=nil,
-                     policy_id, website_id, policy_type, count_weeks,
+                     policy_id, website_id, policy_type, count_weeks, execution_mode,
                      min_count_page_advertiser,
                      max_count_page_advertiser,
                      min_duration_page_advertiser,
@@ -87,6 +88,7 @@ module Tasking
         @policy_type = policy_type
         @website_id = website_id
         @count_weeks = count_weeks
+        @execution_mode=execution_mode
         @min_count_page_advertiser = min_count_page_advertiser
         @max_count_page_advertiser = max_count_page_advertiser
         @min_duration_page_advertiser = min_duration_page_advertiser
@@ -108,6 +110,7 @@ module Tasking
                 "website_id" => @website_id,
                 "policy_type" => @policy_type,
                 "count_weeks" => @count_weeks,
+                "execution_mode" => @execution_mode,
                 "count_visits" => @count_visits,
                 "url_root" => @url_root,
                 "direct_medium_percent" => @direct_medium_percent,

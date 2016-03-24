@@ -33,6 +33,8 @@ module Tasking
           data_cmd = {
               :event_id => event.id,
               :website_label => event.website_label,
+              :policy_type => event.policy_type,
+              :execution_mode => event.execution_mode,
               :building_date => (event.building_date.empty? or event.building_date.nil?) ? Date.today : event.building_date
           }
           data_cmd.merge!(event.business)

@@ -63,13 +63,15 @@ module Planning
          :max_duration,
          :objective_date,
          :key,
-         :events
+         :events,
+         :execution_mode
 
 
     def initialize(data)
       @policy_id = data[:policy_id]
       @policy_type = data[:policy_type]
       @count_weeks = data[:count_weeks]
+      @execution_mode = data[:execution_mode]
       @objective_id = data[:objective_id]
       @count_visits = data[:count_visits]
       @website_label = data[:website_label]
@@ -163,6 +165,7 @@ module Planning
 
         @events << evaluating_traffic_source_organic = Event.new("Evaluating_traffic_source_organic",
                                                                  periodicity_organic,
+                                                                 @execution_mode,
                                                                  {
                                                                      :website_label => @website_label,
                                                                      :building_date => @objective_date.to_date,
@@ -191,6 +194,7 @@ module Planning
                                                                                                      @building_landing_pages_organic_min * IceCube::ONE_MINUTE)
         @events << building_landing_pages_organic = Event.new("Building_landing_pages_organic",
                                                               periodicity_building_landing_pages_organic,
+                                                              @execution_mode,
                                                               {
                                                                   :website_label => @website_label,
                                                                   :building_date => @objective_date.to_date,
@@ -225,6 +229,7 @@ module Planning
 
         @events << evaluating_traffic_source_referral = Event.new("Evaluating_traffic_source_referral",
                                                                   periodicity_referral,
+                                                                  @execution_mode,
                                                                   {
                                                                       :website_label => @website_label,
                                                                       :building_date => @objective_date.to_date,
@@ -252,6 +257,7 @@ module Planning
 
         @events << building_landing_pages_referral = Event.new("Building_landing_pages_referral",
                                                                periodicity_building_landing_pages_referral,
+                                                               @execution_mode,
                                                                {
                                                                    :website_label => @website_label,
                                                                    :building_date => @objective_date.to_date,
@@ -285,6 +291,7 @@ module Planning
 
       @events << choosing_landing_pages = Event.new("Choosing_landing_pages",
                                                     periodicity,
+                                                    @execution_mode,
                                                     {
                                                         :policy_id => @policy_id,
                                                         :building_date => @objective_date.to_date,
@@ -317,6 +324,7 @@ module Planning
 
       @events << building_visits = Event.new("Building_visits",
                                              periodicity,
+                                             @execution_mode,
                                              {
                                                  :objective_id => @objective_id,
                                                  :website_label => @website_label,
@@ -350,6 +358,7 @@ module Planning
 
       @events << building_planification = Event.new("Building_planification",
                                                     periodicity,
+                                                    @execution_mode,
                                                     {
                                                         :objective_id => @objective_id,
                                                         :website_label => @website_label,
@@ -380,6 +389,7 @@ module Planning
 
       @events << choosing_device_platform = Event.new("Choosing_device_platform",
                                                       periodicity,
+                                                      @execution_mode,
                                                       {
                                                           :policy_id => @policy_id,
                                                           :building_date => @objective_date.to_date,
@@ -407,6 +417,7 @@ module Planning
 
       @events << Event.new("Extending_visits",
                            periodicity,
+                           @execution_mode,
                            {
                                :objective_id => @objective_id,
                                :website_label => @website_label,
@@ -434,6 +445,7 @@ module Planning
 
       @events << Event.new("Publishing_visits",
                            periodicity,
+                           @execution_mode,
                            {
                                :objective_id => @objective_id,
                                :building_date => @objective_date.to_date,

@@ -20,20 +20,22 @@ module Tasking
     TMP = File.expand_path(File.join("..", "..", "..", "..", "..", "tmp"), __FILE__)
     class Objectives
       attr :website_label,
-           :date_building,  # n'est pas utilisé pour planifier les events, ni identifier les fichiers produits
+           :date_building, # n'est pas utilisé pour planifier les events, ni identifier les fichiers produits
            :policy_id,
-           :website_id, :policy_type, :count_weeks
+           :website_id, :policy_type, :count_weeks, :execution_mode
 
       def initialize(website_label, date_building,
                      policy_id,
                      website_id, policy_type,
-                     count_weeks)
+                     count_weeks,
+                     execution_mode)
         @website_label = website_label
         @date_building = date_building
         @policy_id = policy_id
         @policy_type = policy_type
         @website_id = website_id
         @count_weeks = count_weeks
+        @execution_mode=execution_mode
         @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       end
 
@@ -119,6 +121,7 @@ module Tasking
                         @website_id,
                         @policy_type,
                         @count_weeks,
+                        @execution_mode,
                         min_count_page_advertiser,
                         max_count_page_advertiser,
                         min_duration_page_advertiser,
@@ -180,6 +183,7 @@ module Tasking
                         @website_id,
                         @policy_type,
                         @count_weeks,
+                        @execution_mode,
                         min_count_page_advertiser,
                         max_count_page_advertiser,
                         min_duration_page_advertiser,
@@ -216,7 +220,7 @@ module Tasking
           behaviour = behaviour_file.load_to_array(EOFLINE2)
 
           p = ProgressBar.create(:title => "Building objectives", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => behaviour_file_size, :format => '%t, %c/%C, %a|%w|')
-          day =  @monday_start.to_date
+          day = @monday_start.to_date
 
           behaviour_file_size.times { |line|
             begin
@@ -226,7 +230,6 @@ module Tasking
               @logger.an_event.debug obj.to_s
 
               obj.send_to_calendar
-
 
 
             rescue Exception => e
