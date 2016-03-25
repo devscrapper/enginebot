@@ -52,20 +52,32 @@ module Planning
 
     # retourne un array copie de tous les events
     def all_events
-      @events.dup
+      Marshal.load( Marshal.dump( @events ))
     end
 
     # retourne un Array contenant les Event de la date, array vide sinon
-    # option : selection des task d'une policy {policy_id, policy_type}
+    # option :
+    # selection des task d'une policy {policy_id, policy_type}
+    # remplacement des event_id de pre_task par task_label (optimisation)
     def all_events_on_date(date, options=nil)
       raise ArgumentError, date if date.nil?
       policy_type = options.fetch(:policy_type, nil)
       policy_id = options.fetch(:policy_id, nil)
+      task_label = options.fetch(:task_label, false)
       start_time = Time.local(date.year, date.month, date.day)
       tasks = on_period(start_time, start_time + 24 * IceCube::ONE_HOUR - IceCube::ONE_SECOND)
       tasks.select { |task| task.policy_type == policy_type and task.policy_id == policy_id } if !tasks.empty? and
           !policy_type.nil? and
           !policy_id.nil?
+
+      #remplace les event_id par le task_label pour les pre-tasks
+      tasks.map! { |task|
+        unless task.pre_tasks.empty?
+          task.pre_tasks.map! { |pt_id| event(pt_id).label }
+          task
+        else
+          task
+        end } if task_label
 
       tasks
     end
@@ -131,22 +143,23 @@ module Planning
 
       end
     end
-    def event(event_id)
-         raise ArgumentError, event_id if event_id.nil?
-         evt = nil
-         begin
-           @sem.synchronize {
-             evt = select({:event_id => event_id})
-           }
-         rescue Exception => e
-           @logger.an_event.debug "cannot get event #{event_id} : #{e.message}"
-           raise "cannot get event #{event_id} : #{e.message}"
 
-         else
-           @logger.an_event.debug "get event #{event_id}"
-           evt
-         end
-       end
+    def event(event_id)
+      raise ArgumentError, event_id if event_id.nil?
+      evt = nil
+      begin
+        @sem.synchronize {
+          evt = select({:event_id => event_id})
+        }
+      rescue Exception => e
+        @logger.an_event.debug "cannot get event #{event_id} : #{e.message}"
+        raise "cannot get event #{event_id} : #{e.message}"
+
+      else
+        @logger.an_event.debug "get event #{event_id}"
+        evt
+      end
+    end
 
     def event_is_over(event_id)
       raise ArgumentError, event_id if event_id.nil?
@@ -209,7 +222,7 @@ module Planning
 
 
       begin
-        tasks = all_events_on_time(date, hour, min).select{|task| !task.has_pre_tasks? }
+        tasks = all_events_on_time(date, hour, min).select { |task| !task.has_pre_tasks? }
 
       rescue Exception => e
         @logger.an_event.debug "cannot list events to execute : #{e.message}"
@@ -503,8 +516,7 @@ module Planning
     # retourne un nouvel Array contenant les event sélectionné
     # retourne un Array vide si aucun event satisfait les critères
     def on_period(start_time, end_time) # end_time exclue
-      @events.select { |evt|   !evt.periodicity.occurrences_between(start_time, end_time - IceCube::ONE_SECOND).empty?
-      }
+      all_events.select { |evt| !evt.periodicity.occurrences_between(start_time, end_time - IceCube::ONE_SECOND).empty?      }
     end
 
     # supprime de pre_tasks_running l'event pour tous les events dont event est pre_task

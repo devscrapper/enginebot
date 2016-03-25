@@ -37,7 +37,7 @@ module Planning
       # http://localhost:9104/tasks/today
       # http://localhost:9104/tasks/now
       # http://localhost:9104/tasks/monday ... sunday
-      # http://localhost:9104/tasks/date/?date=#{date}&policy_type=#{policy_type}&policy_id=#{policy_id}
+      # http://localhost:9104/tasks/date/?date=#{date}&policy_type=#{policy_type}&policy_id=#{policy_id}&task_label=#{true|false}
       # http://localhost:9104/tasks/id?task_id=#{task_id}
       # http://localhost:9104/pre_task_over/all
       # http://localhost:9104/pre_task_over/today
@@ -113,10 +113,12 @@ module Planning
 
                       when "date"
                         # http://localhost:9104/tasks/date/?date=#{date}&policy_type=#{policy_type}&policy_id=#{policy_id}
+                        # polict_id, policy_type, task_label sont des options et peuvent etre absent de la requete
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                         tasks = @calendar.all_events_on_date(Date.parse(query_values["date"]),
                                                              :policy_type => query_values["policy_type"],
-                                                             :policy_id => query_values["policy_id"])
+                                                             :policy_id => query_values["policy_id"],
+                                                             :task_label => query_values["task_label"])
                         tasks.map! { |task| task.to_hash }
                         @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]}"
 
