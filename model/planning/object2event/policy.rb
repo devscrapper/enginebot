@@ -65,13 +65,13 @@ module Planning
          :events,
          :building_behaviour, #utiliser pour passer l'event aux class Trafficn et Rank pour affecter la var pre_task
          :building_hourly_daily_distribution, #utiliser pour passer l'event aux class Trafficn et Rank pour affecter la var pre_task
-         :execution_mode # mode d'execution de la policy : manuel (Piloté au moyen de statupweb) ou autom (piloté par Calendar)
+         :execution_mode # mode d'execution de la policy : manuel (PilotÃ© au moyen de statupweb) ou autom (pilotÃ© par Calendar)
 
     def initialize(data)
       @website_label = data[:website_label]
       d = Date.parse(data[:monday_start])
 
-      # Time.local bug qd on soustrait 21 ou 22 heure en décalant le time zone d'une heure
+      # Time.local bug qd on soustrait 21 ou 22 heure en dÃ©calant le time zone d'une heure
       # remplacement de time.local par Time.utc().localtime
       @monday_start = Time.utc(d.year, d.month, d.day).localtime # iceCube a besoin d'un Time et pas d'un Date
       @registering_date = $staging == "development" ?

@@ -66,9 +66,13 @@ module Planning
       task_label = options.fetch(:task_label, false)
       start_time = Time.local(date.year, date.month, date.day)
       tasks = on_period(start_time, start_time + 24 * IceCube::ONE_HOUR - IceCube::ONE_SECOND)
-      tasks.select { |task| task.policy_type == policy_type and task.policy_id == policy_id } if !tasks.empty? and
+      # select! retourn nil si aucun element selectionné
+      # ne doit jamais arrivé si interrogation demandé par statupweb
+      # par contre si interrogation à partir d'un browser sans maitrise des données => oui
+      tasks.select! { |task| task.policy_type == policy_type and task.policy_id == policy_id } if !tasks.empty? and
           !policy_type.nil? and
           !policy_id.nil?
+
 
       #remplace les event_id par le task_label pour les pre-tasks
       tasks.map! { |task|
@@ -77,7 +81,7 @@ module Planning
           task
         else
           task
-        end } if task_label
+        end } if !tasks.nil? and task_label
 
       tasks
     end

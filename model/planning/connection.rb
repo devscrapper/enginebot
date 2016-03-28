@@ -117,7 +117,7 @@ module Planning
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                         tasks = @calendar.all_events_on_date(Date.parse(query_values["date"]),
                                                              :policy_type => query_values["policy_type"],
-                                                             :policy_id => query_values["policy_id"],
+                                                             :policy_id => query_values["policy_id"].to_i,
                                                              :task_label => query_values["task_label"])
                         tasks.map! { |task| task.to_hash }
                         @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]}"
