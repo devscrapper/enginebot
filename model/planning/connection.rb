@@ -38,6 +38,7 @@ module Planning
       # http://localhost:9104/tasks/now
       # http://localhost:9104/tasks/monday ... sunday
       # http://localhost:9104/tasks/date/?date=#{date}&policy_type=#{policy_type}&policy_id=#{policy_id}&task_label=#{true|false}
+      # http://localhost:9104/tasks/dates/?count_date=#{count_date}&policy_type=#{policy_type}&policy_id=#{policy_id}
       # http://localhost:9104/tasks/id?task_id=#{task_id}
       # http://localhost:9104/pre_task_over/all
       # http://localhost:9104/pre_task_over/today
@@ -62,6 +63,7 @@ module Planning
           @logger.an_event.debug "@http_request_method : #{@http_request_method}"
           @logger.an_event.debug "@http_request_uri : #{@http_request_uri}"
 
+          tasks, dates = nil
           nul, ress_type, ress_id = @http_request_uri.split("/")
 
           @logger.an_event.debug "ress_type : #{ress_type}"
@@ -110,7 +112,7 @@ module Planning
                         # http://localhost:9104/tasks/id?task_id=#{task_id}
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "task_id"}) if query_values["task_id"].nil? or query_values["task_id"].empty?
                         tasks = @calendar.event(query_values["task_id"]).to_hash
-
+                        @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
                       when "date"
                         # http://localhost:9104/tasks/date/?date=#{date}&policy_type=#{policy_type}&policy_id=#{policy_id}
                         # polict_id, policy_type, task_label sont des options et peuvent etre absent de la requete
@@ -121,14 +123,25 @@ module Planning
                                                              :task_label => query_values["task_label"])
                         tasks.map! { |task| task.to_hash }
                         @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]}"
+                        @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
+                      when "dates"
+                        # http://localhost:9104/tasks/dates/?count_date=#{count_date}&policy_type=#{policy_type}&policy_id=#{policy_id}
+                        raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "count_date"}) if query_values["count_date"].nil? or query_values["count_date"].empty?
+                        raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "policy_type"}) if query_values["policy_type"].nil? or query_values["policy_type"].empty?
+                        raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "policy_id"}) if query_values["policy_id"].nil? or query_values["policy_id"].empty?
 
+                        dates = @calendar.next_events_from_now(query_values["policy_type"],
+                                                               query_values["policy_id"].to_i).map { |task| task.periodicity.remaining_occurrences(Time.now) }.flatten
+                        dates.map! { |date| date.start_time.to_date }.uniq!.sort_by!{|t| t}[0..query_values["count_date"].to_i - 1] unless dates.empty?
+
+                        @logger.an_event.info "#{dates.size} dates for #{ress_id} from repository"
                       when "hour"
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "hour"}) if query_values["hour"].nil? or query_values["hour"].empty?
                         tasks = @calendar.all_events_on_hour(Date.parse(query_values["date"]),
                                                              query_values["hour"].to_i)
                         @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]} and hour #{query_values["hour"]}"
-
+                        @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
                       when "time"
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "min"}) if query_values["min"].nil? or query_values["min"].empty?
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "date"}) if query_values["date"].nil? or query_values["date"].empty?
@@ -138,17 +151,18 @@ module Planning
                                                              query_values["min"].to_i)
 
                         @@title_html = "All tasks(#{tasks.size}) of date #{query_values["date"]} and hour #{query_values["hour"]} and min #{query_values["min"]}"
+                        @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
                       when "search"
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "key"}) if query_values["key"].nil? or query_values["key"].empty?
                         tasks = @calendar.one(JSON.parse(query_values["key"]))
                         @@title_html = "Search task(#{tasks.size}) (key : #{JSON.parse(query_values["key"])}"
-
+                        @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
                       when "execute"
                         raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "id"}) if query_values["id"].nil? or query_values["id"].empty?
                         @calendar.execute_one(query_values["id"])
                         tasks = @calendar.all_events_running
                         @@title_html = "Running tasks(#{tasks.size})"
-
+                        @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
                       else
                         raise Error.new(RESSOURCE_UNKNOWN, :values => {:ressource => ress_id})
 
@@ -158,7 +172,7 @@ module Planning
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
 
               end
-              @logger.an_event.info "#{tasks.size} events for #{ress_id} from repository"
+
             #--------------------------------------------------------------------------------------------------------------
             # POST
             #--------------------------------------------------------------------------------------------------------------
@@ -252,7 +266,7 @@ module Planning
           results = e
 
         else
-          results = tasks # as usual, the last expression evaluated in the block will be the return value.
+          results = tasks || dates # as usual, the last expression evaluated in the block will be the return value.
 
         ensure
 

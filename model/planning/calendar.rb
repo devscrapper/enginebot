@@ -52,7 +52,7 @@ module Planning
 
     # retourne un array copie de tous les events
     def all_events
-      Marshal.load( Marshal.dump( @events ))
+      Marshal.load(Marshal.dump(@events))
     end
 
     # retourne un Array contenant les Event de la date, array vide sinon
@@ -306,6 +306,14 @@ module Planning
       date + (date > Date.today ? 0 : 7)
     end
 
+    def next_events_from_now(policy_type, policy_id)
+      raise ArgumentError, policy_type if policy_type.nil? or policy_type.empty?
+      raise ArgumentError, policy_id if policy_id.nil?
+
+      all_events.select { |task| task.policy_type == policy_type and task.policy_id == policy_id and
+          !task.periodicity.remaining_occurrences(Time.now).empty? }
+    end
+
     # enregister les Events issus d'une policy  dans le calendar
     # retourne Array contenant les Events
     # retourne Array vide si pb
@@ -520,7 +528,7 @@ module Planning
     # retourne un nouvel Array contenant les event sélectionné
     # retourne un Array vide si aucun event satisfait les critères
     def on_period(start_time, end_time) # end_time exclue
-      all_events.select { |evt| !evt.periodicity.occurrences_between(start_time, end_time - IceCube::ONE_SECOND).empty?      }
+      all_events.select { |evt| !evt.periodicity.occurrences_between(start_time, end_time - IceCube::ONE_SECOND).empty? }
     end
 
     # supprime de pre_tasks_running l'event pour tous les events dont event est pre_task
