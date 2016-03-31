@@ -39,14 +39,17 @@ module Tasking
            :date_building,
            :policy_type,
            :website_id,
-           :policy_id
-
-      def initialize(label, date_building, policy_type, website_id=nil, policy_id=nil) # pour pouvoir les test avec engienbot_check
+           :policy_id,
+           :execution_mode # mode d'execution de la policy : manuel (Piloté au moyen de statupweb) ou auto (piloté par Calendar)
+# le mode d'execution n'est utilisé que pour le publishing car on souhaite adapté le comportement
+# de la task Publishing en fonction
+      def initialize(label, date_building, policy_type, website_id, policy_id, execution_mode=nil)
         @website_label = label
         @date_building = date_building
         @policy_type = policy_type
         @website_id = website_id
         @policy_id = policy_id
+        @execution_mode = execution_mode
         @logger = Logging::Log.new(self, :staging => $staging, :debugging => $debugging)
       end
 
@@ -339,7 +342,11 @@ module Tasking
         # de 21:00 à j pour j à 23:00   => final_visits_J_24.txt & publishing_visits_J_24.json
         #---------------------------
         # si day <> de nil alors on force le jour de planification pour faciliter les tests.
-
+        # -----------------------------
+        # si execution_mode = auto alors le scheduler prend en charge l'envoie du flow visit vers le bon statupbot (comportement nominal)
+        # si execution_mode = manual alors le flow visit est déposé directement dans le repertoire OUTPUT comme si il avait été
+        # publié par le scheduler. l'envoie du flow vers statupbot sera déclenché par statupweb par le serveur http scheduling/connection.rb
+        # ------------------------------
         current_time = Time.now
         an_hour = 60 * 60
         selected_time = current_time + (2 * an_hour)
@@ -371,7 +378,10 @@ module Tasking
               else
                 start_date_time = Time.new(day.year, day.month, day.day, v.start_date_time.hour, v.start_date_time.min, v.start_date_time.sec).strftime("%Y-%m-%d-%H-%M-%S")
               end
-              published_visits_to_yaml_file = Flow.new(TMP, "#{v.operating_system}-#{v.operating_system_version}", @policy_type, @website_label, start_date_time, v.id_visit, ".yml")
+
+              dir, ext = @execution_mode == "auto" ? [TMP, ".yml"] : [OUTPUT, ".man"]
+
+              published_visits_to_yaml_file = Flow.new(dir, "#{v.operating_system}-#{v.operating_system_version}", @policy_type, @website_label, start_date_time, v.id_visit, ext)
               published_visits_to_yaml_file.write(v.to_yaml)
               published_visits_to_yaml_file.close
 
@@ -381,7 +391,7 @@ module Tasking
             else
               @logger.an_event.debug "generate yaml published visit file for visit #{v.id_visit}"
               begin
-                send_to_statupweb(published_visits_to_yaml_file, @policy_id)
+                send_to_statupweb(published_visits_to_yaml_file)
 
               rescue Exception => e
                 @logger.an_event.error "cannot push to statupweb reporting of yaml published visit file for visit #{v.id_visit} : #{e}"
@@ -517,23 +527,30 @@ module Tasking
         a < b ? a : b
       end
 
-      def send_to_statupweb(visit_flow, policy_id)
+      def send_to_statupweb(visit_flow)
         #informe statupweb de la creation d'une nouvelle visite
         # en cas d'erreur on ne leve as de'exception car c'est de la communication
         begin
           visit_tmp = YAML::load(visit_flow.read)
 
-          visit = {:policy_id => policy_id,
+          visit = {:policy_id => @policy_id,
                    :policy_type => visit_tmp[:visit][:type].to_s,
                    :id_visit => visit_tmp[:visit][:id],
+                   :execution_mode => @execution_mode,
                    :start_time => visit_tmp[:visit][:start_date_time],
                    :landing_url => "#{visit_tmp[:visit][:landing][:scheme]}://#{visit_tmp[:visit][:landing][:fqdn]}#{visit_tmp[:visit][:landing][:path]}",
                    :durations => visit_tmp[:visit][:durations],
                    :referrer => visit_tmp[:visit][:referrer][:medium],
-                   :advert => visit_tmp[:visit][:advert][:advertising]
+                   :advert => visit_tmp[:visit][:advert][:advertising],
+                   :browser_name => visit_tmp[:visitor][:browser][:name],
+                   :browser_version => visit_tmp[:visitor][:browser][:version],
+                   :operating_system_name => visit_tmp[:visitor][:browser][:operating_system],
+                   :operating_system_version => visit_tmp[:visitor][:browser][:operating_system_version]
           }
 
+
           # Parameters: {"policy_id"=>2, "policy_type"=>"traffic", "id_visit"=>"e7509f90-bfd3-0133-e402-000854505ddf", "start_time"=>"2016-02-29 12:53:00 +0100",
+          #               "execution_mode => "auto","
           #              "landing_url"=>"http://meshumeursinformatiques.blogspot.fr/2014/07/construction-dun-environnement-de.html",
           #              "durations"=>[164, 196, 152, 85, 107, 142, 132, 142],
           #              "referrer"=>{"medium"=>"none"},

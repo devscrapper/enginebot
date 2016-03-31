@@ -344,7 +344,8 @@ module Tasking
         Visit::Visits.new(@data[:website_label],
                           @data[:building_date],
                           @data[:policy_type],
-                          @data[:website_id], @data[:policy_id]).Reporting_visits }
+                          @data[:website_id],
+                          @data[:policy_id]).Reporting_visits }
     end
 
     def Publishing_visits
@@ -353,18 +354,19 @@ module Tasking
                           @data[:building_date],
                           @data[:policy_type],
                           @data[:website_id],
-                          @data[:policy_id]).Publishing_visits_by_hour(@data[:min_count_page_advertiser].to_i,
-                                                                       @data[:max_count_page_advertiser].to_i,
-                                                                       @data[:min_duration_page_advertiser].to_i,
-                                                                       @data[:max_duration_page_advertiser].to_i,
-                                                                       @data[:percent_local_page_advertiser].to_i,
-                                                                       @data[:duration_referral].to_i,
-                                                                       @data[:min_count_page_organic].to_i,
-                                                                       @data[:max_count_page_organic].to_i,
-                                                                       @data[:min_duration_page_orgcaanic].to_i,
-                                                                       @data[:max_duration_page_organic].to_i,
-                                                                       @data[:min_duration].to_i,
-                                                                       @data[:max_duration].to_i)
+                          @data[:policy_id],
+                          @data[:execution_mode]).Publishing_visits_by_hour(@data[:min_count_page_advertiser].to_i,
+                                                                            @data[:max_count_page_advertiser].to_i,
+                                                                            @data[:min_duration_page_advertiser].to_i,
+                                                                            @data[:max_duration_page_advertiser].to_i,
+                                                                            @data[:percent_local_page_advertiser].to_i,
+                                                                            @data[:duration_referral].to_i,
+                                                                            @data[:min_count_page_organic].to_i,
+                                                                            @data[:max_count_page_organic].to_i,
+                                                                            @data[:min_duration_page_orgcaanic].to_i,
+                                                                            @data[:max_duration_page_organic].to_i,
+                                                                            @data[:min_duration].to_i,
+                                                                            @data[:max_duration].to_i)
       }
     end
 

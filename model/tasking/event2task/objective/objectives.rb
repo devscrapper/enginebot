@@ -22,7 +22,10 @@ module Tasking
       attr :website_label,
            :date_building, # n'est pas utilisé pour planifier les events, ni identifier les fichiers produits
            :policy_id,
-           :website_id, :policy_type, :count_weeks, :execution_mode
+           :website_id,
+           :policy_type,
+           :count_weeks,
+           :execution_mode
 
       def initialize(website_label, date_building,
                      policy_id,

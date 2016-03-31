@@ -220,7 +220,8 @@ module Planning
        :label => @label,
        :state => @state,
        :execution_mode => @execution_mode,
-       :pre_tasks => @pre_tasks
+       :pre_tasks => @pre_tasks,
+       :building_date => @business[:building_date]
       }
     end
 

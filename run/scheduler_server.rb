@@ -5,7 +5,8 @@ require 'eventmachine'
 require 'rufus-scheduler'
 require_relative '../lib/logging'
 require_relative '../lib/parameter'
-require_relative '../model/scheduler'
+require_relative '../model/scheduling/scheduler'
+require_relative '../model/scheduling/connection'
 require_relative '../model/geolocation'
 require_relative '../lib/supervisor'
 
@@ -26,13 +27,15 @@ else
   periodicity_supervision = parameters.periodicity_supervision
   $statupweb_server_ip = parameters.statupweb_server_ip
   $statupweb_server_port = parameters.statupweb_server_port
+  listening_port = parameters.listening_port
 
   if inputflow_factories.nil? or
       $debugging.nil? or
       $staging.nil? or
-      periodicity_supervision.nil?
-    $statupweb_server_ip.nil? or
-    $statupweb_server_port.nil? or
+      periodicity_supervision.nil? or
+      $statupweb_server_ip.nil? or
+      $statupweb_server_port.nil? or
+      listening_port.nil?
     $stderr << "some parameters not define" << "\n"
     exit(1)
   end
@@ -47,6 +50,7 @@ else
   logger.a_log.info "delay_periodic_scan (second): #{delay_periodic_scan}"
   logger.a_log.info "delay_periodic_send_geolocation (minute): #{delay_periodic_send_geolocation}"
   logger.a_log.info "periodicity supervision : #{periodicity_supervision}"
+  logger.a_log.info "periodicity supervision : #{listening_port}"
   logger.a_log.info "debugging : #{$debugging}"
   logger.a_log.info "staging : #{$staging}"
 
@@ -75,10 +79,12 @@ else
 
       inputflow_factories.each { |os_label, version|
         version.each { |version_label, input_flow_server|
-          s = Scheduler.new(os_label, version_label, input_flow_server, delay_periodic_scan, logger)
+          s = Scheduling::Scheduler.new(os_label, version_label, input_flow_server, delay_periodic_scan, logger)
           s.scan_visit_file
         }
       }
+
+      EventMachine.start_server "0.0.0.0", listening_port, Scheduling::Connection, logger, inputflow_factories
     end
 
   rescue Exception => e

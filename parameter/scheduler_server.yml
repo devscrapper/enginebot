@@ -1,5 +1,6 @@
 
 development:
+  :listening_port: 9105
   :statupweb_server_ip: localhost
   :statupweb_server_port: 3000
   :delay_periodic_scan: 5  #(seconde)
@@ -16,6 +17,7 @@ development:
             :port: 9201
 
 test:
+  :listening_port: 9105
   :statupweb_server_ip: 192.168.1.88
   :statupweb_server_port: 3000
   :delay_periodic_scan: 5 #(seconde)
@@ -44,6 +46,7 @@ test:
             :port: 9201
 
 production:
+  :listening_port: 9105
   :statupweb_server_ip: 192.168.1.88
   :statupweb_server_port: 3000
   :delay_periodic_scan: 5 #(seconde)
