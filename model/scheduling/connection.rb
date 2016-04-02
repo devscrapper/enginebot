@@ -112,11 +112,14 @@ module Scheduling
                                                    :accept => :json
 
                         raise response.content if response.code != 200
-                        @logger.an_event.info "push visit flow #{visit_flow.basename} to input flow server #{ip}:#{port}"
 
                       rescue Exception => e
-                        @logger.an_event.error "visit flow #{visit.basename} not push to input flow server #{ip}:#{ip} : #{e.message}"
+                        @logger.an_event.error "push visit flow #{visit_flow.basename} to input flow server #{ip}:#{port}"
+                        raise "visit not published to statupbot #{ip} : #{e.message}"
+
                       else
+                        @logger.an_event.info "push visit flow #{visit_flow.basename} to input flow server #{ip}:#{port}"
+
                         visit_flow.archive
                         #informe statupweb de la creation d'une nouvelle visite
                         # en cas d'erreur on ne leve as de'exception car c'est de la communication
@@ -129,10 +132,12 @@ module Scheduling
                           raise response.content if response.code != 201
 
                         rescue Exception => e
-                          @logger.an_event.warn "cannot send scheduled state of visit #{query_values["visit_id"]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
+                          @logger.an_event.error "update scheduled state of visit #{query_values["visit_id"]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
+                          raise "visit #{query_values["visit_id"]} state not scheduled : #{e.message}"
+
                         else
                         ensure
-                                 end
+                        end
                       end
                       break # on sort de la boucle des input_flow_server
                     end
@@ -141,7 +146,7 @@ module Scheduling
 
               else
                 @logger.an_event.error "visit #{query_values["visit_id"]} file name not found in #{OUTPUT}"
-
+                raise "visit #{query_values["visit_id"]} file not found"
               end
             #--------------------------------------------------------------------------------------------------------------
             # PATCH
