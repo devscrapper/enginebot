@@ -6,8 +6,8 @@ require 'restclient'
 
 module Scheduling
   class Scheduler
-    OUTPUT = File.expand_path(File.join("..", "..", "..","output"), __FILE__)
-    TMP = File.expand_path(File.join("..", "..", "..","tmp"), __FILE__)
+    OUTPUT = File.expand_path(File.join("..", "..", "..", "output"), __FILE__)
+    TMP = File.expand_path(File.join("..", "..", "..", "tmp"), __FILE__)
 
     attr :os,
          :version,
@@ -106,9 +106,10 @@ module Scheduling
 
     def send_visit_to_statupbot(visit)
       ip, port = nil, nil
-      begin
-        @pool.perform do |dispatcher|
-          dispatcher.dispatch do |details|
+
+      @pool.perform do |dispatcher|
+        dispatcher.dispatch do |details|
+          begin
             ip = details[:ip]
             port = details[:port]
             @logger.an_event.info "visit file name #{visit.absolute_path}"
@@ -120,16 +121,20 @@ module Scheduling
                                        :accept => :json
 
             raise response.content if response.code != 200
+
+
+          rescue Exception => e
+            @logger.an_event.error "push visit flow #{visit.basename} to #{@os}/#{@version} input flow server #{ip}:#{port} : #{e.message}"
+
+          else
             @logger.an_event.info "push visit flow #{visit.basename} to #{@os}/#{@version} input flow server #{ip}:#{port}"
+            change_state_visit_to_statupweb(visit, :published)
+            visit.archive
+
           end
         end
-      rescue Exception => e
-        @logger.an_event.error "visit flow #{visit.basename} not push to #{@os}/#{@version} input flow server #{ip}:#{ip} : #{e.message}"
-      else
-        change_state_visit_to_statupweb(visit, :published)
-        visit.archive
-
       end
+
     end
 
     def change_state_visit_to_statupweb(visit_flow, state)
