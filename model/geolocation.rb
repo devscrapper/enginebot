@@ -22,7 +22,7 @@ class Geolocation
             geolocations_flow = File.open(File.join(TMP, geo_file_source))
             geo_details = geolocations_flow.read
 
-            response = RestClient.post "http://#{input_flow_server[:ip]}:#{input_flow_server[:port]}/geolocations/geolocations_none_#{$staging}_#{Date.today.strftime("%Y-%m-%d")}_#{Time.now.hour}.txt",
+            response = RestClient.post "http://#{input_flow_server[:ip]}:#{input_flow_server[:port]}/geolocations/geolocations_#{$staging}_#{Date.today.strftime("%Y-%m-%d")}_#{Time.now.hour}.txt",
                                        geo_details,
                                        :content_type => :json,
                                        :accept => :json
