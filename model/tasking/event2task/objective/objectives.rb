@@ -136,7 +136,8 @@ module Tasking
                         min_duration_page_organic,
                         max_duration_page_organic,
                         min_duration,
-                        max_duration)
+                        max_duration,
+                        "")
         }
       end
 
@@ -198,7 +199,74 @@ module Tasking
                         min_duration_page_organic,
                         max_duration_page_organic,
                         min_duration,
-                        max_duration)
+                        max_duration,
+                        "") #label_advertising utilisé par seaattack
+        }
+
+      end
+
+      def Building_objectives_seaattack(count_visits_per_day,
+                                        advertising_percent,
+                                        advertisers,
+                                        monday_start,
+                                        url_root,
+                                        min_count_page_advertiser,
+                                        max_count_page_advertiser,
+                                        min_duration_page_advertiser,
+                                        max_duration_page_advertiser,
+                                        percent_local_page_advertiser,
+                                        min_count_page_organic,
+                                        max_count_page_organic,
+                                        min_duration_page_organic,
+                                        max_duration_page_organic,
+                                        min_duration,
+                                        max_duration,
+                                        min_duration_website,
+                                        min_pages_website,
+                                        label_advertising)
+
+        @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> <#{@date_building}> is starting"
+        @logger.an_event.debug "count_visits_per_day #{count_visits_per_day}"
+        @logger.an_event.debug "monday_start #{monday_start}"
+        @logger.an_event.debug "policy_id #{@policy_id}"
+        @logger.an_event.debug "website_id #{@website_id}"
+        @logger.an_event.debug "policy_type #{@policy_type}"
+        @logger.an_event.debug "url_root #{url_root}"
+        @monday_start = monday_start
+
+        Building_objectives { |day, splitted_behaviour, splitted_hourly_daily_distribution|
+          Objective.new(@website_label, day,
+                        count_visits_per_day.to_i,
+                        0, #visit_bounce_rate
+                        splitted_behaviour[3].to_f.round(2), #avg_time_on_site
+                        splitted_behaviour[4].to_f.round(2), #page_views_per_visit
+                        min_duration_website, #min_durations
+                        min_pages_website, #min_pages
+                        0, #direct_medium_percent
+                        0, #referral_medium_percent
+                        100, #organic_medium_percent
+                        advertising_percent, #advertising_percent
+                        [advertisers], #advertisers
+                        url_root,
+                        splitted_hourly_daily_distribution[1], #hour
+                        @policy_id,
+                        @website_id,
+                        @policy_type,
+                        @count_weeks,
+                        @execution_mode,
+                        min_count_page_advertiser,
+                        max_count_page_advertiser,
+                        min_duration_page_advertiser,
+                        max_duration_page_advertiser,
+                        percent_local_page_advertiser,
+                        0, # duration_referral utliser pour le traffic source referral => Traffic
+                        min_count_page_organic,
+                        max_count_page_organic,
+                        min_duration_page_organic,
+                        max_duration_page_organic,
+                        min_duration,
+                        max_duration,
+                        label_advertising)
         }
 
       end

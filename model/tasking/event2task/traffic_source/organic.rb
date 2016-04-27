@@ -32,16 +32,8 @@ module Tasking
       #--------------------------------------------------------------------------------------------------------------
       # evaluate
       #--------------------------------------------------------------------------------------------------------------
-      # calcule une liste de mot clÃ© au moyen du service google suggest et d'une stimulation : ajout d'une lettre de
-      # l'alphabet pour suggÃ©rer Ã  google des solutions.
+      # détermine la pgae d'index dans laquelle on trouve le landing link à partir des keuwords
       #--------------------------------------------------------------------------------------------------------------
-      # input :
-      # count_max : nombre max de mot clÃ© attendus pour les visits du jour ; founit par l'objectif du jour calculÃ© hebdomadairement
-      # par enginebot ; est utilisÃ© exclusivement par evaluate
-      #
-      # output :
-      # le flow enrichit des suggestions google. Ces mot clÃ© ne seront pas associÃ© Ã  un landing_link. Il sera calculÃ©
-      # lors de l'Ã©valuation (il devra contenir le domain du website.)
       #--------------------------------------------------------------------------------------------------------------
 
       def evaluate(count_max, url_root)
@@ -53,6 +45,12 @@ module Tasking
 
           # on specifie l'extension car il peut exister un flow ayant le meme type_flow et label quand l'etap de suggestion
           # est en cours d'execution dont le resultat est stockÃ© dans un flow d'extension tmp
+          # repository contient :
+          # soit une liste de keywords reuperer de semrush pour la policy traffic
+          # soit un couple keywords%SEP%label issue de statupweb pour la policy seaattack
+          # soit un keyword issue de statupweb pour la policy rank
+
+
           @repository_f = Flow.last(TMP, {:type_flow => REPOSITORY, :policy => @policy_type, :label => @website_label, :ext => ".txt"})
 
           @traffic_source_f = Flow.new(TMP, TRAFFIC_SOURCE, @policy_type, @website_label, @date_building, 1)
@@ -158,6 +156,7 @@ module Tasking
           @logger.an_event.info "repository organic for #{@website_label} and #{@date_building}"
         end
       end
+
       private
 
       #--------------------------------------------------------------------------------------------------------------
@@ -200,12 +199,11 @@ module Tasking
       end
 
 
-
-
       #--------------------------------------------------------------------------------------------------------------
       # suggest_keywords
       #--------------------------------------------------------------------------------------------------------------
-      #
+      # calcule une liste de mot clÃ© au moyen du service google suggest et d'une stimulation : ajout d'une lettre de
+      # l'alphabet pour suggÃ©rer Ã  google des solutions.
       #--------------------------------------------------------------------------------------------------------------
       # input :
       # RAS

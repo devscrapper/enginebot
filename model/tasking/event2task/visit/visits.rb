@@ -240,7 +240,7 @@ module Tasking
 
               advert = adverts.shift
               begin
-                v = Final_visit.new(visit, advert, device_platforms.shift)
+                v = Final_visit.new(visit, @policy_type, advert, device_platforms.shift)
                 final_visits_by_hour_file.write("#{v.to_s}#{EOFLINE}")
               rescue Exception => e
                 @logger.an_event.debug visit
@@ -323,7 +323,7 @@ module Tasking
                                     max_duration_page_organic,
                                     min_duration,
                                     max_duration,
-                                    day=nil)
+                                    label_advertising=nil)
         # le déclenchement de la publication est réalisée 2 heures avant l'heure d'exécution proprement dite des visits
         # de 22:00 à j-1 pour j à 00:00
         # à
@@ -341,7 +341,6 @@ module Tasking
         # à
         # de 21:00 à j pour j à 23:00   => final_visits_J_24.txt & publishing_visits_J_24.json
         #---------------------------
-        # si day <> de nil alors on force le jour de planification pour faciliter les tests.
         # -----------------------------
         # si execution_mode = auto alors le scheduler prend en charge l'envoie du flow visit vers le bon statupbot (comportement nominal)
         # si execution_mode = manual alors le flow visit est déposé directement dans le repertoire OUTPUT comme si il avait été
@@ -372,17 +371,14 @@ module Tasking
                                       min_duration_page_organic,
                                       max_duration_page_organic,
                                       min_duration,
-                                      max_duration)
-              if day.nil?
-                start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
-              else
-                start_date_time = Time.new(day.year, day.month, day.day, v.start_date_time.hour, v.start_date_time.min, v.start_date_time.sec).strftime("%Y-%m-%d-%H-%M-%S")
-              end
+                                      max_duration,
+                                      label_advertising)
+              start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
 
               dir, ext = @execution_mode == "auto" ? [TMP, ".yml"] : [OUTPUT, ".man"]
 
               published_visits_to_yaml_file = Flow.new(dir, "#{v.operating_system}-#{v.operating_system_version}", @policy_type, @website_label, start_date_time, v.id_visit, ext)
-              published_visits_to_yaml_file.write(v.to_yaml)
+              published_visits_to_yaml_file.write(v.to_yaml(@policy_type))
               published_visits_to_yaml_file.close
 
             rescue Exception => e

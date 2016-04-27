@@ -147,6 +147,7 @@ module Scheduling
               else
                 @logger.an_event.error "visit #{query_values["visit_id"]} file name not found in #{OUTPUT}"
                 raise "visit #{query_values["visit_id"]} file not found"
+
               end
             #--------------------------------------------------------------------------------------------------------------
             # PATCH

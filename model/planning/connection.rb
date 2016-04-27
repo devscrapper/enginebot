@@ -249,6 +249,8 @@ module Planning
                   @calendar.delete_policy(ress_id.to_i, "traffic")
                 when "ranks"
                   @calendar.delete_policy(ress_id.to_i, "rank")
+                when "seaattacks"
+                  @calendar.delete_policy(ress_id.to_i, "seaattack")
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
               end

@@ -214,22 +214,14 @@ module Tasking
       end
 
       #----------------------------------------------------------------------------------------------------------------
-      # evaluate(hostname, driver)
+      # evaluate(domain)
       #----------------------------------------------------------------------------------------------------------------
       # fournit la liste des mots cles d'un domaine au moyen de semrush.com
       #----------------------------------------------------------------------------------------------------------------
       # input :
       # un domaine sans http
-      # une instance de webdriver
-      # en options :
-      # les propriÃ©tÃ©s d'une geolocation pou faire la requete
-      # un nom absolu de fichier pour stocker les couples [landing_link, keywords] ; aucun tableau ne sera fournit en Output
       # output :
-      # un tableau dont chaque occurence contient le couple [landing_link, keywords]
-      # nom absolu de fichier passÃ© en input contenant les donnÃ©es issues de semtush en l'Ã©tat
       #----------------------------------------------------------------------------------------------------------------
-      # si on capte un pb de deconnection du site semrush car le couple user/password s'est connectÃ© Ã  partir d'un autre
-      # navigateur alors on rejoue l'identi/authen (on capte une exception, on appelle semrush_ident_authen et on fait un retry)
       #----------------------------------------------------------------------------------------------------------------
 
 
@@ -249,7 +241,7 @@ module Tasking
 
 
           #query http vers keywords saas
-          href = URI.encode("http://#{saas_host}:#{saas_port}/?action=evaluate&keywords=#{@words}&domain=#{domain}")
+          href = URI.encode("http://#{saas_host}:#{saas_port}/?action=evaluate&keywords=#{@words}&domain=#{domain}&type=:link")
 
           @logger.an_event.debug "uri evaluate_saas : #{href}"
 

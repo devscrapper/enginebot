@@ -64,8 +64,8 @@ module Planning
          :objective_date,
          :key,
          :events,
-         :execution_mode
-
+         :execution_mode,
+         :label_advertising
 
     def initialize(data)
       @policy_id = data[:policy_id]
@@ -101,6 +101,7 @@ module Planning
       @min_duration = data[:min_duration]
       @max_duration = data[:max_duration]
       @url_root = data[:url_root]
+      @label_advertising = data[:label_advertising]
       @objective_date = IceCube::Schedule.from_yaml(@periodicity).start_time
       @events = []
       begin
@@ -463,7 +464,8 @@ module Planning
                                :min_duration_page_organic => @min_duration_page_organic,
                                :max_duration_page_organic => @max_duration_page_organic,
                                :min_duration => @min_duration,
-                               :max_duration => @max_duration
+                               :max_duration => @max_duration,
+                               :label_advertising => @label_advertising
                            })
 
 

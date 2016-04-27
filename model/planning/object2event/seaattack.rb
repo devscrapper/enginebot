@@ -3,18 +3,26 @@ require_relative '../../../lib/parameter'
 
 module Planning
 
-  class Rank < Policy
+  class Seaattack < Policy
 
     DELAY_TO_PREPARE = 1
 
     attr :count_visits_per_day,
-         :keywords
+         :keywords,
+         :advertising_percent,
+         :advertisers, #type d'advertisers => Adwords
+         :label_advertising #label de l'advert Adwords sur lequel il faut cliquer
+
 
     def initialize(data)
       super(data)
       @count_visits_per_day = data[:count_visits_per_day]
-      @policy_type = "rank"
+      @policy_type = "seaattack"
       @keywords = data[:keywords]
+      @label_advertising = data[:label_advertising]
+      @advertisers = data[:advertisers]
+      @advertising_percent = data[:advertising_percent]
+
       unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
         delay = (@monday_start.to_date - Time.now.to_date).to_i
         raise "#{delay} day(s) remaining before start policy, it is too short to prepare #{@policy_type} policy, #{DELAY_TO_PREPARE} day(s) are require !" if delay <= DELAY_TO_PREPARE
@@ -86,6 +94,7 @@ module Planning
                         :website_label => @website_label,
                         :url_root => @url_root,
                         :keywords => @keywords,
+                        :label_advertising => @label_advertising,
                         :website_id => @website_id
                     }),
           Event.new("Building_objectives",
@@ -96,17 +105,18 @@ module Planning
                         :website_label => @website_label,
                         :policy_type => @policy_type,
                         :policy_id => @policy_id,
-                        :change_bounce_visits_percent => @change_bounce_visits_percent,
                         :monday_start => @monday_start,
                         :count_weeks => @count_weeks,
                         :url_root => @url_root,
                         :count_visits_per_day => @count_visits_per_day,
+                        :advertising_percent => @advertising_percent,
+                        :label_advertising => @label_advertising,
+                        :advertisers => @advertisers,
                         :min_count_page_advertiser => @min_count_page_advertiser,
                         :max_count_page_advertiser => @max_count_page_advertiser,
                         :min_duration_page_advertiser => @min_duration_page_advertiser,
                         :max_duration_page_advertiser => @max_duration_page_advertiser,
                         :percent_local_page_advertiser => @percent_local_page_advertiser,
-                        :duration_referral => @duration_referral,
                         :min_count_page_organic => @min_count_page_organic,
                         :max_count_page_organic => @max_count_page_organic,
                         :min_duration_page_organic => @min_duration_page_organic,

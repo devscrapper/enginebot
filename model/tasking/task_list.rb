@@ -180,9 +180,12 @@ module Tasking
                                        @data[:building_date],
                                        @data[:policy_type]).make_repository(@data[:url_root], # 10mn de suggesting
                                                                             $staging == "development" ? (10.0 /(24 * 60)) : @data[:max_duration])
-          when :rank
-            #Si il y a de smot cl� param�trer dans la tache alors elle est issue dune policy Rank
-            TrafficSource::Default.new(@data[:website_label], @data[:building_date], @data[:policy_type]).make_repository(@data[:keywords])
+          when :rank, :seaattack
+            TrafficSource::Default.new(@data[:website_label],
+                                       @data[:building_date],
+                                       @data[:policy_type]).make_repository(:keywords => @data[:keywords])
+
+
         end
       }
 
@@ -201,7 +204,6 @@ module Tasking
     def Scraping_website
 
       execute(__method__) { |event_id|
-        $stderr << @data[:policy_id] << '\n'
         TrafficSource::Direct.new(@data[:website_label],
                                   @data[:building_date],
                                   @data[:policy_type],
@@ -225,10 +227,18 @@ module Tasking
     def Evaluating_traffic_source_organic
 
       execute(__method__) {
-        # l'evaluation est identique pour Organic & Default
-        TrafficSource::Organic.new(@data[:website_label],
-                                   @data[:building_date],
-                                   @data[:policy_type]).evaluate(@data[:count_max], @data[:url_root])
+
+        case @data[:policy_type].to_sym
+          when :traffic, :rank
+            # l'evaluation est identique pour Organic & Default
+            TrafficSource::Organic.new(@data[:website_label],
+                                       @data[:building_date],
+                                       @data[:policy_type]).evaluate(@data[:count_max], @data[:url_root])
+          when :seaattack
+            TrafficSource::Default.new(@data[:website_label],
+                                       @data[:building_date],
+                                       @data[:policy_type]).evaluate(@data[:count_max], @data[:url_root])
+        end
       }
     end
 
@@ -269,6 +279,32 @@ module Tasking
                                                                                           is_nil_or_empty? { @data[:max_duration] },
                                                                                           is_nil_or_empty? { @data[:min_duration_website] },
                                                                                           is_nil_or_empty? { @data[:min_pages_website] })
+          when "seaattack"
+            Objective::Objectives.new(@data[:website_label],
+                                      @data[:building_date],
+                                      @data[:policy_id],
+                                      @data[:website_id],
+                                      @data[:policy_type],
+                                      @data[:count_weeks],
+                                      @data[:execution_mode]).Building_objectives_seaattack(is_nil_or_empty? { @data[:count_visits_per_day] }.to_i,
+                                                                                            is_nil_or_empty? { @data[:advertising_percent] }.to_i,
+                                                                                            is_nil_or_empty? { @data[:advertisers] },
+                                                                                            is_nil_or_empty? { @data[:monday_start] },
+                                                                                            is_nil_or_empty? { @data[:url_root] },
+                                                                                            is_nil_or_empty? { @data[:min_count_page_advertiser] },
+                                                                                            is_nil_or_empty? { @data[:max_count_page_advertiser] },
+                                                                                            is_nil_or_empty? { @data[:min_duration_page_advertiser] },
+                                                                                            is_nil_or_empty? { @data[:max_duration_page_advertiser] },
+                                                                                            is_nil_or_empty? { @data[:percent_local_page_advertiser] },
+                                                                                            is_nil_or_empty? { @data[:min_count_page_organic] },
+                                                                                            is_nil_or_empty? { @data[:max_count_page_organic] },
+                                                                                            is_nil_or_empty? { @data[:min_duration_page_organic] },
+                                                                                            is_nil_or_empty? { @data[:max_duration_page_organic] },
+                                                                                            is_nil_or_empty? { @data[:min_duration] },
+                                                                                            is_nil_or_empty? { @data[:max_duration] },
+                                                                                            is_nil_or_empty? { @data[:min_duration_website] },
+                                                                                            is_nil_or_empty? { @data[:min_pages_website] },
+                                                                                            is_nil_or_empty? { @data[:label_advertising] })
           when "rank"
             Objective::Objectives.new(@data[:website_label],
                                       @data[:building_date],
@@ -363,10 +399,12 @@ module Tasking
                                                                             @data[:duration_referral].to_i,
                                                                             @data[:min_count_page_organic].to_i,
                                                                             @data[:max_count_page_organic].to_i,
-                                                                            @data[:min_duration_page_orgcaanic].to_i,
+                                                                            @data[:min_duration_page_orgcanic].to_i,
                                                                             @data[:max_duration_page_organic].to_i,
                                                                             @data[:min_duration].to_i,
-                                                                            @data[:max_duration].to_i)
+                                                                            @data[:max_duration].to_i,
+                                                                            @data[:label_advertising]) #label_advertising=nil pour traffic & rank   => reviser le modèle objet pour spécialiser les task en fonction des policy
+
       }
     end
 
@@ -560,5 +598,6 @@ module Tasking
       raise StandardError, "argument is empty" if !yield.nil? and yield.is_a?(String) and yield.empty?
       yield
     end
+
   end
 end

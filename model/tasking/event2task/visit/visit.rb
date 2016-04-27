@@ -165,7 +165,7 @@ module Tasking
           @start_date_time = Time.parse(visit.split(SEPARATOR1)[16])
 
         else
-          new_date =  date.is_a?(String) ? Date.parse(date)  : date
+          new_date = date.is_a?(String) ? Date.parse(date) : date
           @start_date_time = Time.new(new_date.year,
                                       new_date.month,
                                       new_date.day,
@@ -195,7 +195,7 @@ module Tasking
            :screen_resolution,
            :advert
 
-      def initialize(visit, advert=nil, device_platform=nil)
+      def initialize(visit, policy_type=nil, advert=nil, device_platform=nil)
 
         super(visit)
         if advert.nil? and device_platform.nil?
@@ -214,7 +214,7 @@ module Tasking
               @operating_system_version,
               @screen_resolution = device_platform.strip.split(SEPARATOR2)
           @advert = advert
-          @type = @advert == "none" ? :traffic : :advert
+          @type = policy_type
         end
 
       end
@@ -248,7 +248,8 @@ module Tasking
            :min_duration_page_organic,
            :max_duration_page_organic,
            :min_duration,
-           :max_duration
+           :max_duration,
+           :label_advertising
 
       def initialize(visit,
                      min_count_page_advertiser=nil,
@@ -262,7 +263,8 @@ module Tasking
                      min_duration_page_organic=nil,
                      max_duration_page_organic=nil,
                      min_duration=nil,
-                     max_duration=nil)
+                     max_duration=nil,
+                     label_advertising=nil)
         super(visit)
         @min_count_page_advertiser = min_count_page_advertiser
         @max_count_page_advertiser = max_count_page_advertiser
@@ -276,6 +278,7 @@ module Tasking
         @max_duration_page_organic = max_duration_page_organic
         @min_duration = min_duration
         @max_duration = max_duration
+        @label_advertising = label_advertising
       end
 
       def to_file
@@ -292,10 +295,16 @@ module Tasking
                             :durations => durations,
                             :referrer => {:medium => @medium
                             },
-                            :advert => @type.to_sym != :advert ? {:advertising => :none} : {:advertising => @advert.to_sym,
-                                                                                            :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
-                                                                                                            :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))} #calculé par engine_bot
-                            }
+                            :advert => @advert == "none" ? {:advertising => @advert.to_sym} : {:advertising => @advert.to_sym,
+                                                                                               :advertiser => @advert.to_sym == :adsense ?
+                                                                                                   # advert = Adsense
+                                                                                                   {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
+                                                                                                    :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
+                                                                                               : #advert = Adword
+                                                                                                   {:label => @label_advertising, #fourni par statupweb lors de la creation de la policy seaattack
+                                                                                                    :durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
+                                                                                                    :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
+                            } #calculé par engine_bot
         },
                  :website => {:label => @label,
                               #TODO revisier l'initialisation de many_hostname & many_account

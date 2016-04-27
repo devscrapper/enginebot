@@ -38,7 +38,8 @@ module Tasking
            :max_duration_page_organic,
            :min_duration,
            :max_duration,
-           :execution_mode
+           :execution_mode,
+           :label_advertising
 
       def initialize(website_label, date,
                      count_visits =nil,
@@ -66,7 +67,8 @@ module Tasking
                      min_duration_page_organic,
                      max_duration_page_organic,
                      min_duration,
-                     max_duration)
+                     max_duration,
+                     label_advertising)
         @objective_id = UUID.generate(:compact)
         @website_label = website_label
         @count_visits = count_visits
@@ -101,6 +103,7 @@ module Tasking
         @max_duration_page_organic = max_duration_page_organic
         @min_duration = min_duration
         @max_duration = max_duration
+        @label_advertising = label_advertising
       end
 
       def send_to_calendar
@@ -136,7 +139,8 @@ module Tasking
                 "min_duration_page_organic" => @min_duration_page_organic,
                 "max_duration_page_organic" => @max_duration_page_organic,
                 "min_duration" => @min_duration,
-                "max_duration" => @max_duration
+                "max_duration" => @max_duration,
+                "label_advertising" => label_advertising
         }
         @query = {"cmd" => "save"}
         @query.merge!({"object" => "Objective"})
@@ -212,7 +216,8 @@ module Tasking
             "min_duration_page_organic: #{@min_duration_page_organic}\n\r" \
             "max_duration_page_organic: #{@max_duration_page_organic}\n\r" \
             "min_duration: #{@min_duration}\n\r" \
-            "max_duration: #{@max_duration}"
+            "max_duration: #{@max_duration}\`n\r" \
+            "label_advertising: #{@label_advertising}"
       end
 
       private
