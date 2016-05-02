@@ -46,12 +46,20 @@ module Planning
       # POST
       # http://localhost:9104/policies/traffic  payload = { ... }
       # http://localhost:9104/policies/rank     payload = { ... }
+      # http://localhost:9104/policies/seaattack     payload = { ... }
       # http://localhost:9104/objectives/traffic  payload = { ... }
       # http://localhost:9104/objectives/rank      payload = { ... }
+
       # PATCH
       # http://localhost:9104/tasks/<taskname>/?state=start ou over ou fail  payload = {"policy_id" => @data["policy_id"], "task" => task}
+      # http://localhost:9104/policies/traffic/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+      # http://localhost:9104/policies/rank/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+      # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+
       # DELETE
-      # http://localhost:9104/policies/<policy_id>
+      # http://localhost:9104/traffics/<policy_id>
+      # http://localhost:9104/ranks/<policy_id>
+      # http://localhost:9104/seaattacks/<policy_id>
       #------------------------------------------------------------------------------------------------------------------
 
 
@@ -132,7 +140,7 @@ module Planning
 
                         dates = @calendar.next_events_from_now(query_values["policy_type"],
                                                                query_values["policy_id"].to_i).map { |task| task.periodicity.remaining_occurrences(Time.now) }.flatten
-                        dates.map! { |date| date.start_time.to_date }.uniq!.sort_by!{|t| t}[0..query_values["count_date"].to_i - 1] unless dates.empty?
+                        dates.map! { |date| date.start_time.to_date }.uniq!.sort_by! { |t| t }[0..query_values["count_date"].to_i - 1] unless dates.empty?
 
                         @logger.an_event.info "#{dates.size} dates for #{ress_id} from repository"
                       when "hour"
@@ -209,10 +217,11 @@ module Planning
               raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "query string"}) if @http_query_string.nil?
 
               query_values = Addressable::URI.parse("?#{@http_query_string}").query_values
-              raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "state"}) if query_values["state"].nil? or query_values["state"].empty?
+
 
               case ress_type
                 when "tasks"
+                  raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "state"}) if query_values["state"].nil? or query_values["state"].empty?
                   event_id = ress_id
 
                   case query_values["state"]
@@ -232,6 +241,18 @@ module Planning
                       raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => query_values["state"]})
                   end
 
+                when "policies"
+                  policy_type = ress_id
+                  raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "policy_id"}) if query_values["policy_id"].nil? or query_values["policy_id"].empty?
+                  raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "execution_mode"}) if query_values["execution_mode"].nil? or query_values["execution_mode"].empty?
+                  policy_id = query_values["policy_id"]
+                  # http://localhost:9104/policies/traffic/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+                  # http://localhost:9104/policies/rank/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+                  # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+
+                  @logger.an_event.info "update policy #{policy_type} #{policy_id} with #{query_values["execution_mode"]} execution mode to repository"
+                  @calendar.update_execution_mode_policy(policy_type, policy_id.to_i, query_values["execution_mode"])
+
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
 
@@ -241,6 +262,9 @@ module Planning
             # DELETE
             #--------------------------------------------------------------------------------------------------------------
             when "DELETE"
+              # http://localhost:9104/traffics/<policy_id>
+              # http://localhost:9104/ranks/<policy_id>
+              # http://localhost:9104/seaattacks/<policy_id>
               # pas de respect de http, car maj ne renvoient pas la ressource maj
               raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
               @logger.an_event.info "delete events of the #{ress_type} policy id=#{ress_id} to repository"

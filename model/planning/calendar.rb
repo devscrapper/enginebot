@@ -314,6 +314,31 @@ module Planning
           !task.periodicity.remaining_occurrences(Time.now).empty? }
     end
 
+
+    def update_execution_mode_policy(policy_type, policy_id, execution_mode)
+      raise ArgumentError, policy_id if policy_id.nil?
+      raise ArgumentError, policy_type if policy_type.nil?
+      raise ArgumentError, execution_mode if execution_mode.nil?
+
+      begin
+        @sem.synchronize {
+          @events.select { |e| e.key[:policy_id] == policy_id and e.policy_type == policy_type }.each{|evt|
+            evt.execution_mode = execution_mode
+          }
+          save
+        }
+
+      rescue Exception => e
+        @logger.an_event.debug "cannot update execution mode #{execution_mode} events #{policy_type} policy #{policy_id} in calendar : #{e.message}"
+        raise "cannot update execution mode #{execution_mode} events #{policy_type} policy #{policy_id} in calendar : #{e.message}"
+
+      else
+        @logger.an_event.debug "update execution mode #{execution_mode} events #{policy_type} policy #{policy_id} in calendar"
+
+      end
+    end
+
+
     # enregister les Events issus d'une policy  dans le calendar
     # retourne Array contenant les Events
     # retourne Array vide si pb

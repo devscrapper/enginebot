@@ -35,15 +35,15 @@ module Planning
     INIT = 'init'
     FAIL = "fail"
 
-
+    attr_accessor :execution_mode #mode d'execution de la policy : manual (Piloté au moyen de statupweb) ou auto (piloté par Calendar)
     attr :key, # Hash de symbol
          :periodicity, #IceCube::Schedule
          :business, #Hash de symbol
          :state, #String
          :pre_tasks_over, #Array
          :pre_tasks_running, #Array
-         :pre_tasks, #Array
-         :execution_mode #mode d'execution de la policy : manuel (Piloté au moyen de statupweb) ou autom (piloté par Calendar)
+         :pre_tasks #Array
+
 
     attr_reader :id, #UUID
                 :label #String
@@ -98,6 +98,7 @@ module Planning
         self
       end
     end
+
 
 
     # retourne true si event est une pre-task de l'instance courante
@@ -176,6 +177,7 @@ module Planning
     def id
       @id
     end
+
 
     #self is before e
     def is_before?(e)
