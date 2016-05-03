@@ -533,9 +533,8 @@ module Tasking
                    :policy_type => visit_tmp[:visit][:type].to_s,
                    :id_visit => visit_tmp[:visit][:id],
                    :execution_mode => @execution_mode,
-                   :start_time => visit_tmp[:visit][:start_date_time],
+                   :plan_time => visit_tmp[:visit][:start_date_time],
                    :landing_url => "#{visit_tmp[:visit][:landing][:scheme]}://#{visit_tmp[:visit][:landing][:fqdn]}#{visit_tmp[:visit][:landing][:path]}",
-                   :durations => visit_tmp[:visit][:durations],
                    :referrer => visit_tmp[:visit][:referrer][:medium],
                    :advert => visit_tmp[:visit][:advert][:advertising],
                    :browser_name => visit_tmp[:visitor][:browser][:name],
@@ -545,10 +544,10 @@ module Tasking
           }
 
 
-          # Parameters: {"policy_id"=>2, "policy_type"=>"traffic", "id_visit"=>"e7509f90-bfd3-0133-e402-000854505ddf", "start_time"=>"2016-02-29 12:53:00 +0100",
+          # Parameters: {"policy_id"=>2, "policy_type"=>"traffic", "id_visit"=>"e7509f90-bfd3-0133-e402-000854505ddf", "plan_time"=>"2016-02-29 12:53:00 +0100",
           #               "execution_mode => "auto","
           #              "landing_url"=>"http://meshumeursinformatiques.blogspot.fr/2014/07/construction-dun-environnement-de.html",
-          #              "durations"=>[164, 196, 152, 85, 107, 142, 132, 142],
+
           #              "referrer"=>{"medium"=>"none"},
           #              "advert"=>{"advertising"=>"none"}, "visit"=>{"policy_id"=>2, "policy_type"=>"traffic", "id_visit"=>"e7509f90-bfd3-0133-e402-000854505ddf", "start_time"=>"2016-02-29 12:53:00 +0100", "landing_url"=>"http://meshumeursinformatiques.blogspot.fr/2014/07/construction-dun-environnement-de.html", "durations"=>[164, 196, 152, 85, 107, 142, 132, 142], "referrer"=>{"medium"=>"none"}, "advert"=>{"advertising"=>"none"}}}
 
