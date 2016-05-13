@@ -5,9 +5,9 @@ module Planning
 
   class Seaattack < Policy
 
-    DELAY_TO_PREPARE = 1
 
     attr :count_visits_per_day,
+         :start_date, #jour déclenchement
          :keywords,
          :advertising_percent,
          :advertisers, #type d'advertisers => Adwords
@@ -16,6 +16,10 @@ module Planning
 
     def initialize(data)
       super(data)
+      start_datetime =DateTime.parse(data[:start_date])
+      @start_time = Time.local(start_datetime.year, start_datetime.month, start_datetime.day, 0, 0)  # tranforme start_time de DateTime en Time pour IceCube
+      @registering_time = Time.now
+
       @count_visits_per_day = data[:count_visits_per_day]
       @policy_type = "seaattack"
       @keywords = data[:keywords]
@@ -23,10 +27,7 @@ module Planning
       @advertisers = data[:advertisers]
       @advertising_percent = data[:advertising_percent]
 
-      unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
-        delay = (@monday_start.to_date - Time.now.to_date).to_i
-        raise "#{delay} day(s) remaining before start policy, it is too short to prepare #{@policy_type} policy, #{DELAY_TO_PREPARE} day(s) are require !" if delay <= DELAY_TO_PREPARE
-      end
+      raise "delay (#{@start_time - @registering_time}) is too short to prepare policy #{@policy_type}" if @start_time - @registering_time < 3 * IceCube::ONE_HOUR
 
       begin
         parameters = Parameter.new(__FILE__)
@@ -65,25 +66,25 @@ module Planning
     end
 
     def to_event
-      super
-      periodicity_scraping_traffic_source_organic = IceCube::Schedule.new(@registering_date + @scraping_traffic_source_organic_day * IceCube::ONE_DAY +
+      super(@registering_time)
+      periodicity_scraping_traffic_source_organic = IceCube::Schedule.new(@registering_time + @scraping_traffic_source_organic_day * IceCube::ONE_DAY +
                                                                               @scraping_traffic_source_organic_hour * IceCube::ONE_HOUR +
                                                                               @scraping_traffic_source_organic_min * IceCube::ONE_MINUTE,
-                                                                          :end_time => @registering_date +
-                                                                              @count_weeks * IceCube::ONE_WEEK)
+                                                                          :end_time => @registering_time +
+                                                                              @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_date +
-                                                                                                      @count_weeks * IceCube::ONE_WEEK)
+      periodicity_scraping_traffic_source_organic.add_recurrence_rule IceCube::Rule.monthly.until(@registering_time +
+                                                                                                      @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_objectives = IceCube::Schedule.new(@monday_start +
+      periodicity_building_objectives = IceCube::Schedule.new(@registering_time +
                                                                   @building_objectives_day * IceCube::ONE_DAY +
                                                                   @building_objectives_hour * IceCube::ONE_HOUR +
                                                                   @building_objectives_min * IceCube::ONE_MINUTE,
-                                                              :end_time => @monday_start +
-                                                                  (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                              :end_time => @registering_time +
+                                                                  @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_objectives.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                         (@count_weeks -1) * IceCube::ONE_WEEK)
+      periodicity_building_objectives.add_recurrence_rule IceCube::Rule.weekly.until(@registering_time +
+                                                                                         @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
       @events += [
           Event.new("Scraping_traffic_source_organic",
                     periodicity_scraping_traffic_source_organic,
@@ -105,7 +106,7 @@ module Planning
                         :website_label => @website_label,
                         :policy_type => @policy_type,
                         :policy_id => @policy_id,
-                        :monday_start => @monday_start,
+                        :monday_start => @start_time,
                         :count_weeks => @count_weeks,
                         :url_root => @url_root,
                         :count_visits_per_day => @count_visits_per_day,

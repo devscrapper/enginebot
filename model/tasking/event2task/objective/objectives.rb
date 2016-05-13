@@ -137,7 +137,7 @@ module Tasking
                         max_duration_page_organic,
                         min_duration,
                         max_duration,
-                        "")
+                        "") #label_advertising utilisé par seaattack
         }
       end
 
@@ -291,8 +291,8 @@ module Tasking
           behaviour = behaviour_file.load_to_array(EOFLINE2)
 
           p = ProgressBar.create(:title => "Building objectives", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => behaviour_file_size, :format => '%t, %c/%C, %a|%w|')
-          day = @monday_start.to_date
-
+          day = @monday_start
+          #day = @monday_start.to_date
           behaviour_file_size.times { |line|
             begin
               splitted_behaviour = behaviour[line].strip.split(SEPARATOR2)
@@ -315,7 +315,11 @@ module Tasking
               end
             end
             p.increment
-            day = day.next_day(1)
+
+            day = day.is_a?(Date) ?
+                day.next_day(1)   #Date   : pour policy Traffic, Rank
+            :
+                day + 60* 60 * 24 # Time  : pour policy Sea_attack
           }
         rescue Exception => e
           @logger.an_event.error "Building objectives for <#{@policy_type}> <#{@website_label}> at date <#{@date_building}> is over => #{e.message}"

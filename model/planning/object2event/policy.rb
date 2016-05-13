@@ -38,6 +38,7 @@ module Planning
          :count_weeks,
          :monday_start,
          :registering_date,
+         :registering_time,
          :url_root,
          :min_count_page_advertiser,
          :max_count_page_advertiser,
@@ -69,15 +70,6 @@ module Planning
 
     def initialize(data)
       @website_label = data[:website_label]
-      d = Date.parse(data[:monday_start])
-
-      # Time.local bug qd on soustrait 21 ou 22 heure en décalant le time zone d'une heure
-      # remplacement de time.local par Time.utc().localtime
-      @monday_start = Time.utc(d.year, d.month, d.day).localtime # iceCube a besoin d'un Time et pas d'un Date
-      @registering_date = $staging == "development" ?
-          Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
-      :
-          Time.utc(Date.today.year, Date.today.month, Date.today.day, 0, 0).localtime
       @count_weeks = data[:count_weeks]
       @website_id = data[:website_id]
       @policy_id = data[:policy_id]
@@ -111,76 +103,76 @@ module Planning
       @events = []
     end
 
-    def to_event
+    def to_event(plan_date=@monday_start)
 
 
-      periodicity_scraping_device_platform_plugin = IceCube::Schedule.new(@monday_start +
+      periodicity_scraping_device_platform_plugin = IceCube::Schedule.new(plan_date +
                                                                               @scraping_device_platform_plugin_day * IceCube::ONE_DAY +
                                                                               @scraping_device_platform_plugin_hour * IceCube::ONE_HOUR +
                                                                               @scraping_device_platform_plugin_min * IceCube::ONE_MINUTE,
-                                                                          :end_time => @monday_start +
-                                                                              (@count_weeks -1) * IceCube::ONE_WEEK)
-      periodicity_scraping_device_platform_plugin.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                                     (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                                          :end_time => plan_date +
+                                                                              @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
+      periodicity_scraping_device_platform_plugin.add_recurrence_rule IceCube::Rule.weekly.until(plan_date +
+                                                                                                     @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_scraping_hourly_distribution = IceCube::Schedule.new(@monday_start +
+      periodicity_scraping_hourly_distribution = IceCube::Schedule.new(plan_date +
                                                                            @scraping_hourly_distribution_day * IceCube::ONE_DAY +
                                                                            @scraping_hourly_distribution_hour * IceCube::ONE_HOUR +
                                                                            @scraping_hourly_distribution_min * IceCube::ONE_MINUTE,
-                                                                       :end_time => @monday_start +
-                                                                           (@count_weeks -1) * IceCube::ONE_WEEK)
-      periodicity_scraping_hourly_distribution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                                  (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                                       :end_time => plan_date +
+                                                                           @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
+      periodicity_scraping_hourly_distribution.add_recurrence_rule IceCube::Rule.weekly.until(plan_date +
+                                                                                                  @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_scraping_behaviour = IceCube::Schedule.new(@monday_start +
+      periodicity_scraping_behaviour = IceCube::Schedule.new(plan_date +
                                                                  @scraping_behaviour_day * IceCube::ONE_DAY +
                                                                  @scraping_behaviour_hour * IceCube::ONE_HOUR +
                                                                  @scraping_behaviour_min * IceCube::ONE_MINUTE,
-                                                             :end_time => @monday_start +
-                                                                 (@count_weeks -1) * IceCube::ONE_WEEK)
-      periodicity_scraping_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                        (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                             :end_time => plan_date +
+                                                                 @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
+      periodicity_scraping_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(plan_date +
+                                                                                        @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
 
-      periodicity_scraping_device_platform_resolution = IceCube::Schedule.new(@monday_start +
+      periodicity_scraping_device_platform_resolution = IceCube::Schedule.new(plan_date +
                                                                                   @scraping_device_platform_resolution_day * IceCube::ONE_DAY +
                                                                                   @scraping_device_platform_resolution_hour * IceCube::ONE_HOUR +
                                                                                   @scraping_device_platform_resolution_min* IceCube::ONE_MINUTE,
-                                                                              :end_time => @monday_start +
-                                                                                  (@count_weeks -1) * IceCube::ONE_WEEK)
-      periodicity_scraping_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                                         (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                                              :end_time => plan_date +
+                                                                                  @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
+      periodicity_scraping_device_platform_resolution.add_recurrence_rule IceCube::Rule.weekly.until(plan_date +
+                                                                                                         @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
 
-      periodicity_building_device_platform = IceCube::Schedule.new(@monday_start +
+      periodicity_building_device_platform = IceCube::Schedule.new(plan_date +
                                                                        @building_device_platform_day * IceCube::ONE_DAY +
                                                                        @building_device_platform_hour * IceCube::ONE_HOUR +
                                                                        @building_device_platform_min * IceCube::ONE_MINUTE,
-                                                                   :end_time => @monday_start +
-                                                                       (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                                   :end_time => plan_date +
+                                                                       @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_device_platform.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                              (@count_weeks -1) * IceCube::ONE_WEEK)
+      periodicity_building_device_platform.add_recurrence_rule IceCube::Rule.weekly.until(plan_date +
+                                                                                              @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_hourly_distribution = IceCube::Schedule.new(@monday_start +
+      periodicity_building_hourly_distribution = IceCube::Schedule.new(plan_date +
                                                                            @building_hourly_distribution_day * IceCube::ONE_DAY +
                                                                            @building_hourly_distribution_hour * IceCube::ONE_HOUR +
                                                                            @building_hourly_distribution_min * IceCube::ONE_MINUTE,
-                                                                       :end_time => @monday_start +
-                                                                           (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                                       :end_time => plan_date +
+                                                                           @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_hourly_distribution.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                                  (@count_weeks -1) * IceCube::ONE_WEEK)
+      periodicity_building_hourly_distribution.add_recurrence_rule IceCube::Rule.weekly.until(plan_date +
+                                                                                                  @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_behaviour = IceCube::Schedule.new(@monday_start +
+      periodicity_building_behaviour = IceCube::Schedule.new(plan_date +
                                                                  @building_behaviour_day * IceCube::ONE_DAY +
                                                                  @building_behaviour_hour * IceCube::ONE_HOUR +
                                                                  @building_behaviour_min * IceCube::ONE_MINUTE,
-                                                             :end_time => @monday_start +
-                                                                 (@count_weeks -1) * IceCube::ONE_WEEK)
+                                                             :end_time => plan_date +
+                                                                 @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(@monday_start +
-                                                                                        (@count_weeks -1) * IceCube::ONE_WEEK)
+      periodicity_building_behaviour.add_recurrence_rule IceCube::Rule.weekly.until(plan_date +
+                                                                                        @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
       business.merge!({"profil_id_ga" => @profil_id_ga}) if @statistics_type == :ga
 

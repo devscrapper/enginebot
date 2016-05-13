@@ -41,7 +41,8 @@ module Tasking
            :execution_mode,
            :label_advertising
 
-      def initialize(website_label, date,
+      def initialize(website_label,
+                     date,
                      count_visits =nil,
                      visit_bounce_rate=nil,
                      avg_time_on_site=nil,
@@ -83,8 +84,15 @@ module Tasking
         @advertising_percent=advertising_percent
         @advertisers = advertisers
         @url_root = url_root
-        @periodicity =IceCube::Schedule.new(Time.local(date.year, date.month, date.day),
-                                            :end_time => Time.local(date.year, date.month, date.day)).to_yaml
+        if date.is_a?(Date)
+          # pour Traffic et Rank, l'objectif est planififé par rapport à une date
+          end_time = start_time = Time.local(date.year, date.month, date.day)
+        else
+          # pour SeaAttack, l'objectif est panifié par rapport à un Time our delcenche maintenant
+          end_time = start_time = date
+        end
+        @periodicity =IceCube::Schedule.new(start_time,
+                                            :end_time => end_time).to_yaml
         @hourly_distribution=translate_to_count_visits_target(hourly_distribution, count_visits)
         @policy_id = policy_id
         @policy_type = policy_type
@@ -140,7 +148,7 @@ module Tasking
                 "max_duration_page_organic" => @max_duration_page_organic,
                 "min_duration" => @min_duration,
                 "max_duration" => @max_duration,
-                "label_advertising" => label_advertising
+                "label_advertising" => @label_advertising
         }
         @query = {"cmd" => "save"}
         @query.merge!({"object" => "Objective"})

@@ -12,6 +12,15 @@ module Planning
 
     def initialize(data)
       super(data)
+      d = Date.parse(data[:monday_start])
+
+      # Time.local bug qd on soustrait 21 ou 22 heure en décalant le time zone d'une heure
+      # remplacement de time.local par Time.utc().localtime
+      @monday_start = Time.utc(d.year, d.month, d.day).localtime # iceCube a besoin d'un Time et pas d'un Date
+      @registering_date = $staging == "development" ?
+          Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
+      :
+          Time.utc(Date.today.year, Date.today.month, Date.today.day, 0, 0).localtime
       @count_visits_per_day = data[:count_visits_per_day]
       @policy_type = "rank"
       @keywords = data[:keywords]

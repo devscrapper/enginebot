@@ -2,29 +2,29 @@
 development:
   :scraping_traffic_source_organic_day: 0
   :scraping_traffic_source_organic_hour: 0
-  :scraping_traffic_source_organic_min: 15
-  :scraping_device_platform_plugin_day: -2
-  :scraping_device_platform_plugin_hour: 1
-  :scraping_device_platform_plugin_min: 45
-  :scraping_device_platform_resolution_day: -2
-  :scraping_device_platform_resolution_hour: 2
+  :scraping_traffic_source_organic_min: 5
+  :scraping_device_platform_plugin_day: 0
+  :scraping_device_platform_plugin_hour: 0
+  :scraping_device_platform_plugin_min: 10
+  :scraping_device_platform_resolution_day: 0
+  :scraping_device_platform_resolution_hour: 0
   :scraping_device_platform_resolution_min: 15
-  :scraping_hourly_distribution_day: -2
-  :scraping_hourly_distribution_hour: 2
-  :scraping_hourly_distribution_min: 45
-  :scraping_behaviour_day: -2
-  :scraping_behaviour_hour: 3
-  :scraping_behaviour_min: 15
-  :building_device_platform_day: -2
+  :scraping_hourly_distribution_day: 0
+  :scraping_hourly_distribution_hour: 0
+  :scraping_hourly_distribution_min: 20
+  :scraping_behaviour_day: 0
+  :scraping_behaviour_hour: 0
+  :scraping_behaviour_min: 25
+  :building_device_platform_day: 0
   :building_device_platform_hour: 0
   :building_device_platform_min: 0
-  :building_hourly_distribution_day: -2
+  :building_hourly_distribution_day: 0
   :building_hourly_distribution_hour: 0
   :building_hourly_distribution_min: 0
-  :building_behaviour_day: -2
+  :building_behaviour_day: 0
   :building_behaviour_hour: 0
   :building_behaviour_min: 0
-  :building_objectives_day: -2
+  :building_objectives_day: 0
   :building_objectives_hour: 0
   :building_objectives_min: 0
 
