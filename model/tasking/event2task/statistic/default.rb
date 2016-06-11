@@ -176,13 +176,13 @@ module Tasking
       def behaviour
         data = []
 
-        7.times { |i| data << [i + 1,
-                               "not use",
-                               100, #      percent_new_visit
-                               Random.new.rand(80..90), #visit_bounce_rate
-                               Random.new.rand(60..1000), #avg_time_on_site
-                               Random.new.rand(1..20), #page_views_per_visit
-                               Random.new.rand(50..100)] } #count_visits
+        7.times { |i| data << [i + 1, #0
+                               "not use", #1
+                               100, #2 percent_new_visit
+                               Random.new.rand(80..90), #3 visit_bounce_rate
+                               Random.new.rand(60..1000), # 4 avg_time_on_site
+                               Random.new.rand(1..20), #5 page_views_per_visit
+                               Random.new.rand(50..100)] } #6 count_visits
 
         execute("scraping-behaviour",
                 data)

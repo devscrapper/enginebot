@@ -3,145 +3,28 @@ require_relative '../event'
 module Planning
 
   class Objective
-    attr :evaluating_traffic_source_organic_day,
-         :evaluating_traffic_source_organic_hour,
-         :evaluating_traffic_source_organic_min,
-         :evaluating_traffic_source_referral_day,
-         :evaluating_traffic_source_referral_hour,
-         :evaluating_traffic_source_referral_min,
-         :choosing_device_platform_day,
-         :choosing_device_platform_hour,
-         :choosing_device_platform_min,
-         :choosing_landing_pages_day,
-         :choosing_landing_pages_hour,
-         :choosing_landing_pages_min,
-         :building_visits_day,
-         :building_visits_hour,
-         :building_visits_min,
-         :building_planification_day,
-         :building_planification_hour,
-         :building_planification_min,
-         :extending_visits_day,
-         :extending_visits_hour,
-         :extending_visits_min,
-         :start_publishing_visits_day,
-         :start_publishing_visits_hour,
-         :end_publishing_visits_day,
-         :end_publishing_visits_hour,
-         :count_visits,
-         :website_label,
-         :start_time,
-         :visit_bounce_rate,
-         :page_views_per_visit,
-         :avg_time_on_site,
-         :min_durations,
-         :min_pages,
-         :hourly_distribution,
-         :direct_medium_percent,
-         :organic_medium_percent,
-         :referral_medium_percent,
-         :url_root,
-         :advertising_percent,
-         :advertisers,
-         :periodicity,
-         :objective_id,
-         :website_id,
-         :policy_id,
-         :policy_type,
-         :count_weeks,
-         :min_count_page_advertiser,
-         :max_count_page_advertiser,
-         :min_duration_page_advertiser,
-         :max_duration_page_advertiser,
-         :percent_local_page_advertiser,
-         :duration_referral,
-         :min_count_page_organic,
-         :max_count_page_organic,
-         :min_duration_page_organic,
-         :max_duration_page_organic,
-         :min_duration,
-         :max_duration,
-         :objective_date,
-         :key,
-         :events,
-         :execution_mode,
-         :label_advertising
+    attr :events, # list des events generes à partir d'un objectif
+         :key # clé de event dans le calendar
+
+
+    def self.build(data)
+      case data[:policy_type]
+
+        when "seaattack"
+          Seaattackobj.new(data)
+
+        when "traffic"
+          Trafficobj.new(data)
+
+        when "rank"
+          Rankobj.new(data)
+
+      end
+    end
 
     def initialize(data)
-      @policy_id = data[:policy_id]
-      @policy_type = data[:policy_type]
-      @count_weeks = data[:count_weeks]
-      @execution_mode = data[:execution_mode]
-      @objective_id = data[:objective_id]
-      @count_visits = data[:count_visits]
-      @website_label = data[:website_label]
-      @website_id = data[:website_id]
-      @visit_bounce_rate = data[:visit_bounce_rate]
-      @page_views_per_visit = data[:page_views_per_visit]
-      @avg_time_on_site = data[:avg_time_on_site]
-      @min_durations= data[:min_durations]
-      @min_pages = data[:min_pages]
-      @hourly_distribution = data[:hourly_distribution]
-      @direct_medium_percent=data[:direct_medium_percent]
-      @organic_medium_percent=data[:organic_medium_percent]
-      @referral_medium_percent= data[:referral_medium_percent]
-      @advertising_percent= data[:advertising_percent]
-      @advertisers = data[:advertisers]
-      @periodicity = data[:periodicity]
-      @min_count_page_advertiser = data[:min_count_page_advertiser]
-      @max_count_page_advertiser = data[:max_count_page_advertiser]
-      @min_duration_page_advertiser = data[:min_duration_page_advertiser]
-      @max_duration_page_advertiser = data[:max_duration_page_advertiser]
-      @percent_local_page_advertiser = data[:percent_local_page_advertiser]
-      @duration_referral = data[:duration_referral]
-      @min_count_page_organic = data[:min_count_page_organic]
-      @max_count_page_organic = data[:max_count_page_organic]
-      @min_duration_page_organic = data[:min_duration_page_organic]
-      @max_duration_page_organic = data[:max_duration_page_organic]
-      @min_duration = data[:min_duration]
-      @max_duration = data[:max_duration]
-      @url_root = data[:url_root]
-      @label_advertising = data[:label_advertising]
-      @objective_date = IceCube::Schedule.from_yaml(@periodicity).start_time
       @events = []
-      begin
-        parameters = Parameter.new(__FILE__)
-      rescue Exception => e
-        raise "loading parameter traffic failed : #{e.message}"
-
-      else
-        @evaluating_traffic_source_organic_day = parameters.evaluating_traffic_source_organic_day
-        @evaluating_traffic_source_organic_hour = parameters.evaluating_traffic_source_organic_hour
-        @evaluating_traffic_source_organic_min = parameters.evaluating_traffic_source_organic_min
-        @evaluating_traffic_source_referral_day = parameters.evaluating_traffic_source_referral_day
-        @evaluating_traffic_source_referral_hour = parameters.evaluating_traffic_source_referral_hour
-        @evaluating_traffic_source_referral_min = parameters.evaluating_traffic_source_referral_min
-        @choosing_device_platform_day = parameters.choosing_device_platform_day
-        @choosing_device_platform_hour = parameters.choosing_device_platform_hour
-        @choosing_device_platform_min = parameters.choosing_device_platform_min
-        @choosing_landing_pages_day = parameters.choosing_landing_pages_day
-        @choosing_landing_pages_hour = parameters.choosing_landing_pages_hour
-        @choosing_landing_pages_min = parameters.choosing_landing_pages_min
-        @building_visits_day = parameters.building_visits_day
-        @building_visits_hour = parameters.building_visits_hour
-        @building_visits_min = parameters.building_visits_min
-        @building_planification_day = parameters.building_planification_day
-        @building_planification_hour = parameters.building_planification_hour
-        @building_planification_min = parameters.building_planification_min
-        @extending_visits_day = parameters.extending_visits_day
-        @extending_visits_hour = parameters.extending_visits_hour
-        @extending_visits_min = parameters.extending_visits_min
-        @start_publishing_visits_day = parameters.start_publishing_visits_day
-        @start_publishing_visits_hour = parameters.start_publishing_visits_hour
-        @end_publishing_visits_day = parameters.end_publishing_visits_day
-        @end_publishing_visits_hour = parameters.end_publishing_visits_hour
-        @building_landing_pages_referral_day = parameters.building_landing_pages_referral_day
-        @building_landing_pages_referral_hour = parameters.building_landing_pages_referral_hour
-        @building_landing_pages_referral_min = parameters.building_landing_pages_referral_min
-        @building_landing_pages_organic_day = parameters.building_landing_pages_organic_day
-        @building_landing_pages_organic_hour = parameters.building_landing_pages_organic_hour
-        @building_landing_pages_organic_min = parameters.building_landing_pages_organic_min
-      end
+      @key = nil
     end
 
     def to_event
@@ -209,8 +92,9 @@ module Planning
         pre_tasks_choosing_landing_pages << building_landing_pages_organic
       end
 
-      # permet de ne pas planifier un event sur evaluating referral pour la policy Rank et de maière generale de gagner du temps
-      if @referral_medium_percent > 0
+      # .nil? permet de ne pas planifier un event sur evaluating referral pour la policy Rank/SeaAttack
+      # > 0 permet de gagner du temps  pour Traffic sans referral
+      if !@referral_medium_percent.nil? and @referral_medium_percent > 0
         #---------------------------------------------------------------------------------------------------------------
         #-----------Evaluating_traffic_source_referral------------------------------------------------------------------
         #---------------------------------------------------------------------------------------------------------------
@@ -465,11 +349,430 @@ module Planning
                                :max_duration_page_organic => @max_duration_page_organic,
                                :min_duration => @min_duration,
                                :max_duration => @max_duration,
-                               :label_advertising => @label_advertising
+                               :label_advertisings => @label_advertisings
                            })
 
 
       @events
+    end
+  end
+  class Trafficobj < Objective
+    attr :evaluating_traffic_source_organic_day,
+         :evaluating_traffic_source_organic_hour,
+         :evaluating_traffic_source_organic_min,
+         :evaluating_traffic_source_referral_day,
+         :evaluating_traffic_source_referral_hour,
+         :evaluating_traffic_source_referral_min,
+         :choosing_device_platform_day,
+         :choosing_device_platform_hour,
+         :choosing_device_platform_min,
+         :choosing_landing_pages_day,
+         :choosing_landing_pages_hour,
+         :choosing_landing_pages_min,
+         :building_visits_day,
+         :building_visits_hour,
+         :building_visits_min,
+         :building_planification_day,
+         :building_planification_hour,
+         :building_planification_min,
+         :extending_visits_day,
+         :extending_visits_hour,
+         :extending_visits_min,
+         :start_publishing_visits_day,
+         :start_publishing_visits_hour,
+         :end_publishing_visits_day,
+         :end_publishing_visits_hour,
+         :count_visits,
+         :website_label,
+         :start_time,
+         :visit_bounce_rate,
+         :page_views_per_visit,
+         :avg_time_on_site,
+         :min_durations,
+         :min_pages,
+         :hourly_distribution,
+         :direct_medium_percent,
+         :organic_medium_percent,
+         :referral_medium_percent,
+         :url_root,
+         :advertising_percent,
+         :advertisers,
+         :periodicity,
+         :objective_id,
+         :website_id,
+         :policy_id,
+         :policy_type,
+         :count_weeks,
+         :min_count_page_advertiser,
+         :max_count_page_advertiser,
+         :min_duration_page_advertiser,
+         :max_duration_page_advertiser,
+         :percent_local_page_advertiser,
+         :duration_referral,
+         :min_count_page_organic,
+         :max_count_page_organic,
+         :min_duration_page_organic,
+         :max_duration_page_organic,
+         :min_duration,
+         :max_duration,
+         :objective_date,
+         :key,
+         :events,
+         :execution_mode,
+         :label_advertisings
+
+    def initialize(data)
+      @policy_id = data[:policy_id]
+      @policy_type = data[:policy_type]
+      @count_weeks = data[:count_weeks]
+      @execution_mode = data[:execution_mode]
+      @objective_id = data[:objective_id]
+      @count_visits = data[:count_visits]
+      @website_label = data[:website_label]
+      @website_id = data[:website_id]
+      @visit_bounce_rate = data[:visit_bounce_rate]
+      @page_views_per_visit = data[:page_views_per_visit]
+      @avg_time_on_site = data[:avg_time_on_site]
+      @min_durations= data[:min_durations]
+      @min_pages = data[:min_pages]
+      @hourly_distribution = data[:hourly_distribution]
+      @direct_medium_percent=data[:direct_medium_percent]
+      @organic_medium_percent=data[:organic_medium_percent]
+      @referral_medium_percent= data[:referral_medium_percent]
+      @advertising_percent= data[:advertising_percent]
+      @advertisers = data[:advertisers]
+      @periodicity = data[:periodicity]
+      @min_count_page_advertiser = data[:min_count_page_advertiser]
+      @max_count_page_advertiser = data[:max_count_page_advertiser]
+      @min_duration_page_advertiser = data[:min_duration_page_advertiser]
+      @max_duration_page_advertiser = data[:max_duration_page_advertiser]
+      @percent_local_page_advertiser = data[:percent_local_page_advertiser]
+      @duration_referral = data[:duration_referral]
+      @min_count_page_organic = data[:min_count_page_organic]
+      @max_count_page_organic = data[:max_count_page_organic]
+      @min_duration_page_organic = data[:min_duration_page_organic]
+      @max_duration_page_organic = data[:max_duration_page_organic]
+      @min_duration = data[:min_duration]
+      @max_duration = data[:max_duration]
+      @url_root = data[:url_root]
+      @label_advertisings = data[:label_advertisings]
+      @objective_date = IceCube::Schedule.from_yaml(@periodicity).start_time
+      @events = []
+      begin
+        parameters = Parameter.new(__FILE__)
+      rescue Exception => e
+        raise "loading parameter traffic failed : #{e.message}"
+
+      else
+        @evaluating_traffic_source_organic_day = parameters.evaluating_traffic_source_organic_day
+        @evaluating_traffic_source_organic_hour = parameters.evaluating_traffic_source_organic_hour
+        @evaluating_traffic_source_organic_min = parameters.evaluating_traffic_source_organic_min
+        @evaluating_traffic_source_referral_day = parameters.evaluating_traffic_source_referral_day
+        @evaluating_traffic_source_referral_hour = parameters.evaluating_traffic_source_referral_hour
+        @evaluating_traffic_source_referral_min = parameters.evaluating_traffic_source_referral_min
+        @choosing_device_platform_day = parameters.choosing_device_platform_day
+        @choosing_device_platform_hour = parameters.choosing_device_platform_hour
+        @choosing_device_platform_min = parameters.choosing_device_platform_min
+        @choosing_landing_pages_day = parameters.choosing_landing_pages_day
+        @choosing_landing_pages_hour = parameters.choosing_landing_pages_hour
+        @choosing_landing_pages_min = parameters.choosing_landing_pages_min
+        @building_visits_day = parameters.building_visits_day
+        @building_visits_hour = parameters.building_visits_hour
+        @building_visits_min = parameters.building_visits_min
+        @building_planification_day = parameters.building_planification_day
+        @building_planification_hour = parameters.building_planification_hour
+        @building_planification_min = parameters.building_planification_min
+        @extending_visits_day = parameters.extending_visits_day
+        @extending_visits_hour = parameters.extending_visits_hour
+        @extending_visits_min = parameters.extending_visits_min
+        @start_publishing_visits_day = parameters.start_publishing_visits_day
+        @start_publishing_visits_hour = parameters.start_publishing_visits_hour
+        @end_publishing_visits_day = parameters.end_publishing_visits_day
+        @end_publishing_visits_hour = parameters.end_publishing_visits_hour
+        @building_landing_pages_referral_day = parameters.building_landing_pages_referral_day
+        @building_landing_pages_referral_hour = parameters.building_landing_pages_referral_hour
+        @building_landing_pages_referral_min = parameters.building_landing_pages_referral_min
+        @building_landing_pages_organic_day = parameters.building_landing_pages_organic_day
+        @building_landing_pages_organic_hour = parameters.building_landing_pages_organic_hour
+        @building_landing_pages_organic_min = parameters.building_landing_pages_organic_min
+      end
+    end
+  end
+
+  class Rankobj <Objective
+    attr :evaluating_traffic_source_organic_day,
+         :evaluating_traffic_source_organic_hour,
+         :evaluating_traffic_source_organic_min,
+         :evaluating_traffic_source_referral_day,
+         :evaluating_traffic_source_referral_hour,
+         :evaluating_traffic_source_referral_min,
+         :choosing_device_platform_day,
+         :choosing_device_platform_hour,
+         :choosing_device_platform_min,
+         :choosing_landing_pages_day,
+         :choosing_landing_pages_hour,
+         :choosing_landing_pages_min,
+         :building_visits_day,
+         :building_visits_hour,
+         :building_visits_min,
+         :building_planification_day,
+         :building_planification_hour,
+         :building_planification_min,
+         :extending_visits_day,
+         :extending_visits_hour,
+         :extending_visits_min,
+         :start_publishing_visits_day,
+         :start_publishing_visits_hour,
+         :end_publishing_visits_day,
+         :end_publishing_visits_hour,
+         :count_visits,
+         :website_label,
+         :start_time,
+         :visit_bounce_rate,
+         :page_views_per_visit,
+         :avg_time_on_site,
+         :min_durations,
+         :min_pages,
+         :hourly_distribution,
+         :direct_medium_percent,
+         :organic_medium_percent,
+         :referral_medium_percent,
+         :url_root,
+         :advertising_percent,
+         :advertisers,
+         :periodicity,
+         :objective_id,
+         :website_id,
+         :policy_id,
+         :policy_type,
+         :count_weeks,
+         :min_count_page_advertiser,
+         :max_count_page_advertiser,
+         :min_duration_page_advertiser,
+         :max_duration_page_advertiser,
+         :percent_local_page_advertiser,
+         :duration_referral,
+         :min_count_page_organic,
+         :max_count_page_organic,
+         :min_duration_page_organic,
+         :max_duration_page_organic,
+         :min_duration,
+         :max_duration,
+         :objective_date,
+         :key,
+         :events,
+         :execution_mode,
+         :label_advertisings
+
+    def initialize(data)
+      @policy_id = data[:policy_id]
+      @policy_type = data[:policy_type]
+      @count_weeks = data[:count_weeks]
+      @execution_mode = data[:execution_mode]
+      @objective_id = data[:objective_id]
+      @count_visits = data[:count_visits]
+      @website_label = data[:website_label]
+      @website_id = data[:website_id]
+      @visit_bounce_rate = data[:visit_bounce_rate]
+      @page_views_per_visit = data[:page_views_per_visit]
+      @avg_time_on_site = data[:avg_time_on_site]
+      @min_durations= data[:min_durations]
+      @min_pages = data[:min_pages]
+      @hourly_distribution = data[:hourly_distribution]
+      @direct_medium_percent=data[:direct_medium_percent]
+      @organic_medium_percent=data[:organic_medium_percent]
+      @referral_medium_percent= data[:referral_medium_percent]
+      @advertising_percent= data[:advertising_percent]
+      @advertisers = data[:advertisers]
+      @periodicity = data[:periodicity]
+      @min_count_page_advertiser = data[:min_count_page_advertiser]
+      @max_count_page_advertiser = data[:max_count_page_advertiser]
+      @min_duration_page_advertiser = data[:min_duration_page_advertiser]
+      @max_duration_page_advertiser = data[:max_duration_page_advertiser]
+      @percent_local_page_advertiser = data[:percent_local_page_advertiser]
+      @duration_referral = data[:duration_referral]
+      @min_count_page_organic = data[:min_count_page_organic]
+      @max_count_page_organic = data[:max_count_page_organic]
+      @min_duration_page_organic = data[:min_duration_page_organic]
+      @max_duration_page_organic = data[:max_duration_page_organic]
+      @min_duration = data[:min_duration]
+      @max_duration = data[:max_duration]
+      @url_root = data[:url_root]
+      @label_advertisings = data[:label_advertisings]
+      @objective_date = IceCube::Schedule.from_yaml(@periodicity).start_time
+      @events = []
+      begin
+        parameters = Parameter.new(__FILE__)
+      rescue Exception => e
+        raise "loading parameter traffic failed : #{e.message}"
+
+      else
+        @evaluating_traffic_source_organic_day = parameters.evaluating_traffic_source_organic_day
+        @evaluating_traffic_source_organic_hour = parameters.evaluating_traffic_source_organic_hour
+        @evaluating_traffic_source_organic_min = parameters.evaluating_traffic_source_organic_min
+        @evaluating_traffic_source_referral_day = parameters.evaluating_traffic_source_referral_day
+        @evaluating_traffic_source_referral_hour = parameters.evaluating_traffic_source_referral_hour
+        @evaluating_traffic_source_referral_min = parameters.evaluating_traffic_source_referral_min
+        @choosing_device_platform_day = parameters.choosing_device_platform_day
+        @choosing_device_platform_hour = parameters.choosing_device_platform_hour
+        @choosing_device_platform_min = parameters.choosing_device_platform_min
+        @choosing_landing_pages_day = parameters.choosing_landing_pages_day
+        @choosing_landing_pages_hour = parameters.choosing_landing_pages_hour
+        @choosing_landing_pages_min = parameters.choosing_landing_pages_min
+        @building_visits_day = parameters.building_visits_day
+        @building_visits_hour = parameters.building_visits_hour
+        @building_visits_min = parameters.building_visits_min
+        @building_planification_day = parameters.building_planification_day
+        @building_planification_hour = parameters.building_planification_hour
+        @building_planification_min = parameters.building_planification_min
+        @extending_visits_day = parameters.extending_visits_day
+        @extending_visits_hour = parameters.extending_visits_hour
+        @extending_visits_min = parameters.extending_visits_min
+        @start_publishing_visits_day = parameters.start_publishing_visits_day
+        @start_publishing_visits_hour = parameters.start_publishing_visits_hour
+        @end_publishing_visits_day = parameters.end_publishing_visits_day
+        @end_publishing_visits_hour = parameters.end_publishing_visits_hour
+        @building_landing_pages_referral_day = parameters.building_landing_pages_referral_day
+        @building_landing_pages_referral_hour = parameters.building_landing_pages_referral_hour
+        @building_landing_pages_referral_min = parameters.building_landing_pages_referral_min
+        @building_landing_pages_organic_day = parameters.building_landing_pages_organic_day
+        @building_landing_pages_organic_hour = parameters.building_landing_pages_organic_hour
+        @building_landing_pages_organic_min = parameters.building_landing_pages_organic_min
+      end
+    end
+  end
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Objective SeaAttack
+  #---------------------------------------------------------------------------------------------------------------------
+  class Seaattackobj < Objective
+
+    attr :advertising_percent, # from data
+         :advertisers, # from data
+         :avg_time_on_site, # from data
+         :building_landing_pages_organic_day, # from parameter
+         :building_landing_pages_organic_hour, # from parameter
+         :building_landing_pages_organic_min, # from parameter
+         :building_planification_day, # from parameter
+         :building_planification_hour, # from parameter
+         :building_planification_min, # from parameter
+         :building_visits_day, # from parameter
+         :building_visits_hour, # from parameter
+         :building_visits_min, # from parameter
+         :choosing_device_platform_day, # from parameter
+         :choosing_device_platform_hour, # from parameter
+         :choosing_device_platform_min, # from parameter
+         :choosing_landing_pages_day, # from parameter
+         :choosing_landing_pages_hour, # from parameter
+         :choosing_landing_pages_min, # from parameter
+         :count_visits, # from data
+         :count_weeks, # from data
+         :end_publishing_visits_day, # from parameter
+         :end_publishing_visits_hour, # from parameter
+         :evaluating_traffic_source_organic_day, # from parameter
+         :evaluating_traffic_source_organic_hour, # from parameter
+         :evaluating_traffic_source_organic_min, # from parameter
+         :execution_mode, # from data
+         :extending_visits_day, # from parameter
+         :extending_visits_hour, # from parameter
+         :extending_visits_min, # from parameter
+         :hourly_distribution, # from data
+         :label_advertisings, # from data
+         :min_count_page_advertiser, # from data
+         :min_count_page_organic, # from data
+         :min_duration, # from data
+         :min_durations, # from data
+         :min_duration_page_advertiser, # from data
+         :min_duration_page_organic, # from data
+         :min_pages, # from data
+         :max_count_page_advertiser, # from data
+         :max_count_page_organic, # from data
+         :max_duration, # from data
+         :max_duration_page_advertiser, # from data
+         :max_duration_page_organic, # from data
+         :objective_date, # date d'exécution de l'objectif
+         :objective_id, # identifiant de objectif
+         :organic_medium_percent, # from data
+         :percent_local_page_advertiser, # from data
+         :periodicity, # from data
+         :page_views_per_visit, # from data
+         :policy_id, # from data
+         :policy_type, # from data
+         :start_publishing_visits_day, # from parameter
+         :start_publishing_visits_hour, # from parameter
+         :visit_bounce_rate, # from data
+         :website_id, # from data
+         :website_label # from data
+
+    def initialize(data)
+      super
+      @advertising_percent= data[:advertising_percent]
+      @advertisers = data[:advertisers]
+      @avg_time_on_site = data[:avg_time_on_site]
+      @direct_medium_percent=data[:direct_medium_percent] # =0
+      @execution_mode = data[:execution_mode]
+      @count_visits = data[:count_visits]
+      @count_weeks = data[:count_weeks]
+      @hourly_distribution = data[:hourly_distribution]
+      @label_advertisings = data[:label_advertisings]
+      @min_count_page_advertiser = data[:min_count_page_advertiser]
+      @min_count_page_organic = data[:min_count_page_organic]
+      @min_duration = data[:min_duration]
+      @min_durations= data[:min_durations]
+      @min_duration_page_advertiser = data[:min_duration_page_advertiser]
+      @min_duration_page_organic = data[:min_duration_page_organic]
+      @min_pages = data[:min_pages]
+      @max_count_page_advertiser = data[:max_count_page_advertiser]
+      @max_count_page_organic = data[:max_count_page_organic]
+      @max_duration = data[:max_duration]
+      @max_duration_page_advertiser = data[:max_duration_page_advertiser]
+      @max_duration_page_organic = data[:max_duration_page_organic]
+      @objective_date = IceCube::Schedule.from_yaml(data[:periodicity]).start_time
+      @objective_id = data[:objective_id]
+      @organic_medium_percent=data[:organic_medium_percent]
+      @percent_local_page_advertiser = data[:percent_local_page_advertiser]
+      @periodicity = data[:periodicity]
+      @page_views_per_visit = data[:page_views_per_visit]
+      @policy_id = data[:policy_id]
+      @policy_type = data[:policy_type]
+      @referral_medium_percent= data[:referral_medium_percent]  # =0
+      @visit_bounce_rate = data[:visit_bounce_rate]
+      @website_id = data[:website_id]
+      @website_label = data[:website_label]
+
+      begin
+        parameters = Parameter.new("seaattack.rb")
+
+      rescue Exception => e
+        raise "loading parameter seaattack failed : #{e.message}"
+
+      else
+        @building_landing_pages_organic_day = parameters.building_landing_pages_organic_day
+        @building_landing_pages_organic_hour = parameters.building_landing_pages_organic_hour
+        @building_landing_pages_organic_min = parameters.building_landing_pages_organic_min
+        @building_planification_day = parameters.building_planification_day
+        @building_planification_hour = parameters.building_planification_hour
+        @building_planification_min = parameters.building_planification_min
+        @building_visits_day = parameters.building_visits_day
+        @building_visits_hour = parameters.building_visits_hour
+        @building_visits_min = parameters.building_visits_min
+        @choosing_device_platform_day = parameters.choosing_device_platform_day
+        @choosing_device_platform_hour = parameters.choosing_device_platform_hour
+        @choosing_device_platform_min = parameters.choosing_device_platform_min
+        @choosing_landing_pages_day = parameters.choosing_landing_pages_day
+        @choosing_landing_pages_hour = parameters.choosing_landing_pages_hour
+        @choosing_landing_pages_min = parameters.choosing_landing_pages_min
+        @end_publishing_visits_day = parameters.end_publishing_visits_day
+        @end_publishing_visits_hour = parameters.end_publishing_visits_hour
+        @evaluating_traffic_source_organic_day = parameters.evaluating_traffic_source_organic_day
+        @evaluating_traffic_source_organic_hour = parameters.evaluating_traffic_source_organic_hour
+        @evaluating_traffic_source_organic_min = parameters.evaluating_traffic_source_organic_min
+        @extending_visits_day = parameters.extending_visits_day
+        @extending_visits_hour = parameters.extending_visits_hour
+        @extending_visits_min = parameters.extending_visits_min
+        @start_publishing_visits_day = parameters.start_publishing_visits_day
+        @start_publishing_visits_hour = parameters.start_publishing_visits_hour
+      end
     end
   end
 end

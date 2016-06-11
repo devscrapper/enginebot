@@ -322,7 +322,7 @@ module Planning
 
       begin
         @sem.synchronize {
-          @events.select { |e| e.key[:policy_id] == policy_id and e.policy_type == policy_type }.each{|evt|
+          @events.select { |e| e.key[:policy_id] == policy_id and e.policy_type == policy_type }.each { |evt|
             evt.execution_mode = execution_mode
           }
           save
@@ -338,6 +338,37 @@ module Planning
       end
     end
 
+    def update_sea_policy(policy_type, policy_id, data_sea)
+      # modifie les proprietes SEA (keywords, Label_advertisings)d'une policy SeaAttack
+      raise ArgumentError, policy_id if policy_id.nil?
+      raise ArgumentError, policy_type if policy_type.nil?
+      raise ArgumentError, data_sea if data_sea.nil?
+
+      begin
+        @sem.synchronize {
+          @events.select { |e| e.key[:policy_id] == policy_id and e.policy_type == policy_type }.each { |evt|
+            case evt.label
+              when "Publishing_visits", "Building_objectives"
+                #maj label_advertsings
+                evt.business[:label_advertisings] = data_sea[:label_advertisings]
+
+              when "Scraping_traffic_source_organic"
+                #maj keywords
+                evt.business[:keywords] = data_sea[:keywords]
+            end
+          }
+          save
+        }
+
+      rescue Exception => e
+        @logger.an_event.debug "cannot update sea properties events #{policy_type} policy #{policy_id} in calendar : #{e.message}"
+        raise "cannot update sea properties events #{policy_type} policy #{policy_id} in calendar : #{e.message}"
+
+      else
+        @logger.an_event.debug "update sea properties events #{policy_type} policy #{policy_id} in calendar"
+
+      end
+    end
 
     # enregister les Events issus d'une policy  dans le calendar
     # retourne Array contenant les Events
@@ -390,8 +421,8 @@ module Planning
       begin
         @logger.an_event.debug "register object <#{object}> data_event #{data_event}"
         require_relative "object2event/#{object.downcase}"
-        events = eval(object.capitalize!).new(data_event).to_event
-
+        # events = eval(object.capitalize!).new(data_event).to_event
+        events = eval(object.capitalize!).build(data_event).to_event
         @sem.synchronize {
           #suppression des objective existant de la policy : policy_id
           delete_objectives(events[0].policy_id, events[0].building_date)
@@ -555,7 +586,7 @@ module Planning
     def on_period(start_time, end_time) # end_time exclue
       all_events.select { |evt|
         # !evt.periodicity.occurrences_between(start_time, end_time - IceCube::ONE_SECOND).empty?
-       evt.periodicity.occurs_between?(start_time, end_time - IceCube::ONE_SECOND)
+        evt.periodicity.occurs_between?(start_time, end_time - IceCube::ONE_SECOND)
       }
     end
 

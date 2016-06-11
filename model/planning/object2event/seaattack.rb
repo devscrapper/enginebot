@@ -6,28 +6,38 @@ module Planning
   class Seaattack < Policy
 
 
-    attr :count_visits_per_day,
-         :start_date, #jour déclenchement
-         :keywords,
-         :advertising_percent,
-         :advertisers, #type d'advertisers => Adwords
-         :label_advertising #label de l'advert Adwords sur lequel il faut cliquer
-
+    attr :advertisers, #type d'advertisers => Adwords dans un premier temps
+         :advertising_percent, # le pourcentage de visit pour lesquelles on click sur un advert(100 par defaut)
+         :keywords, # mot cle associé au Sea (Adword)
+         :label_advertisings, #liste de label de l'advert Adwords sur lequel il faut cliquer
+         :min_count_page_advertiser, # nombre min de page consulter chez l'advertiser
+         :min_duration_page_advertiser, # duree min de consultation d'une page chez l'advertiser
+         :max_count_page_advertiser, # nombre max de page consulter chez l'advertiser
+         :max_duration_page_advertiser, # duree max de consultation d'une page chez l'advertiser
+         :percent_local_page_advertiser, # pourcentage de page consulter  chez l'advertiser avant de partir sur un site externe
+         :start_date, #jour d'exécution des objectives
+         :start_time # jour et heure d'exécution des objectives ; calcul des visits et debut de leur publication
 
     def initialize(data)
       super(data)
-      start_datetime =DateTime.parse(data[:start_date])
-      @start_time = Time.local(start_datetime.year, start_datetime.month, start_datetime.day, 0, 0)  # tranforme start_time de DateTime en Time pour IceCube
+      @advertisers = data[:advertisers]
+      @advertising_percent = 100 #toutes visits click sur un advert. aucun interer de generer des visit qui ne clique pas # car il existe déjà des visits qui utilisent les mot clés.
+      @keywords = data[:keywords]
+      @label_advertisings = data[:label_advertisings]
+      @min_count_page_advertiser = data[:min_count_page_advertiser]
+      @min_duration_page_advertiser = data[:min_duration_page_advertiser]
+      @max_count_page_advertiser = data[:max_count_page_advertiser]
+      @max_duration_page_advertiser = data[:max_duration_page_advertiser]
+      @percent_local_page_advertiser = data[:percent_local_page_advertiser]
+      @policy_type = "seaattack"
+      @start_date = Date.parse(data[:start_date])
+      @start_time = Time.local(@start_date.year, @start_date.month, @start_date.day, 0, 0) # tranforme start_time de DateTime en Time pour IceCube
       @registering_time = Time.now
 
-      @count_visits_per_day = data[:count_visits_per_day]
-      @policy_type = "seaattack"
-      @keywords = data[:keywords]
-      @label_advertising = data[:label_advertising]
-      @advertisers = data[:advertisers]
-      @advertising_percent = data[:advertising_percent]
-
-      raise "delay (#{@start_time - @registering_time}) is too short to prepare policy #{@policy_type}" if @start_time - @registering_time < 3 * IceCube::ONE_HOUR
+      # si la date d'execution des objectives est celle du jour d'enregstrement de la policy alors on planifier lexécution au plus tot
+      # sinon au jour planifé qui par exemple le lendemain
+      # dans tous les cas la préparation de la policy est déclenché au plus tot : des la reception de l'enregistrment de la policy
+      @start_time = @start_time <= @registering_time ? @registering_time : @start_time
 
       begin
         parameters = Parameter.new(__FILE__)
@@ -83,8 +93,7 @@ module Planning
                                                               :end_time => @registering_time +
                                                                   @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
 
-      periodicity_building_objectives.add_recurrence_rule IceCube::Rule.weekly.until(@registering_time +
-                                                                                         @count_weeks * IceCube::ONE_WEEK - IceCube::ONE_DAY)
+      periodicity_building_objectives.add_recurrence_rule IceCube::Rule.weekly.count(@count_weeks)
       @events += [
           Event.new("Scraping_traffic_source_organic",
                     periodicity_scraping_traffic_source_organic,
@@ -93,10 +102,8 @@ module Planning
                         :policy_type => @policy_type,
                         :policy_id => @policy_id,
                         :website_label => @website_label,
-                        :url_root => @url_root,
-                        :keywords => @keywords,
-                        :label_advertising => @label_advertising,
-                        :website_id => @website_id
+                        :website_id => @website_id,
+                        :keywords => @keywords
                     }),
           Event.new("Building_objectives",
                     periodicity_building_objectives,
@@ -108,10 +115,8 @@ module Planning
                         :policy_id => @policy_id,
                         :monday_start => @start_time,
                         :count_weeks => @count_weeks,
-                        :url_root => @url_root,
-                        :count_visits_per_day => @count_visits_per_day,
                         :advertising_percent => @advertising_percent,
-                        :label_advertising => @label_advertising,
+                        :label_advertisings => @label_advertisings,
                         :advertisers => @advertisers,
                         :min_count_page_advertiser => @min_count_page_advertiser,
                         :max_count_page_advertiser => @max_count_page_advertiser,

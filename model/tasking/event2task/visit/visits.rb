@@ -323,7 +323,7 @@ module Tasking
                                     max_duration_page_organic,
                                     min_duration,
                                     max_duration,
-                                    label_advertising=nil)
+                                    label_advertisings=nil)
         # le déclenchement de la publication est réalisée 2 heures avant l'heure d'exécution proprement dite des visits
         # de 22:00 à j-1 pour j à 00:00
         # à
@@ -372,7 +372,7 @@ module Tasking
                                       max_duration_page_organic,
                                       min_duration,
                                       max_duration,
-                                      label_advertising)
+                                      label_advertisings)
               start_date_time = v.start_date_time.strftime("%Y-%m-%d-%H-%M-%S")
 
               dir, ext = @execution_mode == "auto" ? [TMP, ".yml"] : [OUTPUT, ".man"]

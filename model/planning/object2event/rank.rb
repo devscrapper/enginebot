@@ -6,14 +6,16 @@ module Planning
   class Rank < Policy
 
     DELAY_TO_PREPARE = 1
-
+#TODO suppress toutes les données relatives à advertiser
     attr :count_visits_per_day,
+         :max_duration_scraping,
+         :url_root,
          :keywords
 
     def initialize(data)
       super(data)
       d = Date.parse(data[:monday_start])
-
+      @url_root = data[:url_root]
       # Time.local bug qd on soustrait 21 ou 22 heure en décalant le time zone d'une heure
       # remplacement de time.local par Time.utc().localtime
       @monday_start = Time.utc(d.year, d.month, d.day).localtime # iceCube a besoin d'un Time et pas d'un Date
@@ -24,6 +26,7 @@ module Planning
       @count_visits_per_day = data[:count_visits_per_day]
       @policy_type = "rank"
       @keywords = data[:keywords]
+      @max_duration_scraping = data[:max_duration_scraping]
       unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
         delay = (@monday_start.to_date - Time.now.to_date).to_i
         raise "#{delay} day(s) remaining before start policy, it is too short to prepare #{@policy_type} policy, #{DELAY_TO_PREPARE} day(s) are require !" if delay <= DELAY_TO_PREPARE

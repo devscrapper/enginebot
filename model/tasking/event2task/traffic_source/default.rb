@@ -29,24 +29,26 @@ module Tasking
       #--------------------------------------------------------------------------------------------------------------
       # make_repository
       #--------------------------------------------------------------------------------------------------------------
-      # interroge semrush pour recuperer une liste de mot clÃ© et leur landing link
+      #
       #--------------------------------------------------------------------------------------------------------------
       # input :
-      # RAS
+      # Array contenant des mot clés
       # output :
       # flow (repository-organic.txt) contenant les mots clÃ©
       #--------------------------------------------------------------------------------------------------------------
       # utiliser par policy rank
       #--------------------------------------------------------------------------------------------------------------
 
-      def make_repository(variables)
+      def make_repository(keywords)
         # :keywords => @data[:keywords],
-        # :label_advertising => @data[:label_advertising]
+        # :label_advertisings => @data[:label_advertisings]
         begin
-          str = variables.map { |k, v| v }.join(SEPARATOR)
 
           @repository_f = Flow.new(TMP, REPOSITORY, @policy_type, @website_label, @date_building, 1, ".txt")
-          @repository_f.write("#{str}#{EOFLINE}")
+          keywords.each{|keyword|
+                    @repository_f.write("#{keyword}#{EOFLINE}")
+          }
+
 
         rescue Exception => e
           @logger.an_event.fatal "repository organic for #{@website_label} and #{@date_building} : #{e.message}"
@@ -68,22 +70,22 @@ module Tasking
       #--------------------------------------------------------------------------------------------------------------
       # construit par defaut une evlautation pour seaattack ;
       # la page d'index sera tj 1 ;
-      # ajoute en fin de fichier output le libelle de l'adwrod : label_advertising
+      # aucune uri ne sera en output : uri.scheme, uri.hostname, uri.path
       #--------------------------------------------------------------------------------------------------------------
       # input :
       # reposotiru des keywords,  repository contient :
-      #  un couple keywords%SEP%label_advertising     issue de statupweb pour la policy seaattack
+      #  un couple keywords%SEP%label_advertisings     issue de statupweb pour la policy seaattack
       #
       # output :
       # flow (TRAFFIC_SOURCE)
+      # not use%SEP%not use%SEP%not use%SEP%(not set)%SEP%google%SEP%organic%SEP%keyword%SEP%1
       #--------------------------------------------------------------------------------------------------------------
       # utiliser par seaattack
       #--------------------------------------------------------------------------------------------------------------
-      def evaluate(count_max, url_root)
+      def evaluate(count_max)
 
         begin
           @logger.an_event.debug "organic count max : #{count_max}"
-          @logger.an_event.debug "organic url_root : #{url_root}"
 
           # on specifie l'extension car il peut exister un flow ayant le meme type_flow et label quand l'etap de suggestion
           # est en cours d'execution dont le resultat est stockÃ© dans un flow d'extension tmp
@@ -96,16 +98,12 @@ module Tasking
           # on ne fait que des append dans keyxord
           @traffic_source_f.empty if @traffic_source_f.exist?
 
-          keyword = @repository_f.load_to_array(EOFLINE)[0]
-          @logger.an_event.debug "organic keyword : #{keyword}"
-
-          uri = URI.parse(url_root)
-          @logger.an_event.debug "organic uri : #{uri}"
-
           p = ProgressBar.create(:title => "Evaluating keywords", :length => 100, :starting_at => 0, :total => count_max, :format => '%t, %c/%C, %a|%w|')
 
           count_max.times { | |
-            line = [uri.scheme, uri.hostname, uri.path, "(not set)", "google", "organic", keyword, 1].join(SEPARATOR)
+          keyword = @repository_f.load_to_array(EOFLINE).shuffle[0]
+          @logger.an_event.debug "organic keyword : #{keyword}"
+            line = ["not use", "not use", "not use", "(not set)", "google", "organic", keyword, 1].join(SEPARATOR)
             @logger.an_event.debug "organic line : #{line}"
 
             @traffic_source_f.append("#{line}#{EOFLINE}")

@@ -55,6 +55,7 @@ module Planning
       # http://localhost:9104/policies/traffic/?execution_mode=[manual|auto]&policy_id=#{policy_id}
       # http://localhost:9104/policies/rank/?execution_mode=[manual|auto]&policy_id=#{policy_id}
       # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+      # http://localhost:9104/policies/seaattack/?policy_id=#{policyid} payload = { ... }
 
       # DELETE
       # http://localhost:9104/traffics/<policy_id>
@@ -243,15 +244,38 @@ module Planning
 
                 when "policies"
                   policy_type = ress_id
-                  raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "policy_id"}) if query_values["policy_id"].nil? or query_values["policy_id"].empty?
-                  raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "execution_mode"}) if query_values["execution_mode"].nil? or query_values["execution_mode"].empty?
-                  policy_id = query_values["policy_id"]
-                  # http://localhost:9104/policies/traffic/?execution_mode=[manual|auto]&policy_id=#{policy_id}
-                  # http://localhost:9104/policies/rank/?execution_mode=[manual|auto]&policy_id=#{policy_id}
-                  # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+                  case policy_type
+                    when "traffic", "rank"
+                      raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "policy_id"}) if query_values["policy_id"].nil? or query_values["policy_id"].empty?
+                      raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "execution_mode"}) if query_values["execution_mode"].nil? or query_values["execution_mode"].empty?
+                      policy_id = query_values["policy_id"]
+                      # http://localhost:9104/policies/traffic/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+                      # http://localhost:9104/policies/rank/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+                      # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
 
-                  @logger.an_event.info "update policy #{policy_type} #{policy_id} with #{query_values["execution_mode"]} execution mode to repository"
-                  @calendar.update_execution_mode_policy(policy_type, policy_id.to_i, query_values["execution_mode"])
+                      @logger.an_event.info "update policy #{policy_type} #{policy_id} with #{query_values["execution_mode"]} execution mode to repository"
+                      @calendar.update_execution_mode_policy(policy_type, policy_id.to_i, query_values["execution_mode"])
+                    when "seaattack"
+                      raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "policy_id"}) if query_values["policy_id"].nil? or query_values["policy_id"].empty?
+                      policy_id = query_values["policy_id"]
+                      if query_values["execution_mode"].nil?
+                        # http://localhost:9104/policies/seaattack/?policy_id=#{policy_id}
+                        @http_content = JSON.parse(@http_content, {:symbolize_names => true})
+                        @calendar.update_sea_policy(policy_type, policy_id.to_i, @http_content)
+
+                      else
+                        raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "execution_mode"}) if query_values["execution_mode"].empty?
+                        # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+                        policy_id = query_values["policy_id"]
+                        @logger.an_event.info "update policy #{policy_type} #{policy_id} with #{query_values["execution_mode"]} execution mode to repository"
+                        @calendar.update_execution_mode_policy(policy_type, policy_id.to_i, query_values["execution_mode"])
+
+                      end
+                    else
+                      raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_id})
+
+                  end
+
 
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})

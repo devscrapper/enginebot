@@ -96,7 +96,7 @@ set :branch, "master" # version à déployer
 set :keep_releases, 3 # nombre de version conservées
 set :server_name, "192.168.1.85" # adresse du server de destination
 set :deploy_to, "/usr/local/rvm/wrappers/#{application}" # repertoire de deploiement de l'application
-set :server_name, "olgadays.synology.me" #adresse du server de destination hors reseau local
+set :server_name, "olgadays.synology.me:22" #adresse du server de destination hors reseau local
 set :deploy_via, :copy # using a local scm repository which cannot be accessed from the remote machine.
 set :user, "eric"
 set :password, "Brembo01"
@@ -111,9 +111,26 @@ before 'rvm:install_ruby', 'rvm:create_gemset' #, 'avant:install_ruby'
 after 'rvm:install_ruby', 'apres:install_ruby'
 before 'deploy:setup', 'rvm:create_alias', 'rvm:create_wrappers', 'deploy:gem_list'
 after "deploy:update", "apres:update", "deploy:start", "deploy:status"
-before "deploy:update" , "deploy:stop", "log:delete"
+before "deploy:update", "deploy:stop", "log:delete"
 before "data:clear", "deploy:stop"
 after "data:clear", "deploy:start"
+
+#----------------------------------------------------------------------------------------------------------------------
+# task list : output
+#----------------------------------------------------------------------------------------------------------------------
+namespace :output do
+
+  task :down, :roles => :app do
+    capture("ls #{File.join(current_path, 'output', '*.yml')}").split(/\r\n/).each { |log_file|
+      get log_file, File.join(File.dirname(__FILE__), '..', 'output', File.basename(log_file))
+    }
+  end
+
+  task :delete, :roles => :app do
+    run "rm #{File.join(current_path, 'output', '*')}"
+  end
+
+end
 
 #----------------------------------------------------------------------------------------------------------------------
 # task list : log
@@ -127,7 +144,10 @@ namespace :log do
   end
 
   task :delete, :roles => :app do
-    run "rm #{File.join(current_path, 'log', '*')}"
+    begin
+      run "rm #{File.join(current_path, 'log', '*.deb')}"
+    rescue Exception => e
+    end
   end
 
 end
@@ -194,7 +214,9 @@ namespace :deploy do
   task :gem_list, :roles => :app do
     #installation des gem dans le gesmset
     gemlist(File.expand_path(File.join("..", "..", "Gemfile"), __FILE__)).each { |parse|
-      run_without_rvm("#{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem query -I #{parse[:name].strip} -v #{parse[:version].strip} ; if [  $? -eq 0 ] ; then #{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem install #{parse[:name].strip} -v #{parse[:version].strip} -N ; else echo \"gem #{parse[:name].strip} #{parse[:version].strip} already installed\" ; fi")
+      unless parse.nil?
+        run_without_rvm("#{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem query -I #{parse[:name].strip} -v #{parse[:version].strip} ; if [  $? -eq 0 ] ; then #{path_to_bin_rvm(:with_ruby => rvm_ruby_string_evaluated)} gem install #{parse[:name].strip} -v #{parse[:version].strip} -N ; else echo \"gem #{parse[:name].strip} #{parse[:version].strip} already installed\" ; fi")
+      end
     }
   end
 end
@@ -208,7 +230,7 @@ namespace :data do
       begin
         run "rm -f #{File.join(current_path, dir, '*') }"
       rescue Exception => e
-         p "#{dir} not clear : #{e.message}"
+        p "#{dir} not clear : #{e.message}"
       end
     }
   end
@@ -219,8 +241,8 @@ end
 #----------------------------------------------------------------------------------------------------------------------
 namespace :avant do
   task :install_rvm do
-    run_without_rvm ("#{sudo} apt update")
-    run_without_rvm ("#{sudo} apt -y full-upgrade")
+    run_without_rvm ("#{sudo} apt get update")
+    run_without_rvm ("#{sudo} apt full-upgrade -y")
   end
 end
 #----------------------------------------------------------------------------------------------------------------------

@@ -249,7 +249,7 @@ module Tasking
            :max_duration_page_organic,
            :min_duration,
            :max_duration,
-           :label_advertising
+           :label_advertisings
 
       def initialize(visit,
                      min_count_page_advertiser=nil,
@@ -264,7 +264,7 @@ module Tasking
                      max_duration_page_organic=nil,
                      min_duration=nil,
                      max_duration=nil,
-                     label_advertising=nil)
+                     label_advertisings=nil)
         super(visit)
         @min_count_page_advertiser = min_count_page_advertiser
         @max_count_page_advertiser = max_count_page_advertiser
@@ -278,12 +278,12 @@ module Tasking
         @max_duration_page_organic = max_duration_page_organic
         @min_duration = min_duration
         @max_duration = max_duration
-        @label_advertising = label_advertising
+        @label_advertisings = label_advertisings
       end
 
       def to_file
         require 'uuid'
-        advertiser_durations_size = Random.rand(@min_count_page_advertiser..@max_count_page_advertiser) # calculé par engine_bot
+        advertiser_durations_size = Random.rand(@min_count_page_advertiser..@max_count_page_advertiser) unless @advert == "none"
 
         visit = {:visit => {:id => @id_visit,
                             :start_date_time => @start_date_time,
@@ -301,7 +301,7 @@ module Tasking
                                                                                                    {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
                                                                                                     :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
                                                                                                : #advert = Adword
-                                                                                                   {:label => @label_advertising, #fourni par statupweb lors de la creation de la policy seaattack
+                                                                                                   {:label => @label_advertisings, #fourni par statupweb lors de la creation de la policy seaattack
                                                                                                     :durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
                                                                                                     :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
                             } #calculé par engine_bot

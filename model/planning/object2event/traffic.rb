@@ -6,7 +6,8 @@ module Planning
   class Traffic < Policy
     include Errors
     DURATION_TOO_SHORT = 2100
-    attr :scraping_traffic_source_referral_day,
+    attr :max_duration_scraping,
+         :scraping_traffic_source_referral_day,
          :scraping_traffic_source_referral_hour,
          :scraping_traffic_source_referral_min,
          :change_count_visits_percent,
@@ -18,12 +19,19 @@ module Planning
          :advertisers,
          :count_page,
          :schemes,
-         :types
+         :types,
+         :url_root,
+         :min_count_page_advertiser, # nombre min de page consulter chez l'advertiser
+         :max_count_page_advertiser, # nombre max de page consulter chez l'advertiser
+         :min_duration_page_advertiser, # duree min de consultation d'une page chez l'advertiser
+         :max_duration_page_advertiser, # duree max de consultation d'une page chez l'advertiser
+         :percent_local_page_advertiser # pourcentage de page consulter  chez l'advertiser avant de partir sur un site externe
+
 
     def initialize(data)
       super(data)
       d = Date.parse(data[:monday_start])
-
+      @url_root = data[:url_root]
       # Time.local bug qd on soustrait 21 ou 22 heure en décalant le time zone d'une heure
       # remplacement de time.local par Time.utc().localtime
       @monday_start = Time.utc(d.year, d.month, d.day).localtime # iceCube a besoin d'un Time et pas d'un Date
@@ -38,6 +46,7 @@ module Planning
       @organic_medium_percent=data[:organic_medium_percent]
       @referral_medium_percent= data[:referral_medium_percent]
       @advertising_percent= data[:advertising_percent]
+      @max_duration_scraping = data[:max_duration_scraping]
       @advertisers = data[:advertisers]
       @count_page = data[:count_page]
       @schemes = data[:schemes]
@@ -45,6 +54,11 @@ module Planning
       @url_root = data[:url_root]
       @policy_type = "traffic"
       @max_duration_scraping = data[:max_duration_scraping]
+      @min_count_page_advertiser = data[:min_count_page_advertiser]
+      @max_count_page_advertiser = data[:max_count_page_advertiser]
+      @min_duration_page_advertiser = data[:min_duration_page_advertiser]
+      @max_duration_page_advertiser = data[:max_duration_page_advertiser]
+      @percent_local_page_advertiser = data[:percent_local_page_advertiser]
       unless data[:monday_start].nil? # iceCube a besoin d'un Time et pas d'un Date
         delay = (@monday_start.to_date - Time.now.to_date).to_i
         raise Error.new(DURATION_TOO_SHORT,

@@ -31,54 +31,43 @@ module Planning
          :building_landing_pages_organic_day,
          :building_landing_pages_organic_hour,
          :building_landing_pages_organic_min,
-         :website_label,
-         :website_id,
-         :policy_id,
-         :policy_type,
-         :count_weeks,
+         :website_label,  #utilisé par SeaAttack(sea.label)
+         :website_id,  #utilisé par SeaAttack(sea.id)
+         :policy_id, #utilisé par SeaAttack
+         :policy_type, #utilisé par SeaAttack
+         :count_weeks,  #utilisé par SeaAttack
          :monday_start,
          :registering_date,
-         :registering_time,
-         :url_root,
-         :min_count_page_advertiser,
-         :max_count_page_advertiser,
-         :min_duration_page_advertiser,
-         :max_duration_page_advertiser,
-         :percent_local_page_advertiser,
+         :registering_time,  # jour et heure d'enregistrement de la policy
          :duration_referral,
-         :min_count_page_organic,
-         :max_count_page_organic,
-         :min_duration_page_organic,
-         :max_duration_page_organic,
-         :min_duration,
-         :max_duration,
-         :min_duration_website,
-         :min_pages_website,
+         :min_count_page_organic, #utilisé par SeaAttack
+         :max_count_page_organic, #utilisé par SeaAttack
+         :min_duration_page_organic, #utilisé par SeaAttack
+         :max_duration_page_organic, #utilisé par SeaAttack
+         :min_duration, #utilisé par SeaAttack
+         :max_duration, #utilisé par SeaAttack
+         :min_duration_website, #utilisé par SeaAttack
+         :min_pages_website, #utilisé par SeaAttack
          :hourly_daily_distribution,
          :percent_new_visit,
          :visit_bounce_rate,
          :avg_time_on_site,
          :page_views_per_visit,
          :count_visits_per_day,
-         :statistic_type,
-         :max_duration_scraping,
+         :statistic_type,  #utilisé par SeaAttack
          :key,
          :events,
          :building_behaviour, #utiliser pour passer l'event aux class Trafficn et Rank pour affecter la var pre_task
          :building_hourly_daily_distribution, #utiliser pour passer l'event aux class Trafficn et Rank pour affecter la var pre_task
-         :execution_mode # mode d'execution de la policy : manuel (Piloté au moyen de statupweb) ou autom (piloté par Calendar)
+         :execution_mode #utilisé par SeaAttack # mode d'execution de la policy : manuel (Piloté au moyen de statupweb) ou autom (piloté par Calendar)
 
     def initialize(data)
       @website_label = data[:website_label]
       @count_weeks = data[:count_weeks]
       @website_id = data[:website_id]
       @policy_id = data[:policy_id]
-      @url_root = data[:url_root]
-      @min_count_page_advertiser = data[:min_count_page_advertiser]
-      @max_count_page_advertiser = data[:max_count_page_advertiser]
-      @min_duration_page_advertiser = data[:min_duration_page_advertiser]
-      @max_duration_page_advertiser = data[:max_duration_page_advertiser]
-      @percent_local_page_advertiser = data[:percent_local_page_advertiser]
+
+
       @duration_referral = data[:duration_referral]
       @min_count_page_organic = data[:min_count_page_organic]
       @max_count_page_organic = data[:max_count_page_organic]
@@ -89,7 +78,6 @@ module Planning
       @min_duration_website = data[:min_duration_website]
       @min_pages_website = data[:min_pages_website]
       @statistics_type = data[:statistics_type]
-      @max_duration_scraping = data[:max_duration_scraping]
       @execution_mode = data[:execution_mode]
       if @statistics_type == "custom"
         @hourly_daily_distribution = data[:hourly_daily_distribution]

@@ -183,7 +183,7 @@ module Tasking
           when :rank, :seaattack
             TrafficSource::Default.new(@data[:website_label],
                                        @data[:building_date],
-                                       @data[:policy_type]).make_repository(:keywords => @data[:keywords])
+                                       @data[:policy_type]).make_repository(@data[:keywords])
 
 
         end
@@ -237,7 +237,7 @@ module Tasking
           when :seaattack
             TrafficSource::Default.new(@data[:website_label],
                                        @data[:building_date],
-                                       @data[:policy_type]).evaluate(@data[:count_max], @data[:url_root])
+                                       @data[:policy_type]).evaluate(@data[:count_max])
         end
       }
     end
@@ -286,11 +286,9 @@ module Tasking
                                       @data[:website_id],
                                       @data[:policy_type],
                                       @data[:count_weeks],
-                                      @data[:execution_mode]).Building_objectives_seaattack(is_nil_or_empty? { @data[:count_visits_per_day] }.to_i,
-                                                                                            is_nil_or_empty? { @data[:advertising_percent] }.to_i,
+                                      @data[:execution_mode]).Building_objectives_seaattack(is_nil_or_empty? { @data[:advertising_percent] }.to_i,
                                                                                             is_nil_or_empty? { @data[:advertisers] },
                                                                                             is_nil_or_empty? { @data[:monday_start] },
-                                                                                            is_nil_or_empty? { @data[:url_root] },
                                                                                             is_nil_or_empty? { @data[:min_count_page_advertiser] },
                                                                                             is_nil_or_empty? { @data[:max_count_page_advertiser] },
                                                                                             is_nil_or_empty? { @data[:min_duration_page_advertiser] },
@@ -304,7 +302,7 @@ module Tasking
                                                                                             is_nil_or_empty? { @data[:max_duration] },
                                                                                             is_nil_or_empty? { @data[:min_duration_website] },
                                                                                             is_nil_or_empty? { @data[:min_pages_website] },
-                                                                                            is_nil_or_empty? { @data[:label_advertising] })
+                                                                                            is_nil_or_empty? { @data[:label_advertisings] })
           when "rank"
             Objective::Objectives.new(@data[:website_label],
                                       @data[:building_date],
@@ -403,7 +401,7 @@ module Tasking
                                                                             @data[:max_duration_page_organic].to_i,
                                                                             @data[:min_duration].to_i,
                                                                             @data[:max_duration].to_i,
-                                                                            @data[:label_advertising]) #label_advertising=nil pour traffic & rank   => reviser le modèle objet pour spécialiser les task en fonction des policy
+                                                                            @data[:label_advertisings]) #label_advertising=nil pour traffic & rank   => reviser le modèle objet pour spécialiser les task en fonction des policy
 
       }
     end
