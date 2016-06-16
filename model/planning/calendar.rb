@@ -350,7 +350,7 @@ module Planning
             case evt.label
               when "Publishing_visits", "Building_objectives"
                 #maj label_advertsings
-                evt.business[:label_advertisings] = data_sea[:label_advertisings]
+                evt.business[:fqdn_advertisings] = data_sea[:fqdn_advertisings]
 
               when "Scraping_traffic_source_organic"
                 #maj keywords

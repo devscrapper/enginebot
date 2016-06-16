@@ -41,7 +41,7 @@ module Tasking
 
       def make_repository(keywords)
         # :keywords => @data[:keywords],
-        # :label_advertisings => @data[:label_advertisings]
+        # :fqdn_advertisings => @data[:fqdn_advertisings]
         begin
 
           @repository_f = Flow.new(TMP, REPOSITORY, @policy_type, @website_label, @date_building, 1, ".txt")
@@ -74,7 +74,7 @@ module Tasking
       #--------------------------------------------------------------------------------------------------------------
       # input :
       # reposotiru des keywords,  repository contient :
-      #  un couple keywords%SEP%label_advertisings     issue de statupweb pour la policy seaattack
+      #  un couple keywords%SEP%fqdn_advertisings     issue de statupweb pour la policy seaattack
       #
       # output :
       # flow (TRAFFIC_SOURCE)

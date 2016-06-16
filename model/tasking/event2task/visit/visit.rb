@@ -249,7 +249,7 @@ module Tasking
            :max_duration_page_organic,
            :min_duration,
            :max_duration,
-           :label_advertisings
+           :fqdn_advertisings
 
       def initialize(visit,
                      min_count_page_advertiser=nil,
@@ -264,7 +264,7 @@ module Tasking
                      max_duration_page_organic=nil,
                      min_duration=nil,
                      max_duration=nil,
-                     label_advertisings=nil)
+                     fqdn_advertisings=nil)
         super(visit)
         @min_count_page_advertiser = min_count_page_advertiser
         @max_count_page_advertiser = max_count_page_advertiser
@@ -278,7 +278,7 @@ module Tasking
         @max_duration_page_organic = max_duration_page_organic
         @min_duration = min_duration
         @max_duration = max_duration
-        @label_advertisings = label_advertisings
+        @fqdn_advertisings = fqdn_advertisings
       end
 
       def to_file
@@ -288,11 +288,11 @@ module Tasking
         visit = {:visit => {:id => @id_visit,
                             :start_date_time => @start_date_time,
                             :type => @type.to_sym,
-                            :landing => {:scheme => @landing_page_scheme,
+                            :landing => {:scheme => @landing_page_scheme,    #TODO supprimer landing link pour seaattack
                                          :fqdn => @landing_page_hostname,
                                          :path => @landing_page_path
                             },
-                            :durations => durations,
+                            :durations => durations, #TODO supprimer durations pour sea_attack
                             :referrer => {:medium => @medium
                             },
                             :advert => @advert == "none" ? {:advertising => @advert.to_sym} : {:advertising => @advert.to_sym,
@@ -300,8 +300,8 @@ module Tasking
                                                                                                    # advert = Adsense
                                                                                                    {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
                                                                                                     :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
-                                                                                               : #advert = Adword
-                                                                                                   {:label => @label_advertisings, #fourni par statupweb lors de la creation de la policy seaattack
+                                                                                               : #advert = Adword      #TODO mettre un s à label idem dans statupbot
+                                                                                                   {:label => @fqdn_advertisings, #fourni par statupweb lors de la creation de la policy seaattack
                                                                                                     :durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
                                                                                                     :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
                             } #calculé par engine_bot

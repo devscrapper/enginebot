@@ -320,13 +320,21 @@ module Planning
       #---------------------------------------------------------------------------------------------------------------
       #-----------Publishing_visits------------------------------------------------------------------
       #---------------------------------------------------------------------------------------------------------------
-      periodicity = IceCube::Schedule.new(@objective_date +
-                                              @start_publishing_visits_day * IceCube::ONE_DAY +
-                                              @start_publishing_visits_hour * IceCube::ONE_HOUR,
-                                          :end_time => @objective_date +
-                                              @start_publishing_visits_day * IceCube::ONE_DAY +
-                                              @start_publishing_visits_hour * IceCube::ONE_HOUR)
-      periodicity.add_recurrence_rule IceCube::Rule.hourly.count(24)
+      case @policy_type
+        when "traffic", "rank"
+          periodicity = IceCube::Schedule.new(@objective_date +
+                                                  @start_publishing_visits_day * IceCube::ONE_DAY +
+                                                  @start_publishing_visits_hour * IceCube::ONE_HOUR,
+                                              :end_time => @objective_date +
+                                                  @start_publishing_visits_day * IceCube::ONE_DAY +
+                                                  @start_publishing_visits_hour * IceCube::ONE_HOUR)
+          periodicity.add_recurrence_rule IceCube::Rule.hourly.count(24)
+        when "seaattack"
+          @objective_date +
+                                                            @start_publishing_visits_day * IceCube::ONE_DAY +
+                                                            @start_publishing_visits_hour * IceCube::ONE_HOUR
+      end
+
 
       @events << Event.new("Publishing_visits",
                            periodicity,
@@ -349,7 +357,7 @@ module Planning
                                :max_duration_page_organic => @max_duration_page_organic,
                                :min_duration => @min_duration,
                                :max_duration => @max_duration,
-                               :label_advertisings => @label_advertisings
+                               :fqdn_advertisings => @fqdn_advertisings
                            })
 
 
@@ -419,7 +427,7 @@ module Planning
          :key,
          :events,
          :execution_mode,
-         :label_advertisings
+         :fqdn_advertisings
 
     def initialize(data)
       @policy_id = data[:policy_id]
@@ -455,7 +463,7 @@ module Planning
       @min_duration = data[:min_duration]
       @max_duration = data[:max_duration]
       @url_root = data[:url_root]
-      @label_advertisings = data[:label_advertisings]
+      @fqdn_advertisings = data[:fqdn_advertisings]
       @objective_date = IceCube::Schedule.from_yaml(@periodicity).start_time
       @events = []
       begin
@@ -562,7 +570,7 @@ module Planning
          :key,
          :events,
          :execution_mode,
-         :label_advertisings
+         :fqdn_advertisings
 
     def initialize(data)
       @policy_id = data[:policy_id]
@@ -598,7 +606,7 @@ module Planning
       @min_duration = data[:min_duration]
       @max_duration = data[:max_duration]
       @url_root = data[:url_root]
-      @label_advertisings = data[:label_advertisings]
+      @fqdn_advertisings = data[:fqdn_advertisings]
       @objective_date = IceCube::Schedule.from_yaml(@periodicity).start_time
       @events = []
       begin
@@ -667,8 +675,6 @@ module Planning
          :choosing_landing_pages_min, # from parameter
          :count_visits, # from data
          :count_weeks, # from data
-         :end_publishing_visits_day, # from parameter
-         :end_publishing_visits_hour, # from parameter
          :evaluating_traffic_source_organic_day, # from parameter
          :evaluating_traffic_source_organic_hour, # from parameter
          :evaluating_traffic_source_organic_min, # from parameter
@@ -677,7 +683,7 @@ module Planning
          :extending_visits_hour, # from parameter
          :extending_visits_min, # from parameter
          :hourly_distribution, # from data
-         :label_advertisings, # from data
+         :fqdn_advertisings, # from data
          :min_count_page_advertiser, # from data
          :min_count_page_organic, # from data
          :min_duration, # from data
@@ -714,7 +720,7 @@ module Planning
       @count_visits = data[:count_visits]
       @count_weeks = data[:count_weeks]
       @hourly_distribution = data[:hourly_distribution]
-      @label_advertisings = data[:label_advertisings]
+      @fqdn_advertisings = data[:fqdn_advertisings]
       @min_count_page_advertiser = data[:min_count_page_advertiser]
       @min_count_page_organic = data[:min_count_page_organic]
       @min_duration = data[:min_duration]
@@ -735,7 +741,7 @@ module Planning
       @page_views_per_visit = data[:page_views_per_visit]
       @policy_id = data[:policy_id]
       @policy_type = data[:policy_type]
-      @referral_medium_percent= data[:referral_medium_percent]  # =0
+      @referral_medium_percent= data[:referral_medium_percent] # =0
       @visit_bounce_rate = data[:visit_bounce_rate]
       @website_id = data[:website_id]
       @website_label = data[:website_label]
@@ -762,8 +768,6 @@ module Planning
         @choosing_landing_pages_day = parameters.choosing_landing_pages_day
         @choosing_landing_pages_hour = parameters.choosing_landing_pages_hour
         @choosing_landing_pages_min = parameters.choosing_landing_pages_min
-        @end_publishing_visits_day = parameters.end_publishing_visits_day
-        @end_publishing_visits_hour = parameters.end_publishing_visits_hour
         @evaluating_traffic_source_organic_day = parameters.evaluating_traffic_source_organic_day
         @evaluating_traffic_source_organic_hour = parameters.evaluating_traffic_source_organic_hour
         @evaluating_traffic_source_organic_min = parameters.evaluating_traffic_source_organic_min

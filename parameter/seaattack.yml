@@ -27,8 +27,6 @@ development:
   :choosing_landing_pages_day: 0
   :choosing_landing_pages_hour: 0
   :choosing_landing_pages_min: 0
-  :end_publishing_visits_day: 1
-  :end_publishing_visits_hour: 0
   :evaluating_traffic_source_organic_day: 0
   :evaluating_traffic_source_organic_hour: 0
   :evaluating_traffic_source_organic_min: 35

@@ -137,7 +137,7 @@ module Tasking
                         max_duration_page_organic,
                         min_duration,
                         max_duration,
-                        "") #label_advertisings utilisé par seaattack
+                        "") #fqdn_advertisings utilisé par seaattack
         }
       end
 
@@ -200,7 +200,7 @@ module Tasking
                         max_duration_page_organic,
                         min_duration,
                         max_duration,
-                        "") #label_advertisings utilisé par seaattack
+                        "") #fqdn_advertisings utilisé par seaattack
         }
 
       end
@@ -221,7 +221,7 @@ module Tasking
                                         max_duration,
                                         min_duration_website,
                                         min_pages_website,
-                                        label_advertisings)
+                                        fqdn_advertisings)
 
         @logger.an_event.debug "Building objectives for <#{@policy_type}> <#{@website_label}> <#{@date_building}> is starting"
         @logger.an_event.debug "monday_start #{monday_start}"
@@ -264,7 +264,7 @@ module Tasking
                         max_duration_page_organic,
                         min_duration,
                         max_duration,
-                        label_advertisings)
+                        fqdn_advertisings)
         }
 
       end

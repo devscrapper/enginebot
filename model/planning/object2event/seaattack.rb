@@ -9,7 +9,7 @@ module Planning
     attr :advertisers, #type d'advertisers => Adwords dans un premier temps
          :advertising_percent, # le pourcentage de visit pour lesquelles on click sur un advert(100 par defaut)
          :keywords, # mot cle associé au Sea (Adword)
-         :label_advertisings, #liste de label de l'advert Adwords sur lequel il faut cliquer
+         :fqdn_advertisings, #liste de fqdn de l'advert Adwords sur lequel il faut cliquer
          :min_count_page_advertiser, # nombre min de page consulter chez l'advertiser
          :min_duration_page_advertiser, # duree min de consultation d'une page chez l'advertiser
          :max_count_page_advertiser, # nombre max de page consulter chez l'advertiser
@@ -23,7 +23,7 @@ module Planning
       @advertisers = data[:advertisers]
       @advertising_percent = 100 #toutes visits click sur un advert. aucun interer de generer des visit qui ne clique pas # car il existe déjà des visits qui utilisent les mot clés.
       @keywords = data[:keywords]
-      @label_advertisings = data[:label_advertisings]
+      @fqdn_advertisings = data[:fqdn_advertisings]
       @min_count_page_advertiser = data[:min_count_page_advertiser]
       @min_duration_page_advertiser = data[:min_duration_page_advertiser]
       @max_count_page_advertiser = data[:max_count_page_advertiser]
@@ -116,7 +116,7 @@ module Planning
                         :monday_start => @start_time,
                         :count_weeks => @count_weeks,
                         :advertising_percent => @advertising_percent,
-                        :label_advertisings => @label_advertisings,
+                        :fqdn_advertisings => @fqdn_advertisings,
                         :advertisers => @advertisers,
                         :min_count_page_advertiser => @min_count_page_advertiser,
                         :max_count_page_advertiser => @max_count_page_advertiser,

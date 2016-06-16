@@ -302,7 +302,7 @@ module Tasking
                                                                                             is_nil_or_empty? { @data[:max_duration] },
                                                                                             is_nil_or_empty? { @data[:min_duration_website] },
                                                                                             is_nil_or_empty? { @data[:min_pages_website] },
-                                                                                            is_nil_or_empty? { @data[:label_advertisings] })
+                                                                                            is_nil_or_empty? { @data[:fqdn_advertisings] })
           when "rank"
             Objective::Objectives.new(@data[:website_label],
                                       @data[:building_date],
@@ -384,24 +384,46 @@ module Tasking
 
     def Publishing_visits
       execute(__method__) {
-        Visit::Visits.new(@data[:website_label],
-                          @data[:building_date],
-                          @data[:policy_type],
-                          @data[:website_id],
-                          @data[:policy_id],
-                          @data[:execution_mode]).Publishing_visits_by_hour(@data[:min_count_page_advertiser].to_i,
-                                                                            @data[:max_count_page_advertiser].to_i,
-                                                                            @data[:min_duration_page_advertiser].to_i,
-                                                                            @data[:max_duration_page_advertiser].to_i,
-                                                                            @data[:percent_local_page_advertiser].to_i,
-                                                                            @data[:duration_referral].to_i,
-                                                                            @data[:min_count_page_organic].to_i,
-                                                                            @data[:max_count_page_organic].to_i,
-                                                                            @data[:min_duration_page_orgcanic].to_i,
-                                                                            @data[:max_duration_page_organic].to_i,
-                                                                            @data[:min_duration].to_i,
-                                                                            @data[:max_duration].to_i,
-                                                                            @data[:label_advertisings]) #label_advertising=nil pour traffic & rank   => reviser le modèle objet pour spécialiser les task en fonction des policy
+        case @data[:policy_type]
+          when "traffic", "rank"
+            Visit::Visits.new(@data[:website_label],
+                              @data[:building_date],
+                              @data[:policy_type],
+                              @data[:website_id],
+                              @data[:policy_id],
+                              @data[:execution_mode]).Publishing_visits_by_hour(@data[:min_count_page_advertiser].to_i,
+                                                                                @data[:max_count_page_advertiser].to_i,
+                                                                                @data[:min_duration_page_advertiser].to_i,
+                                                                                @data[:max_duration_page_advertiser].to_i,
+                                                                                @data[:percent_local_page_advertiser].to_i,
+                                                                                @data[:duration_referral].to_i,
+                                                                                @data[:min_count_page_organic].to_i,
+                                                                                @data[:max_count_page_organic].to_i,
+                                                                                @data[:min_duration_page_orgcanic].to_i,
+                                                                                @data[:max_duration_page_organic].to_i,
+                                                                                @data[:min_duration].to_i,
+                                                                                @data[:max_duration].to_i)
+
+          when "seaattack"
+            Visit::Visits.new(@data[:website_label],
+                                          Date.today, # on prend la date courante car les visits ne sont pas calculées
+                                          @data[:policy_type],
+                                          @data[:website_id],
+                                          @data[:policy_id],
+                                          @data[:execution_mode]).Publishing_visits_by_hour(@data[:min_count_page_advertiser].to_i,
+                                                                                            @data[:max_count_page_advertiser].to_i,
+                                                                                            @data[:min_duration_page_advertiser].to_i,
+                                                                                            @data[:max_duration_page_advertiser].to_i,
+                                                                                            @data[:percent_local_page_advertiser].to_i,
+                                                                                            @data[:duration_referral].to_i,
+                                                                                            @data[:min_count_page_organic].to_i,
+                                                                                            @data[:max_count_page_organic].to_i,
+                                                                                            @data[:min_duration_page_orgcanic].to_i,
+                                                                                            @data[:max_duration_page_organic].to_i,
+                                                                                            @data[:min_duration].to_i,
+                                                                                            @data[:max_duration].to_i,
+                                                                                            @data[:fqdn_advertisings])
+        end
 
       }
     end
