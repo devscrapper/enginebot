@@ -186,14 +186,13 @@ module Tasking
     class Final_visit < Planed_visit
 
 
-      attr :type, # :traffic pour une visit generant du traffic sans cliquer surune pub
-           # :advert pour ine visit generant du traffic avec click sur un pub
+      attr :type, # :traffic |:rank| :seaattack
            :browser,
            :browser_version,
            :operating_system,
            :operating_system_version,
            :screen_resolution,
-           :advert
+           :advert # none (traffic|rank), adsense(traffic), adwords(seaattack)
 
       def initialize(visit, policy_type=nil, advert=nil, device_platform=nil)
 
@@ -287,30 +286,10 @@ module Tasking
 
         visit = {:visit => {:id => @id_visit,
                             :start_date_time => @start_date_time,
-                            :type => @type.to_sym,
-                            :landing => {:scheme => @landing_page_scheme,    #TODO supprimer landing link pour seaattack
-                                         :fqdn => @landing_page_hostname,
-                                         :path => @landing_page_path
-                            },
-                            :durations => durations, #TODO supprimer durations pour sea_attack
-                            :referrer => {:medium => @medium
-                            },
-                            :advert => @advert == "none" ? {:advertising => @advert.to_sym} : {:advertising => @advert.to_sym,
-                                                                                               :advertiser => @advert.to_sym == :adsense ?
-                                                                                                   # advert = Adsense
-                                                                                                   {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
-                                                                                                    :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
-                                                                                               : #advert = Adword      #TODO mettre un s à label idem dans statupbot
-                                                                                                   {:label => @fqdn_advertisings, #fourni par statupweb lors de la creation de la policy seaattack
-                                                                                                    :durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
-                                                                                                    :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
-                            } #calculé par engine_bot
+                            :type => @type.to_sym, # :traffic | :rank | seaattack
+                            :referrer => {:medium => @medium} # (none) | referral | organic
         },
-                 :website => {:label => @label,
-                              #TODO revisier l'initialisation de many_hostname & many_account
-                              :many_hostname => :true,
-                              :many_account_ga => :no
-                 },
+                 :website => {:label => @label},
                  :visitor => {
                      :id => UUID.generate,
                      :browser => {:name => @browser,
@@ -323,6 +302,48 @@ module Tasking
 
         }
 
+        case visit[:visit][:type]
+          when :seaattack
+            visit[:visit].merge!(:advert => {:advertising => @advert.to_sym,
+                                             :advertiser => {:fqdn_advertisings => @fqdn_advertisings, #fourni par statupweb lors de la creation de la policy seaattack
+                                                             :durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
+                                                             :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
+                                 })
+
+          when :rank
+            visit[:visit].merge!(:landing => {:scheme => @landing_page_scheme,
+                                              :fqdn => @landing_page_hostname,
+                                              :path => @landing_page_path})
+            visit[:visit][:durations] = durations
+            #TODO revisier l'initialisation de many_hostname & many_account
+            visit[:website][:many_hostname] = :true
+            visit[:website][:many_account_ga] = :no
+
+          when :traffic
+            case @advert.to_sym
+              when :none
+                visit[:visit].merge!(:landing => {:scheme => @landing_page_scheme,
+                                                  :fqdn => @landing_page_hostname,
+                                                  :path => @landing_page_path})
+                visit[:visit][:durations] = durations
+                #TODO revisier l'initialisation de many_hostname & many_account
+                visit[:website][:many_hostname] = :true
+                visit[:website][:many_account_ga] = :no
+              else
+                visit[:visit].merge!(:landing => {:scheme => @landing_page_scheme,
+                                                  :fqdn => @landing_page_hostname,
+                                                  :path => @landing_page_path})
+                visit[:visit][:durations] = durations
+                visit[:visit].merge!(:advert => {:advertising => @advert.to_sym,
+                                                 :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
+                                                                 :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
+                                     })
+                #TODO revisier l'initialisation de many_hostname & many_account
+                visit[:website][:many_hostname] = :true
+                visit[:website][:many_account_ga] = :no
+            end
+
+        end
 
         case visit[:visit][:referrer][:medium]
           when "(none)"

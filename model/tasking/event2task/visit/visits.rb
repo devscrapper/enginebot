@@ -534,13 +534,14 @@ module Tasking
                    :id_visit => visit_tmp[:visit][:id],
                    :execution_mode => @execution_mode,
                    :plan_time => visit_tmp[:visit][:start_date_time],
-                   :landing_url => "#{visit_tmp[:visit][:landing][:scheme]}://#{visit_tmp[:visit][:landing][:fqdn]}#{visit_tmp[:visit][:landing][:path]}",
                    :referrer => visit_tmp[:visit][:referrer][:medium],
-                   :advert => visit_tmp[:visit][:advert][:advertising],
                    :browser_name => visit_tmp[:visitor][:browser][:name],
                    :browser_version => visit_tmp[:visitor][:browser][:version],
                    :operating_system_name => visit_tmp[:visitor][:browser][:operating_system],
-                   :operating_system_version => visit_tmp[:visitor][:browser][:operating_system_version]
+                   :operating_system_version => visit_tmp[:visitor][:browser][:operating_system_version],
+                   :keywords => visit_tmp[:visit][:referrer][:keyword] || "none",
+                   :advert => visit_tmp[:visit][:advert][:advertising] || "none",
+                   :landing_url => !visit_tmp[:visit][:landing].nil? ? "#{visit_tmp[:visit][:landing][:scheme]}://#{visit_tmp[:visit][:landing][:fqdn]}#{visit_tmp[:visit][:landing][:path]}" : "none"
           }
 
 

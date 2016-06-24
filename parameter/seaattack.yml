@@ -9,30 +9,30 @@ development:
   :building_hourly_distribution_day: 0
   :building_hourly_distribution_hour: 0
   :building_hourly_distribution_min: 0
-  :building_landing_pages_organic_day: 0
-  :building_landing_pages_organic_hour: 0
-  :building_landing_pages_organic_min: 0
-  :building_visits_day: 0
-  :building_visits_hour: 0
-  :building_visits_min: 0
+  :building_landing_pages_organic_day: -1
+  :building_landing_pages_organic_hour: 21
+  :building_landing_pages_organic_min: 5
+  :building_visits_day: -1
+  :building_visits_hour: 21
+  :building_visits_min: 15
   :building_objectives_day: 0
   :building_objectives_hour: 0
   :building_objectives_min: 0
-  :building_planification_day: 0
-  :building_planification_hour: 0
-  :building_planification_min: 0
-  :choosing_device_platform_day: 0
-  :choosing_device_platform_hour: 0
-  :choosing_device_platform_min: 30
-  :choosing_landing_pages_day: 0
-  :choosing_landing_pages_hour: 0
-  :choosing_landing_pages_min: 0
-  :evaluating_traffic_source_organic_day: 0
-  :evaluating_traffic_source_organic_hour: 0
-  :evaluating_traffic_source_organic_min: 35
-  :extending_visits_day: 0
-  :extending_visits_hour: 0
-  :extending_visits_min: 0
+  :building_planification_day: -1
+  :building_planification_hour: 21
+  :building_planification_min: 20
+  :choosing_device_platform_day: -1
+  :choosing_device_platform_hour: 21
+  :choosing_device_platform_min: 5
+  :choosing_landing_pages_day: -1
+  :choosing_landing_pages_hour: 21
+  :choosing_landing_pages_min: 10
+  :evaluating_traffic_source_organic_day: -1
+  :evaluating_traffic_source_organic_hour: 21
+  :evaluating_traffic_source_organic_min: 0
+  :extending_visits_day: -1
+  :extending_visits_hour: 21
+  :extending_visits_min: 25
   :scraping_traffic_source_organic_day: 0
   :scraping_traffic_source_organic_hour: 0
   :scraping_traffic_source_organic_min: 5
@@ -48,62 +48,60 @@ development:
   :scraping_behaviour_day: 0
   :scraping_behaviour_hour: 0
   :scraping_behaviour_min: 25
-  :start_publishing_visits_day: 0
-  :start_publishing_visits_hour: 1
+  :start_publishing_visits_day: -1
+  :start_publishing_visits_hour: 22
 
 test:
-    :building_behaviour_day: 0
-    :building_behaviour_hour: 0
-    :building_behaviour_min: 0
-    :building_device_platform_day: 0
-    :building_device_platform_hour: 0
-    :building_device_platform_min: 0
-    :building_hourly_distribution_day: 0
-    :building_hourly_distribution_hour: 0
-    :building_hourly_distribution_min: 0
-    :building_landing_pages_organic_day: 0
-    :building_landing_pages_organic_hour: 0
-    :building_landing_pages_organic_min: 0
-    :building_visits_day: 0
-    :building_visits_hour: 0
-    :building_visits_min: 0
-    :building_objectives_day: 0
-    :building_objectives_hour: 0
-    :building_objectives_min: 0
-    :building_planification_day: 0
-    :building_planification_hour: 0
-    :building_planification_min: 0
-    :choosing_device_platform_day: 0
-    :choosing_device_platform_hour: 0
-    :choosing_device_platform_min: 30
-    :choosing_landing_pages_day: 0
-    :choosing_landing_pages_hour: 0
-    :choosing_landing_pages_min: 0
-    :end_publishing_visits_day: 1
-    :end_publishing_visits_hour: 0
-    :evaluating_traffic_source_organic_day: 0
-    :evaluating_traffic_source_organic_hour: 0
-    :evaluating_traffic_source_organic_min: 35
-    :extending_visits_day: 0
-    :extending_visits_hour: 0
-    :extending_visits_min: 0
-    :scraping_traffic_source_organic_day: 0
-    :scraping_traffic_source_organic_hour: 0
-    :scraping_traffic_source_organic_min: 5
-    :scraping_device_platform_plugin_day: 0
-    :scraping_device_platform_plugin_hour: 0
-    :scraping_device_platform_plugin_min: 10
-    :scraping_device_platform_resolution_day: 0
-    :scraping_device_platform_resolution_hour: 0
-    :scraping_device_platform_resolution_min: 15
-    :scraping_hourly_distribution_day: 0
-    :scraping_hourly_distribution_hour: 0
-    :scraping_hourly_distribution_min: 20
-    :scraping_behaviour_day: 0
-    :scraping_behaviour_hour: 0
-    :scraping_behaviour_min: 25
-    :start_publishing_visits_day: 0
-    :start_publishing_visits_hour: 1
+     :building_behaviour_day: 0
+     :building_behaviour_hour: 0
+     :building_behaviour_min: 0
+     :building_device_platform_day: 0
+     :building_device_platform_hour: 0
+     :building_device_platform_min: 0
+     :building_hourly_distribution_day: 0
+     :building_hourly_distribution_hour: 0
+     :building_hourly_distribution_min: 0
+     :building_landing_pages_organic_day: -1
+     :building_landing_pages_organic_hour: 21
+     :building_landing_pages_organic_min: 5
+     :building_visits_day: -1
+     :building_visits_hour: 21
+     :building_visits_min: 15
+     :building_objectives_day: 0
+     :building_objectives_hour: 0
+     :building_objectives_min: 0
+     :building_planification_day: -1
+     :building_planification_hour: 21
+     :building_planification_min: 20
+     :choosing_device_platform_day: -1
+     :choosing_device_platform_hour: 21
+     :choosing_device_platform_min: 5
+     :choosing_landing_pages_day: -1
+     :choosing_landing_pages_hour: 21
+     :choosing_landing_pages_min: 10
+     :evaluating_traffic_source_organic_day: -1
+     :evaluating_traffic_source_organic_hour: 21
+     :evaluating_traffic_source_organic_min: 0
+     :extending_visits_day: -1
+     :extending_visits_hour: 21
+     :extending_visits_min: 25
+     :scraping_traffic_source_organic_day: 0
+     :scraping_traffic_source_organic_hour: 0
+     :scraping_traffic_source_organic_min: 5
+     :scraping_device_platform_plugin_day: 0
+     :scraping_device_platform_plugin_hour: 0
+     :scraping_device_platform_plugin_min: 10
+     :scraping_device_platform_resolution_day: 0
+     :scraping_device_platform_resolution_hour: 0
+     :scraping_device_platform_resolution_min: 15
+     :scraping_hourly_distribution_day: 0
+     :scraping_hourly_distribution_hour: 0
+     :scraping_hourly_distribution_min: 20
+     :scraping_behaviour_day: 0
+     :scraping_behaviour_hour: 0
+     :scraping_behaviour_min: 25
+     :start_publishing_visits_day: -1
+     :start_publishing_visits_hour: 22
 
 production:
     :building_behaviour_day: 0

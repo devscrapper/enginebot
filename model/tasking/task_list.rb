@@ -406,23 +406,23 @@ module Tasking
 
           when "seaattack"
             Visit::Visits.new(@data[:website_label],
-                                          Date.today, # on prend la date courante car les visits ne sont pas calculées
-                                          @data[:policy_type],
-                                          @data[:website_id],
-                                          @data[:policy_id],
-                                          @data[:execution_mode]).Publishing_visits_by_hour(@data[:min_count_page_advertiser].to_i,
-                                                                                            @data[:max_count_page_advertiser].to_i,
-                                                                                            @data[:min_duration_page_advertiser].to_i,
-                                                                                            @data[:max_duration_page_advertiser].to_i,
-                                                                                            @data[:percent_local_page_advertiser].to_i,
-                                                                                            @data[:duration_referral].to_i,
-                                                                                            @data[:min_count_page_organic].to_i,
-                                                                                            @data[:max_count_page_organic].to_i,
-                                                                                            @data[:min_duration_page_orgcanic].to_i,
-                                                                                            @data[:max_duration_page_organic].to_i,
-                                                                                            @data[:min_duration].to_i,
-                                                                                            @data[:max_duration].to_i,
-                                                                                            @data[:fqdn_advertisings])
+                              @data[:building_date],
+                              @data[:policy_type],
+                              @data[:website_id],
+                              @data[:policy_id],
+                              @data[:execution_mode]).Publishing_visits_by_hour(@data[:min_count_page_advertiser].to_i,
+                                                                                @data[:max_count_page_advertiser].to_i,
+                                                                                @data[:min_duration_page_advertiser].to_i,
+                                                                                @data[:max_duration_page_advertiser].to_i,
+                                                                                @data[:percent_local_page_advertiser].to_i,
+                                                                                @data[:duration_referral].to_i,
+                                                                                @data[:min_count_page_organic].to_i,
+                                                                                @data[:max_count_page_organic].to_i,
+                                                                                @data[:min_duration_page_orgcanic].to_i,
+                                                                                @data[:max_duration_page_organic].to_i,
+                                                                                @data[:min_duration].to_i,
+                                                                                @data[:max_duration].to_i,
+                                                                                @data[:fqdn_advertisings])
         end
 
       }

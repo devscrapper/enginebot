@@ -320,20 +320,13 @@ module Planning
       #---------------------------------------------------------------------------------------------------------------
       #-----------Publishing_visits------------------------------------------------------------------
       #---------------------------------------------------------------------------------------------------------------
-      case @policy_type
-        when "traffic", "rank"
-          periodicity = IceCube::Schedule.new(@objective_date +
-                                                  @start_publishing_visits_day * IceCube::ONE_DAY +
-                                                  @start_publishing_visits_hour * IceCube::ONE_HOUR,
-                                              :end_time => @objective_date +
-                                                  @start_publishing_visits_day * IceCube::ONE_DAY +
-                                                  @start_publishing_visits_hour * IceCube::ONE_HOUR)
-          periodicity.add_recurrence_rule IceCube::Rule.hourly.count(24)
-        when "seaattack"
-          @objective_date +
-                                                            @start_publishing_visits_day * IceCube::ONE_DAY +
-                                                            @start_publishing_visits_hour * IceCube::ONE_HOUR
-      end
+      periodicity = IceCube::Schedule.new(@objective_date +
+                                              @start_publishing_visits_day * IceCube::ONE_DAY +
+                                              @start_publishing_visits_hour * IceCube::ONE_HOUR,
+                                          :end_time => @objective_date +
+                                              @start_publishing_visits_day * IceCube::ONE_DAY +
+                                              @start_publishing_visits_hour * IceCube::ONE_HOUR)
+      periodicity.add_recurrence_rule IceCube::Rule.hourly.count(24)
 
 
       @events << Event.new("Publishing_visits",
