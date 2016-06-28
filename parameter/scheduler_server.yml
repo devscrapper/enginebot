@@ -4,7 +4,7 @@ development:
   :statupweb_server_ip: localhost
   :statupweb_server_port: 3000
   :delay_periodic_scan: 5  #(seconde)
-  :delay_periodic_send_geolocation: 60 #(minute)
+  :delay_periodic_send_geolocation: 1 #(minute)
   :periodicity_supervision: 15m #(minute)
   :debugging: true
   :inputflow_factories:
