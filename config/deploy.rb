@@ -22,7 +22,6 @@
 lock '3.4.0'
 
 set :application, 'enginebot'
-set :repo_url, "git@github.com://github.com/devscrapper/#{fetch(:application)}.git/"
 set :repo_url, "https://github.com/devscrapper/#{fetch(:application)}.git/"
 set :github_access_token, '64c0b7864a901bc6a9d7cd851ab5fb431196299e'
 set :default, 'master'
@@ -52,22 +51,10 @@ set :server_list, ["calendar_#{fetch(:application)}",
 set :log_level, :debug
 
 # Default value for :pty is false
-# set :pty, true
+#set :pty, true
 
 # Default value for :linked_files is []
-set :linked_files, fetch(:linked_files, ['parameter/backlink.yml']).push('parameter/calendar_server.yml',
-                                                                         'parameter/default.yml',
-                                                                         'parameter/direct.yml',
-                                                                         'parameter/environment.yml',
-                                                                         'parameter/keyword.yml',
-                                                                         'parameter/mail_sender.yml',
-                                                                         'parameter/objective.yml',
-                                                                         'parameter/rank.yml',
-                                                                         'parameter/scheduler_server.yml',
-                                                                         'parameter/seaattack.yml',
-                                                                         'parameter/supervisor.yml',
-                                                                         'parameter/task_server.yml',
-                                                                         'parameter/traffic.yml')
+set :linked_files, fetch(:linked_files, [])
 
 # Default value for linked_dirs is []
 set :linked_dirs, fetch(:linked_dirs, []).push('log', 'tmp', 'output', 'input', 'data', 'archive')
@@ -78,7 +65,7 @@ set :default_env, {path: "/opt/ruby/bin:$PATH"}
 # Default value for keep_releases is 5
 set :keep_releases, 3
 
-before 'deploy:check:linked_files', 'config:push'
+#before 'deploy:check:linked_files', 'config:push'
 
 # before 'deploy:starting', 'github:deployment:create'
 # after  'deploy:starting', 'github:deployment:pending'
@@ -171,33 +158,40 @@ namespace :deploy do
 
   task :start do
     on roles(:app) do
-      begin
-        sudo "initctl start #{fetch(:application)}"
-      rescue Exception => e
-        p "dont start #{fetch(:application)} : #{e.message}"
-      end
+      fetch(:server_list).each{|server|
+        begin
+          sudo "initctl start #{server}"
+        rescue Exception => e
+          p "dont start #{server} : #{e.message}"
+        end
+      }
+
 
     end
   end
   task :stop do
     on roles(:app) do
 
-      begin
-        sudo "initctl stop #{fetch(:application)}"
-      rescue Exception => e
-        p "dont stop #{fetch(:application)} : #{e.message}"
-      end
+      fetch(:server_list).each{|server|
+        begin
+          sudo "initctl stop #{server}"
+        rescue Exception => e
+          p "dont start #{server} : #{e.message}"
+        end
+      }
 
     end
   end
   task :status do
     on roles(:app) do
 
-      begin
-        sudo "initctl status #{fetch(:application)}"
-      rescue Exception => e
-        p "dont status #{fetch(:application)} : #{e.message}"
-      end
+      fetch(:server_list).each{|server|
+        begin
+          sudo "initctl status #{server}"
+        rescue Exception => e
+          p "dont start #{server} : #{e.message}"
+        end
+      }
 
     end
   end

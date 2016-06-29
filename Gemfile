@@ -22,14 +22,10 @@ gem 'htmlentities', '~> 4.3', '>= 4.3.4'
 
 #group :development
 group :development do
-  gem 'capistrano-rails', '~> 1.1'
   gem 'capistrano-rvm'
   gem 'capistrano', '~> 3.1'
   gem 'capistrano-bundler', '~> 1.1.2'
-  gem 'capistrano-passenger'
-  gem 'capistrano-upload-config'
-  gem 'capistrano-rails-db'
-  gem 'capistrano3-delayed-job', '~> 1.0'
+  gem 'sshkit-sudo'
   gem 'tzinfo-data', '~>1.2014.5'
 end
 
