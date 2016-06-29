@@ -92,21 +92,21 @@ end
 namespace :log do
   task :down do
     on roles(:app) do
-        begin
-          capture("ls #{File.join(current_path, 'log', '*.*')}").split(/\r\n/).each { |log_file|
-            get log_file, File.join(File.dirname(__FILE__), '..', 'log', File.basename(log_file))
-          }
-        rescue Exception => e
-          p "dont down log : #{e.message}"
-        end
-       end
+      begin
+        capture("ls #{File.join(current_path, 'log', '*.*')}").split(/\r\n/).each { |log_file|
+          get log_file, File.join(File.dirname(__FILE__), '..', 'log', File.basename(log_file))
+        }
+      rescue Exception => e
+        p "dont down log : #{e.message}"
+      end
+    end
   end
   task :delete do
     on roles(:app) do
       begin
         sudo "rm #{File.join(current_path, 'log', '*.*')}"
       rescue Exception => e
-        end
+      end
     end
   end
 
@@ -141,24 +141,27 @@ namespace :deploy do
     on roles(:app) do
       within release_path do
         # suppression des fichier de controle pour upstart
-        begin
-          sudo " rm --interactive=never -f /etc/init/#{fetch(:application)}.conf"
-        rescue Exception => e
-          p "KO : suppression des fichier de controle pour upstart : #{e.message}"
-        end
-        begin
-          # déploiement des fichier de controle pour upstart
-          sudo " cp #{File.join(current_path, 'control', '*')} /etc/init"
-        rescue Exception => e
-          p "KO : deploiement des fichier de controle pour upstart : #{e.message}"
-        end
+
+        fetch(:server_list).each { |server|
+          begin
+            sudo " rm --interactive=never -f /etc/init/#{server}.conf"
+          rescue Exception => e
+            p "KO : suppression du fichier de controle pour upstart #{server} : #{e.message}"
+          end
+          begin
+            # déploiement des fichier de controle pour upstart
+            sudo " cp #{File.join(current_path, 'control', '*')} /etc/init"
+          rescue Exception => e
+            p "KO : deploiement des fichier de controle pour upstart : #{e.message}"
+          end
+        }
       end
     end
   end
 
   task :start do
     on roles(:app) do
-      fetch(:server_list).each{|server|
+      fetch(:server_list).each { |server|
         begin
           sudo "initctl start #{server}"
         rescue Exception => e
@@ -172,7 +175,7 @@ namespace :deploy do
   task :stop do
     on roles(:app) do
 
-      fetch(:server_list).each{|server|
+      fetch(:server_list).each { |server|
         begin
           sudo "initctl stop #{server}"
         rescue Exception => e
@@ -185,7 +188,7 @@ namespace :deploy do
   task :status do
     on roles(:app) do
 
-      fetch(:server_list).each{|server|
+      fetch(:server_list).each { |server|
         begin
           sudo "initctl status #{server}"
         rescue Exception => e
