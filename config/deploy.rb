@@ -150,7 +150,7 @@ namespace :deploy do
           end
           begin
             # déploiement des fichier de controle pour upstart
-            sudo " cp #{File.join(current_path, 'control', '*')} /etc/init"
+            sudo " cp #{File.join(current_path, 'control', "#{server}.conf")} /etc/init"
           rescue Exception => e
             p "KO : deploiement des fichier de controle pour upstart : #{e.message}"
           end
