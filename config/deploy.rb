@@ -19,7 +19,7 @@
 # le redemarrage des serveurs
 #---------------------------------------------------------------------------------------------------------------------
 
-lock '3.4.0'
+lock '3.4.1'
 
 set :application, 'enginebot'
 set :repo_url, "https://github.com/devscrapper/#{fetch(:application)}.git/"
