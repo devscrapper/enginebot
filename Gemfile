@@ -1,6 +1,6 @@
 #referentiels
 source "http://rubygems.org"
-source "http://gems.github.com"
+
 # utiliser en dev net-ssh 2.6.x et pas > sinon capistrano n'arrive plus à se connecter à la machine distante. Si nécessire en prod alors utiliser les groupes
 
 gem 'eventmachine', '~> 1.0.8'

@@ -6,6 +6,7 @@ development:
   [Windows, 7, Internet Explorer, 11.0],
   [Windows, 7, Internet Explorer, 9.0],
   [Windows, 7, Firefox, 24.0],
+  [Windows, 7, Edge, none],
   [Windows, 7, Firefox, 19.0]
   ]
   :distribution: [
@@ -17,6 +18,7 @@ test:
   [Windows, 7, Chrome, 39.0.2139.3],
   [Windows, 7, Opera, 9.0],
   [Windows, 7, Internet Explorer, 11.0],
+  [Windows, 7, Edge, none],
   [Windows, 7, Firefox, 19.0]
   ]
   :distribution: [

@@ -201,12 +201,26 @@ namespace :deploy do
   task :restart do
     on roles(:app) do
       within release_path do
-        stop
-        start
+        fetch(:server_list).each { |server|
+                begin
+                  sudo "initctl stop #{server}"
+                  sudo "initctl start #{server}"
+                rescue Exception => e
+                  p "dont start #{server} : #{e.message}"
+                end
+              }
       end
     end
   end
 
+  task :environment do
+    on roles(:app) do
+      within release_path do
+
+        execute("echo 'staging: test' >  #{File.join(current_path, 'parameter', 'environment.yml')}")
+      end
+    end
+  end
 
 end
 
@@ -219,5 +233,6 @@ after "deploy:stop", "log:delete"
 # TO update gem  : uncomment under line
 after 'deploy:updating', 'deploy:bundle_install'
 after 'deploy:updating', "deploy:control"
+after 'deploy:updating', "deploy:environment"
 after "deploy:control", "deploy:start"
 after "deploy:start", "deploy:status"
