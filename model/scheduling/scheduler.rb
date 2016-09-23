@@ -115,13 +115,17 @@ module Scheduling
             @logger.an_event.info "visit file name #{visit.absolute_path}"
             visit_details = visit.read
 
-            response = RestClient.post "http://#{ip}:#{port}/visits/new",
-                                       visit_details,
-                                       :content_type => :json,
-                                       :accept => :json
+            # attend pendant 60s max
+            # ressaie toutes les 2s
+            # leve une exception si echec
+            wait(60, true, 2) {
+              response = RestClient.post "http://#{ip}:#{port}/visits/new",
+                                         visit_details,
+                                         :content_type => :json,
+                                         :accept => :json
 
-            raise response.content if response.code != 200
-
+              raise response.content if response.code != 200
+            }
 
           rescue Exception => e
             @logger.an_event.error "push visit flow #{visit.basename} to #{@os}/#{@version} input flow server #{ip}:#{port} : #{e.message}"
@@ -143,12 +147,16 @@ module Scheduling
       begin
         visit = YAML::load(visit_flow.read)
 
-        response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:visit][:id]}",
-                                    JSON.generate({:state => state}),
-                                    :content_type => :json,
-                                    :accept => :json
-        raise response.content if response.code != 201
-
+        # attend pendant 60s max
+        # ressaie toutes les 2s
+        # leve une exception si echec
+        wait(60, true, 2) {
+          response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:visit][:id]}",
+                                      JSON.generate({:state => state}),
+                                      :content_type => :json,
+                                      :accept => :json
+          raise response.content if response.code != 201
+        }
       rescue Exception => e
         @logger.an_event.warn "cannot send scheduled state of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
       else
@@ -157,7 +165,33 @@ module Scheduling
       end
     end
 
+    private
 
+    # wait pour une duree passé en paramètre si pas de bloc passé
+    # si un bloc est passé alors evalue le bloc. Si le resultates est true alors return
+    # sinon si false ou exception alors reessaie apres un intervale (par defaut 0.2).
+    # qd durée dépassé alors on s'arrete. une exception est levée si exception == true.
+    def wait(timeout, exception = false, interval=0.2)
+
+      if !block_given?
+        sleep(timeout)
+        return
+      end
+
+      begin
+
+        return if yield
+
+      rescue Exception => e
+        @logger.an_event.warn e.message
+        sleep(interval)
+        timeout -= interval
+        retry if (0 < timeout)
+      end
+
+      raise e if exception
+
+
+    end
   end
-
 end

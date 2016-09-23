@@ -225,7 +225,7 @@ namespace :deploy do
 end
 
 
-before 'deploy:check:linked_files', 'config:push'
+
 before 'deploy:updating', "deploy:stop"
 before 'deploy:updating', "git:push"
 after "deploy:stop", "log:delete"
@@ -233,6 +233,6 @@ after "deploy:stop", "log:delete"
 # TO update gem  : uncomment under line
 after 'deploy:updating', 'deploy:bundle_install'
 after 'deploy:updating', "deploy:control"
-after 'deploy:updating', "deploy:environment"
+after 'deploy:finished', "deploy:environment"
 after "deploy:control", "deploy:start"
 after "deploy:start", "deploy:status"
