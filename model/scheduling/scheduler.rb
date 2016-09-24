@@ -187,9 +187,10 @@ module Scheduling
         sleep(interval)
         timeout -= interval
         retry if (0 < timeout)
+        raise e if exception
       end
 
-      raise e if exception
+
 
 
     end
