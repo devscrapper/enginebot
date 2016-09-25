@@ -124,7 +124,7 @@ module Scheduling
                                          :content_type => :json,
                                          :accept => :json
 
-              raise response.content if response.code != 200
+              raise response.content unless [200,201,202,203,204,205,206].include?(response.code)
             }
 
           rescue Exception => e
@@ -155,7 +155,7 @@ module Scheduling
                                       JSON.generate({:state => state}),
                                       :content_type => :json,
                                       :accept => :json
-          raise response.content if response.code != 201
+          raise response.content unless [200,201,202,203,204,205,206].include?(response.code)
         }
       rescue Exception => e
         @logger.an_event.warn "cannot send scheduled state of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
@@ -167,10 +167,10 @@ module Scheduling
 
     private
 
-    # wait pour une duree passé en paramètre si pas de bloc passé
-    # si un bloc est passé alors evalue le bloc. Si le resultates est true alors return
-    # sinon si false ou exception alors reessaie apres un intervale (par defaut 0.2).
-    # qd durée dépassé alors on s'arrete. une exception est levée si exception == true.
+    # si pas de bloc passé => wait pour une duree passé en paramètre
+    # si un bloc est passé => evalue le bloc tant que le bloc return false, leve une exception, ou que le timeout n'est pas atteind
+    # qd le timeout est atteint, si exception == true alors propage l'exception hors du wait
+
     def wait(timeout, exception = false, interval=0.2)
 
       if !block_given?
@@ -178,21 +178,24 @@ module Scheduling
         return
       end
 
-      begin
-
-        return if yield
-
-      rescue Exception => e
-        @logger.an_event.warn e.message
+      while (timeout > 0)
         sleep(interval)
         timeout -= interval
-        retry if (0 < timeout)
-        raise e if exception
+        begin
+          return if yield
+        rescue Exception => e
+          p "try again : #{e.message}"
+        else
+          p "try again."
+        end
       end
 
-
-
-
+      if exception == true
+        p "raise exception : #{e.message}"
+        raise e
+      else
+        p "no exception"
+      end
     end
   end
 end
