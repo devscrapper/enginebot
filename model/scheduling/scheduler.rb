@@ -124,7 +124,7 @@ module Scheduling
                                          :content_type => :json,
                                          :accept => :json
 
-              raise response.content unless [200,201,202,203,204,205,206].include?(response.code)
+
             }
 
           rescue Exception => e
@@ -155,7 +155,7 @@ module Scheduling
                                       JSON.generate({:state => state}),
                                       :content_type => :json,
                                       :accept => :json
-          raise response.content unless [200,201,202,203,204,205,206].include?(response.code)
+
         }
       rescue Exception => e
         @logger.an_event.warn "cannot send scheduled state of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
@@ -190,12 +190,9 @@ module Scheduling
         end
       end
 
-      if exception == true
-        p "raise exception : #{e.message}"
-        raise e
-      else
-        p "no exception"
-      end
+      raise e if !e.nil? and exception == true  and $staging != "development"
+
     end
   end
 end
+
