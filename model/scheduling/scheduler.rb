@@ -119,7 +119,7 @@ module Scheduling
             # ressaie toutes les 2s
             # leve une exception si echec
             wait(60, true, 2) {
-              response = RestClient.post "http://#{ip}:#{port}/visits/new",
+              RestClient.post "http://#{ip}:#{port}/visits/new",
                                          visit_details,
                                          :content_type => :json,
                                          :accept => :json
@@ -132,7 +132,6 @@ module Scheduling
 
           else
             @logger.an_event.info "push visit flow #{visit.basename} to #{@os}/#{@version} input flow server #{ip}:#{port}"
-            change_state_visit_to_statupweb(visit, :published)
             visit.archive
 
           end
@@ -151,14 +150,14 @@ module Scheduling
         # ressaie toutes les 2s
         # leve une exception si echec
         wait(60, true, 2) {
-          response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:visit][:id]}",
+          RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:visit][:id]}",
                                       JSON.generate({:state => state}),
                                       :content_type => :json,
                                       :accept => :json
 
         }
       rescue Exception => e
-        @logger.an_event.warn "cannot send scheduled state of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
+        @logger.an_event.error "cannot send #{state.to_s} state of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
       else
       ensure
         visit_flow.close
