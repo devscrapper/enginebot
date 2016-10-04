@@ -326,6 +326,7 @@ module Tasking
                                                   :fqdn => @landing_page_hostname,
                                                   :path => @landing_page_path})
                 visit[:visit][:durations] = durations
+                visit[:visit].merge!(:advert => {:advertising => @advert.to_sym})
                 #TODO revisier l'initialisation de many_hostname & many_account
                 visit[:website][:many_hostname] = :true
                 visit[:website][:many_account_ga] = :no
