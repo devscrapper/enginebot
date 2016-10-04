@@ -123,8 +123,6 @@ module Scheduling
                                          visit_details,
                                          :content_type => :json,
                                          :accept => :json
-
-
             }
 
           rescue Exception => e
@@ -157,8 +155,9 @@ module Scheduling
 
         }
       rescue Exception => e
-        @logger.an_event.error "cannot send #{state.to_s} state of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
+        @logger.an_event.error "change state #{state.to_s} of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) : #{e.message}"
       else
+        @logger.an_event.debug "change state #{state.to_s} of visit #{visit[:visit][:id]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port})"
       ensure
         visit_flow.close
       end

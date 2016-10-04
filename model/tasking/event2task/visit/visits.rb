@@ -390,7 +390,7 @@ module Tasking
                 send_to_statupweb(published_visits_to_yaml_file)
 
               rescue Exception => e
-                @logger.an_event.error "cannot push to statupweb reporting of yaml published visit file for visit #{v.id_visit} : #{e}"
+                @logger.an_event.error "cannot push to statupweb visit file #{v.id_visit} : #{e}"
               else
 
               end
@@ -551,19 +551,45 @@ module Tasking
 
           #              "referrer"=>{"medium"=>"none"},
           #              "advert"=>{"advertising"=>"none"}, "visit"=>{"policy_id"=>2, "policy_type"=>"traffic", "id_visit"=>"e7509f90-bfd3-0133-e402-000854505ddf", "start_time"=>"2016-02-29 12:53:00 +0100", "landing_url"=>"http://meshumeursinformatiques.blogspot.fr/2014/07/construction-dun-environnement-de.html", "durations"=>[164, 196, 152, 85, 107, 142, 132, 142], "referrer"=>{"medium"=>"none"}, "advert"=>{"advertising"=>"none"}}}
+          wait(60, true, 2) {
+            RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/",
+                            JSON.generate(visit),
+                            :content_type => :json,
+                            :accept => :json
 
-          response = RestClient.post "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/",
-                                     JSON.generate(visit),
-                                     :content_type => :json,
-                                     :accept => :json
-          raise response.content if response.code != 201
-
+          }
         rescue Exception => e
-          @logger.an_event.warn "cannot send visit to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.response}"
+          @logger.an_event.error "push visit flow #{visit_flow.basename} to statupweb #{$statupweb_server_ip}/#{$statupweb_server_port} : #{e.message}"
+
         else
+          @logger.an_event.debug "push visit flow #{visit_flow.basename} to statupweb #{$statupweb_server_ip}/#{$statupweb_server_port}"
+
         ensure
           visit_flow.close
         end
+      end
+
+      def wait(timeout, exception = false, interval=0.2)
+
+        if !block_given?
+          sleep(timeout)
+          return
+        end
+
+        while (timeout > 0)
+          sleep(interval)
+          timeout -= interval
+          begin
+            return if yield
+          rescue Exception => e
+            p "try again : #{e.message}"
+          else
+            p "try again."
+          end
+        end
+
+        raise e if !e.nil? and exception == true and $staging != "development"
+
       end
     end
   end
