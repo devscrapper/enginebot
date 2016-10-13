@@ -120,9 +120,9 @@ module Scheduling
             # leve une exception si echec
             wait(60, true, 2) {
               RestClient.post "http://#{ip}:#{port}/visits/new",
-                                         visit_details,
-                                         :content_type => :json,
-                                         :accept => :json
+                              visit_details,
+                              :content_type => :json,
+                              :accept => :json
             }
 
           rescue Exception => e
@@ -149,9 +149,9 @@ module Scheduling
         # leve une exception si echec
         wait(60, true, 2) {
           RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{visit[:visit][:id]}",
-                                      JSON.generate({:state => state}),
-                                      :content_type => :json,
-                                      :accept => :json
+                           JSON.generate({:state => state}),
+                           :content_type => :json,
+                           :accept => :json
 
         }
       rescue Exception => e
@@ -169,12 +169,18 @@ module Scheduling
     # si un bloc est passé => evalue le bloc tant que le bloc return false, leve une exception, ou que le timeout n'est pas atteind
     # qd le timeout est atteint, si exception == true alors propage l'exception hors du wait
 
+    # si pas de bloc passé => wait pour une duree passé en paramètre
+    # si un bloc est passé => evalue le bloc tant que le bloc return false, leve une exception, ou que le timeout n'est pas atteind
+    # qd le timeout est atteint, si exception == true alors propage l'exception hors du wait
+
     def wait(timeout, exception = false, interval=0.2)
 
       if !block_given?
         sleep(timeout)
         return
       end
+
+      timeout = interval if $staging == "development" # on execute une fois
 
       while (timeout > 0)
         sleep(interval)
@@ -188,7 +194,7 @@ module Scheduling
         end
       end
 
-      raise e if !e.nil? and exception == true  and $staging != "development"
+      raise e if !e.nil? and exception == true
 
     end
   end
