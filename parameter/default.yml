@@ -1,13 +1,13 @@
 
 development:
   :devices: [
-  [Windows, 7, Chrome, 39.0.2139.3],
-  [Windows, 7, Chrome, 23.0.1271.97],
-  [Windows, 7, Internet Explorer, 11.0],
-  [Windows, 7, Internet Explorer, 9.0],
-  [Windows, 7, Firefox, 24.0],
-  [Windows, 7, Edge, none],
-  [Windows, 7, Firefox, 19.0]
+  [Windows, 7, Chrome, 39.0.2139.3, 25],
+  [Windows, 7, Chrome, 23.0.1271.97, 25],
+  [Windows, 7, Internet Explorer, 11.0, 5],
+  [Windows, 7, Internet Explorer, 10, 5],
+  [Windows, 7, Firefox, 24.0, 15],
+  [Windows, 7, Edge, none, 10],
+  [Windows, 7, Firefox, 19.0, 15]
   ]
   :distribution: [
   [0, 9], [1, 4], [2, 2], [3, 1], [4, 0], [5, 2], [6, 5], [7, 8], [8, 15], [9, 25], [10, 20], [11, 19],[12, 30], [13, 35], [14, 20], [15, 15], [16, 10], [17, 18], [18, 28], [19, 40], [20, 23], [21, 27], [22, 40], [23, 27]
@@ -15,11 +15,12 @@ development:
 
 test:
   :devices: [
-  [Windows, 7, Chrome, 39.0.2139.3],
-  [Windows, 7, Opera, 9.0],
-  [Windows, 7, Internet Explorer, 11.0],
-  [Windows, 7, Edge, none],
-  [Windows, 7, Firefox, 19.0]
+  [Windows, 7, Chrome, 39.0.2139.3, 50],
+  [Windows, 7, Opera, 9.0, 5],
+  [Windows, 7, Internet Explorer, 11.0, 5],
+  [Windows, 7, Edge, none, 5],
+  [Windows, 7, Firefox, 19.0, 25],
+  [Windows, 7, Safari, 16.0, 10]
   ]
   :distribution: [
   [0, 9], [1, 4], [2, 2], [3, 1], [4, 0], [5, 2], [6, 5], [7, 8], [8, 15], [9, 25], [10, 20], [11, 19],[12, 30], [13, 35], [14, 20], [15, 15], [16, 10], [17, 18], [18, 28], [19, 40], [20, 23], [21, 27], [22, 40], [23, 27]
@@ -27,12 +28,12 @@ test:
 
 production:
   :devices: [
-  [Windows, 7, Chrome, 39.0.2139.3],
-  [Windows, 7, Chrome, 23.0.1271.97],
-  [Windows, 7, Internet Explorer, 11.0],
-  [Windows, 7, Internet Explorer, 9.0],
-  [Windows, 7, Firefox, 24.0],
-  [Windows, 7, Firefox, 19.0]
+  [Windows, 7, Chrome, 39.0.2139.3, 50],
+  [Windows, 7, Opera, 9.0, 5],
+  [Windows, 7, Internet Explorer, 11.0, 5],
+  [Windows, 7, Edge, none, 5],
+  [Windows, 7, Firefox, 19.0, 35],
+  [Windows, 7, Safari, 16.0, 10]
   ]
   :distribution: [
   [0, 9], [1, 4], [2, 2], [3, 1], [4, 0], [5, 2], [6, 5], [7, 8], [8, 15], [9, 25], [10, 20], [11, 19],[12, 30], [13, 35], [14, 20], [15, 15], [16, 10], [17, 18], [18, 28], [19, 40], [20, 23], [21, 27], [22, 40], [23, 27]

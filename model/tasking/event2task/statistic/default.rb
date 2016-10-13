@@ -62,12 +62,12 @@ module Tasking
 # le contenu du fichier default.yml contient la liste des combinaisons browser, browser version, os, os version
 # disponible   :
 #       devices: [
-#       [Windows, 7, Chrome, 39.0.2139.3],
-#       [Windows, 7, Chrome, 23.0.1271.97],
-#       [Windows, 7, Internet Explorer, 11.0],
-#       [Windows, 7, Internet Explorer, 9.0],
-#       [Windows, 7, Firefox, 24.0],
-#       [Windows, 7, Firefox, 19.0]
+#       [Windows, 7, Chrome, 39.0.2139.3, 25],
+#       [Windows, 7, Chrome, 23.0.1271.97, 25],
+#       [Windows, 7, Internet Explorer, 11.0, 20],
+#       [Windows, 7, Internet Explorer, 9.0, 10],
+#       [Windows, 7, Firefox, 24.0, 10],
+#       [Windows, 7, Firefox, 19.0, 10]
 #       ]
 #input :
 # label du site,
@@ -84,7 +84,7 @@ module Tasking
       def device_platform_plugin
 
         execute("scraping-device-platform-plugin",
-                @devices.map { |device| device + ["flash_version", "javaenabled", "ismobile", 100] })
+                @devices.map { |device| device[0..3] + ["flash_version", "javaenabled", "ismobile", device[4]] })
       end
 
 
@@ -118,7 +118,7 @@ module Tasking
       def device_platform_resolution
 
         execute("scraping-device-platform-resolution",
-                @devices.map { |device| device + ["screencolor", "1280x1024", "ismobile", 100] })
+                @devices.map { |device| device[0..3] + ["screencolor", "1280x1024", "ismobile", device[4]] })
       end
 
 

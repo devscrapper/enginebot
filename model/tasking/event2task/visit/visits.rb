@@ -569,12 +569,18 @@ module Tasking
         end
       end
 
+# si pas de bloc passé => wait pour une duree passé en paramètre
+# si un bloc est passé => evalue le bloc tant que le bloc return false, leve une exception, ou que le timeout n'est pas atteind
+# qd le timeout est atteint, si exception == true alors propage l'exception hors du wait
+
       def wait(timeout, exception = false, interval=0.2)
 
         if !block_given?
           sleep(timeout)
           return
         end
+
+        timeout = interval if $staging == "development" # on execute une fois
 
         while (timeout > 0)
           sleep(interval)
@@ -588,7 +594,7 @@ module Tasking
           end
         end
 
-        raise e if !e.nil? and exception == true and $staging != "development"
+        raise e if !e.nil? and exception == true
 
       end
     end
