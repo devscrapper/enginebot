@@ -105,13 +105,13 @@ module Scheduling
                         ip = server[:ip]
                         port = server[:port]
                         visit_details = visit_flow.read
+                        wait(60, true, 1.2) {
+                          response = RestClient.post "http://#{ip}:#{port}/visits/new",
+                                                     visit_details,
+                                                     :content_type => :json,
+                                                     :accept => :json
 
-                        response = RestClient.post "http://#{ip}:#{port}/visits/new",
-                                                   visit_details,
-                                                   :content_type => :json,
-                                                   :accept => :json
-
-                        raise response.content if response.code != 200
+                        }
 
                       rescue Exception => e
                         @logger.an_event.error "push visit flow #{visit_flow.basename} to input flow server #{ip}:#{port}"
@@ -124,12 +124,12 @@ module Scheduling
                         #informe statupweb de la creation d'une nouvelle visite
                         # en cas d'erreur on ne leve as de'exception car c'est de la communication
                         begin
-
-                          response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{query_values["visit_id"]}",
-                                                      JSON.generate({:state => :published}),
-                                                      :content_type => :json,
-                                                      :accept => :json
-                          raise response.content if response.code != 201
+                          wait(60, true, 1.2) {
+                            response = RestClient.patch "http://#{$statupweb_server_ip}:#{$statupweb_server_port}/visits/#{query_values["visit_id"]}",
+                                                        JSON.generate({:state => :published}),
+                                                        :content_type => :json,
+                                                        :accept => :json
+                          }
 
                         rescue Exception => e
                           @logger.an_event.error "update scheduled state of visit #{query_values["visit_id"]} to statupweb (#{$statupweb_server_ip}:#{$statupweb_server_port}) => #{e.message}"
@@ -240,6 +240,34 @@ module Scheduling
 
     private
 
+    # si pas de bloc passé => wait pour une duree passé en paramètre
+    # si un bloc est passé => evalue le bloc tant que le bloc return false, leve une exception, ou que le timeout n'est pas atteind
+    # qd le timeout est atteint, si exception == true alors propage l'exception hors du wait
+
+    def wait(timeout, exception = false, interval=0.2)
+
+      if !block_given?
+        sleep(timeout)
+        return
+      end
+
+      timeout = interval if $staging == "development" # on execute une fois
+
+      while (timeout > 0)
+        sleep(interval)
+        timeout -= interval
+        begin
+          return if yield
+        rescue Exception => e
+          p "try again : #{e.message}"
+        else
+          p "try again."
+        end
+      end
+
+      raise e if !e.nil? and exception == true
+
+    end
   end
 
 

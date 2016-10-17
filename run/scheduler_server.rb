@@ -7,7 +7,6 @@ require_relative '../lib/logging'
 require_relative '../lib/parameter'
 require_relative '../model/scheduling/scheduler'
 require_relative '../model/scheduling/connection'
-require_relative '../model/geolocation'
 require_relative '../lib/supervisor'
 
 
@@ -68,13 +67,6 @@ else
       # supervision
       Rufus::Scheduler.start_new.every periodicity_supervision do
         Supervisor.send_online(File.basename(__FILE__, '.rb'))
-      end
-
-      #TODO solution à revisiter de publication des geolocations qd la ou les solution finales de recuperation des geolocations
-      #TODO seront terminées
-      Geolocation.send(inputflow_factories, logger)
-      EM.add_periodic_timer(delay_periodic_send_geolocation * 60) do
-        Geolocation.send(inputflow_factories, logger)
       end
 
       inputflow_factories.each { |os_label, version|
