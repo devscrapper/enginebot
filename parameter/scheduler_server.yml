@@ -44,6 +44,12 @@ test:
           :server1:
             :ip: 192.168.1.86
             :port: 9201
+      :ten:
+        :pattern: "Windows-10"
+        :servers:
+          :server1:
+            :ip: 192.168.1.87
+            :port: 9201
 
 production:
   :listening_port: 9105
