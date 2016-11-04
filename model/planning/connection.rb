@@ -47,20 +47,24 @@ module Planning
       # http://localhost:9104/policies/traffic  payload = { ... }
       # http://localhost:9104/policies/rank     payload = { ... }
       # http://localhost:9104/policies/seaattack     payload = { ... }
+      # http://localhost:9104/policies/advert  payload = { ... }
       # http://localhost:9104/objectives/traffic  payload = { ... }
       # http://localhost:9104/objectives/rank      payload = { ... }
+      # http://localhost:9104/objectives/advert      payload = { ... }
 
       # PATCH
       # http://localhost:9104/tasks/<taskname>/?state=start ou over ou fail  payload = {"policy_id" => @data["policy_id"], "task" => task}
       # http://localhost:9104/policies/traffic/?execution_mode=[manual|auto]&policy_id=#{policy_id}
       # http://localhost:9104/policies/rank/?execution_mode=[manual|auto]&policy_id=#{policy_id}
       # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+      # http://localhost:9104/policies/advert/?execution_mode=[manual|auto]&policy_id=#{policy_id}
       # http://localhost:9104/policies/seaattack/?policy_id=#{policyid} payload = { ... }
 
       # DELETE
       # http://localhost:9104/traffics/<policy_id>
       # http://localhost:9104/ranks/<policy_id>
       # http://localhost:9104/seaattacks/<policy_id>
+      # http://localhost:9104/adverts/<policy_id>
       #------------------------------------------------------------------------------------------------------------------
 
 
@@ -245,13 +249,14 @@ module Planning
                 when "policies"
                   policy_type = ress_id
                   case policy_type
-                    when "traffic", "rank"
+                    when "traffic", "rank", "advert"
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "policy_id"}) if query_values["policy_id"].nil? or query_values["policy_id"].empty?
                       raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "execution_mode"}) if query_values["execution_mode"].nil? or query_values["execution_mode"].empty?
                       policy_id = query_values["policy_id"]
                       # http://localhost:9104/policies/traffic/?execution_mode=[manual|auto]&policy_id=#{policy_id}
                       # http://localhost:9104/policies/rank/?execution_mode=[manual|auto]&policy_id=#{policy_id}
                       # http://localhost:9104/policies/seaattack/?execution_mode=[manual|auto]&policy_id=#{policy_id}
+                      # http://localhost:9104/policies/advert/?execution_mode=[manual|auto]&policy_id=#{policy_id}
 
                       @logger.an_event.info "update policy #{policy_type} #{policy_id} with #{query_values["execution_mode"]} execution mode to repository"
                       @calendar.update_execution_mode_policy(policy_type, policy_id.to_i, query_values["execution_mode"])
@@ -289,6 +294,7 @@ module Planning
               # http://localhost:9104/traffics/<policy_id>
               # http://localhost:9104/ranks/<policy_id>
               # http://localhost:9104/seaattacks/<policy_id>
+              # http://localhost:9104/adverts/<policy_id>
               # pas de respect de http, car maj ne renvoient pas la ressource maj
               raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
               @logger.an_event.info "delete events of the #{ress_type} policy id=#{ress_id} to repository"
@@ -299,6 +305,8 @@ module Planning
                   @calendar.delete_policy(ress_id.to_i, "rank")
                 when "seaattacks"
                   @calendar.delete_policy(ress_id.to_i, "seaattack")
+                when "adverts"
+                  @calendar.delete_policy(ress_id.to_i, "advert")
                 else
                   raise Error.new(RESSOURCE_NOT_MANAGE, :values => {:ressource => ress_type})
               end

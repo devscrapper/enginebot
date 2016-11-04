@@ -1,36 +1,36 @@
 
 development:
-  :choosing_device_platform_day: -1
-  :choosing_device_platform_hour: 0
-  :choosing_device_platform_min: 0
-  :evaluating_traffic_source_organic_day: -1
-  :evaluating_traffic_source_organic_hour: 0
-  :evaluating_traffic_source_organic_min: 30
   :building_landing_pages_organic_day: -1
   :building_landing_pages_organic_hour: 0
   :building_landing_pages_organic_min: 0
-  :evaluating_traffic_source_referral_day: -1
-  :evaluating_traffic_source_referral_hour: 1
-  :evaluating_traffic_source_referral_min: 0
   :building_landing_pages_referral_day: -1
   :building_landing_pages_referral_hour: 0
   :building_landing_pages_referral_min: 0
-  :choosing_landing_pages_day: -1
-  :choosing_landing_pages_hour: 0
-  :choosing_landing_pages_min: 0
-  :building_visits_day: -1
-  :building_visits_hour: 0
-  :building_visits_min: 0
   :building_planification_day: -1
   :building_planification_hour: 0
   :building_planification_min: 0
+  :building_visits_day: -1
+  :building_visits_hour: 0
+  :building_visits_min: 0
+  :choosing_device_platform_day: -1
+  :choosing_device_platform_hour: 0
+  :choosing_device_platform_min: 0
+  :choosing_landing_pages_day: -1
+  :choosing_landing_pages_hour: 0
+  :choosing_landing_pages_min: 0
+  :end_publishing_visits_day: 0
+  :end_publishing_visits_hour: 22
+  :evaluating_traffic_source_organic_day: -1
+  :evaluating_traffic_source_organic_hour: 0
+  :evaluating_traffic_source_organic_min: 30
+  :evaluating_traffic_source_referral_day: -1
+  :evaluating_traffic_source_referral_hour: 1
+  :evaluating_traffic_source_referral_min: 0
   :extending_visits_day: -1
   :extending_visits_hour: 0
   :extending_visits_min: 0
   :start_publishing_visits_day: -1
   :start_publishing_visits_hour: 22
-  :end_publishing_visits_day: 0
-  :end_publishing_visits_hour: 22
 
 test:
   :choosing_device_platform_day: -1

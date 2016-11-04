@@ -327,6 +327,27 @@ module Tasking
                                                                                        is_nil_or_empty? { @data[:max_duration] },
                                                                                        is_nil_or_empty? { @data[:min_duration_website] },
                                                                                        is_nil_or_empty? { @data[:min_pages_website] })
+          when "advert"
+            Objective::Objectives.new(@data[:website_label],
+                                      @data[:building_date],
+                                      @data[:policy_id],
+                                      @data[:website_id],
+                                      @data[:policy_type],
+                                      @data[:count_weeks],
+                                      @data[:execution_mode]).Building_objectives_advert(is_nil_or_empty? { @data[:advertising_percent] }.to_i,
+                                                                                       is_nil_or_empty? { @data[:advertisers] },
+                                                                                       is_nil_or_empty? { @data[:count_visits_per_day] }.to_i,
+                                                                                       is_nil_or_empty? { @data[:min_count_page_advertiser] },
+                                                                                       is_nil_or_empty? { @data[:min_duration] },
+                                                                                       is_nil_or_empty? { @data[:min_duration_page_advertiser] },
+                                                                                       is_nil_or_empty? { @data[:min_duration_website] },
+                                                                                       is_nil_or_empty? { @data[:min_pages_website] },
+                                                                                       is_nil_or_empty? { @data[:monday_start] },
+                                                                                       is_nil_or_empty? { @data[:max_count_page_advertiser] },
+                                                                                       is_nil_or_empty? { @data[:max_duration] },
+                                                                                       is_nil_or_empty? { @data[:max_duration_page_advertiser] },
+                                                                                       is_nil_or_empty? { @data[:percent_local_page_advertiser] },
+                                                                                       is_nil_or_empty? { @data[:url_root] })
         end
       }
 

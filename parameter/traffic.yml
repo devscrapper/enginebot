@@ -1,5 +1,20 @@
 
 development:
+  :building_behaviour_day: -2
+  :building_behaviour_hour: 0
+  :building_behaviour_min: 0
+  :building_device_platform_day: -2
+  :building_device_platform_hour: 0
+  :building_device_platform_min: 0
+  :building_hourly_distribution_day: -2
+  :building_hourly_distribution_hour: 0
+  :building_hourly_distribution_min: 0
+  :building_landing_pages_direct_day: 0
+  :building_landing_pages_direct_hour: 0
+  :building_landing_pages_direct_min: 0
+  :building_objectives_day: -2
+  :building_objectives_hour: 0
+  :building_objectives_min: 0
   :scraping_traffic_source_organic_day: 0
   :scraping_traffic_source_organic_hour: 0
   :scraping_traffic_source_organic_min: 15
@@ -21,21 +36,7 @@ development:
   :scraping_behaviour_day: -2
   :scraping_behaviour_hour: 3
   :scraping_behaviour_min: 0
-  :building_device_platform_day: -2
-  :building_device_platform_hour: 0
-  :building_device_platform_min: 0
-  :building_hourly_distribution_day: -2
-  :building_hourly_distribution_hour: 0
-  :building_hourly_distribution_min: 0
-  :building_behaviour_day: -2
-  :building_behaviour_hour: 0
-  :building_behaviour_min: 0
-  :building_landing_pages_direct_day: 0
-  :building_landing_pages_direct_hour: 0
-  :building_landing_pages_direct_min: 0
-  :building_objectives_day: -2
-  :building_objectives_hour: 0
-  :building_objectives_min: 0
+
 
 test:
   :scraping_traffic_source_organic_day: 0
