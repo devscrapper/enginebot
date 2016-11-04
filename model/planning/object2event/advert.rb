@@ -29,10 +29,7 @@ module Planning
       # remplacement de time.local par Time.utc().localtime
       @monday_start = Time.utc(d.year, d.month, d.day).localtime # iceCube a besoin d'un Time et pas d'un Date
       @count_visits_per_day = data[:count_visits_per_day]
-      @registering_date = $staging == "development" ?
-          Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
-      :
-          Time.utc(Date.today.year, Date.today.month, Date.today.day, 0, 0).localtime
+      @registering_date = Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
 
 
       # advertiser data
