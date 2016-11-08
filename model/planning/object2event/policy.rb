@@ -31,14 +31,14 @@ module Planning
          :building_landing_pages_organic_day,
          :building_landing_pages_organic_hour,
          :building_landing_pages_organic_min,
-         :website_label,  #utilisé par SeaAttack(sea.label)
-         :website_id,  #utilisé par SeaAttack(sea.id)
+         :website_label, #utilisé par SeaAttack(sea.label)
+         :website_id, #utilisé par SeaAttack(sea.id)
          :policy_id, #utilisé par SeaAttack
          :policy_type, #utilisé par SeaAttack
-         :count_weeks,  #utilisé par SeaAttack
+         :count_weeks, #utilisé par SeaAttack
          :monday_start,
          :registering_date,
-         :registering_time,  # jour et heure d'enregistrement de la policy
+         :registering_time, # jour et heure d'enregistrement de la policy
          :duration_referral,
          :min_count_page_organic, #utilisé par SeaAttack
          :max_count_page_organic, #utilisé par SeaAttack
@@ -54,7 +54,7 @@ module Planning
          :avg_time_on_site,
          :page_views_per_visit,
          :count_visits_per_day,
-         :statistic_type,  #utilisé par SeaAttack
+         :statistic_type, #utilisé par SeaAttack
          :key,
          :events,
          :building_behaviour, #utiliser pour passer l'event aux class Trafficn et Rank pour affecter la var pre_task
@@ -79,13 +79,22 @@ module Planning
       @min_pages_website = data[:min_pages_website]
       @statistics_type = data[:statistics_type]
       @execution_mode = data[:execution_mode]
-      if @statistics_type == "custom"
-        @hourly_daily_distribution = data[:hourly_daily_distribution]
-        @percent_new_visit = data[:percent_new_visit]
-        @visit_bounce_rate = data[:visit_bounce_rate]
-        @avg_time_on_site = data[:avg_time_on_site]
-        @page_views_per_visit = data[:page_views_per_visit]
-        @count_visits_per_day = data[:count_visits_per_day]
+      case @statistics_type
+        when "custom"
+          @hourly_daily_distribution = data[:hourly_daily_distribution]
+          @percent_new_visit = data[:percent_new_visit]
+          @visit_bounce_rate = data[:visit_bounce_rate]
+          @avg_time_on_site = data[:avg_time_on_site]
+          @page_views_per_visit = data[:page_views_per_visit]
+          @count_visits_per_day = data[:count_visits_per_day]
+          @registering_date = Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
+        when "ga"
+          @registering_date = $staging == "development" ?
+              Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
+          :
+              Time.utc(Date.today.year, Date.today.month, Date.today.day, 0, 0).localtime
+        when "default"
+          @registering_date = Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
       end
 
       @events = []

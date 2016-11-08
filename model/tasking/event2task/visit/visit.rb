@@ -286,7 +286,7 @@ module Tasking
 
         visit = {:visit => {:id => @id_visit,
                             :start_date_time => @start_date_time,
-                            :type => @type.to_sym, # :traffic | :rank | seaattack
+                            :type => @type.to_sym, # :traffic | :rank | seaattack  | :advert
                             :referrer => {:medium => @medium} # (none) | referral | organic
         },
                  :website => {:label => @label},
@@ -343,6 +343,18 @@ module Tasking
                 visit[:website][:many_hostname] = :true
                 visit[:website][:many_account_ga] = :no
             end
+          when :advert
+            visit[:visit].merge!(:landing => {:scheme => @landing_page_scheme,
+                                              :fqdn => @landing_page_hostname,
+                                              :path => @landing_page_path})
+            visit[:visit][:durations] = durations
+            visit[:visit].merge!(:advert => {:advertising => @advert.to_sym,
+                                             :advertiser => {:durations => Array.new(advertiser_durations_size).fill { Random.rand(@min_duration_page_advertiser..@max_duration_page_advertiser) }, #calculé par engine_bot
+                                                             :arounds => Array.new(advertiser_durations_size).fill(:outside_fqdn).fill(:inside_fqdn, 0, (advertiser_durations_size * @percent_local_page_advertiser/100).round(0))}
+                                 })
+            #TODO revisier l'initialisation de many_hostname & many_account
+            visit[:website][:many_hostname] = :true
+            visit[:website][:many_account_ga] = :no
 
         end
 

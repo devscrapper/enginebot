@@ -12,12 +12,12 @@ development:
     :building_landing_pages_direct_day: 0
     :building_landing_pages_direct_hour: 0
     :building_landing_pages_direct_min: 0
-    :building_visits_day: 0
-    :building_visits_hour: 0
-    :building_visits_min: 0
     :building_objectives_day: 0
     :building_objectives_hour: 0
     :building_objectives_min: 0
+    :building_visits_day: 0
+    :building_visits_hour: 0
+    :building_visits_min: 0
     :building_planification_day: 0
     :building_planification_hour: 0
     :building_planification_min: 0
