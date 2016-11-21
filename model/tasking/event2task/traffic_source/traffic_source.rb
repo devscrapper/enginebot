@@ -19,8 +19,8 @@ module Tasking
 # Globals variables
 #------------------------------------------------------------------------------------------
 
-      OUTPUT = File.expand_path(File.join("..", "..","..", "..","..", "output"), __FILE__)
-      TMP = File.expand_path(File.join("..", "..","..", "..", "..","tmp"), __FILE__)
+      OUTPUT = File.expand_path(File.join("..", "..", "..", "..", "..", "output"), __FILE__)
+      TMP = File.expand_path(File.join("..", "..", "..", "..", "..", "tmp"), __FILE__)
       EOFLINE ="\n"
       SEPARATOR1="%SEP%"
       PROGRESS_BAR_SIZE = 180
@@ -37,8 +37,7 @@ module Tasking
            :scraped_f, # flow contenant les mots clÃ© scrappÃ©s de semrush
            :repository_f, # flow contenant les mots clÃ©s de issue de semrush complÃ©tÃ©s de ceux de google suggest
            :traffic_source_f #flow contenant les mots clÃ©s de semrush, googleSuggest, evaluÃ©s dans les moteur de
-           # recherche google, bing, yahoo Ã  destination de enginebot
-
+      # recherche google, bing, yahoo Ã  destination de enginebot
 
 
       #--------------------------------------------------------------------------------------------------------------
@@ -71,7 +70,7 @@ module Tasking
 
         rescue Exception => e
           @logger.an_event.error ("Building landing pages #{medium} for <#{@policy_type}> <#{@website_label}> is over #{e.message}")
-            raise e
+          raise e
         else
           @logger.an_event.debug("Building landing pages #{medium} for <#{@policy_type}> <#{@website_label}> is over")
         end
@@ -86,9 +85,9 @@ module Tasking
 
         landing_page_type_flow = "landing-pages-#{medium.to_s}"
         traffic_source_file = Flow.last(TMP, {:type_flow => traffic_source_type_flow,
-                                                :label => @website_label,
-                                                :policy => @policy_type,
-                                           :ext => ".txt"}).last #input
+                                              :label => @website_label,
+                                              :policy => @policy_type,
+                                              :ext => ".txt"}).last #input
         @logger.an_event.debug "traffic source type flow : #{traffic_source_file.basename}"
         raise IOError, "input flow <#{traffic_source_file.basename}> is missing" unless traffic_source_file.exist? #input
 
@@ -105,9 +104,14 @@ module Tasking
           # @logger.an_event.info "Loading vol <#{volume.vol}> of #{traffic_source_file.basename} input file"
           #        pob = ProgressBar.create(:title => "Loading vol <#{volume.vol}> of #{traffic_source_file.basename} input file", :length => PROGRESS_BAR_SIZE, :starting_at => 0, :total => volume.count_lines(EOFLINE), :format => '%t, %c/%C, %a|%w|')
           volume.foreach(EOFLINE) { |p|
-            source_page = yield(p)
-            landing_pages_file.write(source_page.to_s)
-            pob.increment
+            begin
+              source_page = yield(p)
+            rescue Exception => e
+              @logger.an_event.warn "#{p} : #{e.message}"
+            else
+              landing_pages_file.write(source_page.to_s)
+              pob.increment
+            end
           }
         }
         traffic_source_file.archive_previous
@@ -119,10 +123,6 @@ module Tasking
       def title(action, policy = @policy_type, website_label = @website_label, date = @date_building)
         [action, policy, website_label, date].join(" | ")
       end
-
-
-
-
 
 
     end

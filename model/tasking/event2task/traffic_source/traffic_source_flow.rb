@@ -1,3 +1,4 @@
+
 module Tasking
   module TrafficSource
     class TrafficSourceFlow
@@ -28,7 +29,7 @@ module Tasking
       end
 
       def to_s(*a)
-        to_file.join(SEPARATOR) + "#{EOFLINE}"
+        to_file.join(SEPARATOR) + "#{Tasking::TrafficSource::TrafficSource::EOFLINE}"
       end
 
     end

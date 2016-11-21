@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby -w
 # encoding: UTF-8
 require "logging"
+require_relative 'parameter'
 
 module Logging
   # la stratégie de logging est conditionnée par trois critères :

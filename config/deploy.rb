@@ -94,7 +94,7 @@ namespace :log do
     on roles(:app) do
       begin
         capture("ls #{File.join(current_path, 'log', '*.*')}").split(/\r\n/).each { |log_file|
-          get log_file, File.join(File.dirname(__FILE__), '..', 'log', File.basename(log_file))
+          download! log_file, File.join(File.dirname(__FILE__), '..', 'log', File.basename(log_file))
         }
       rescue Exception => e
         p "dont down log : #{e.message}"
