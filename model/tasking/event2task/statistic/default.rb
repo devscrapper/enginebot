@@ -180,8 +180,8 @@ module Tasking
                                "not use", #1
                                100, #2 percent_new_visit
                                Random.new.rand(80..90), #3 visit_bounce_rate
-                               Random.new.rand(60..1000), # 4 avg_time_on_site
-                               Random.new.rand(1..20), #5 page_views_per_visit
+                               Random.new.rand(60..300), # 4 avg_time_on_site
+                               Random.new.rand(3..11), #5 page_views_per_visit
                                Random.new.rand(50..100)] } #6 count_visits
 
         execute("scraping-behaviour",
