@@ -3,7 +3,7 @@ source "http://rubygems.org"
 
 # utiliser en dev net-ssh 2.6.x et pas > sinon capistrano n'arrive plus à se connecter à la machine distante. Si nécessire en prod alors utiliser les groupes
 
-gem 'mime-types', '2.99.3'
+gem 'mime-types', '2.99.1'
 gem 'eventmachine', '~> 1.0.8'
 gem 'json', '~> 1.8.3'
 gem 'ruby-progressbar', '~> 1.7.5'
