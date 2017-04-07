@@ -86,7 +86,6 @@ module Planning
           @visit_bounce_rate = data[:visit_bounce_rate]
           @avg_time_on_site = data[:avg_time_on_site]
           @page_views_per_visit = data[:page_views_per_visit]
-          @count_visits_per_day = data[:count_visits_per_day]
           @registering_date = Time.utc(Date.today.year, Date.today.month, Date.today.day, Time.now.hour, Time.now.min).localtime
         when "ga"
           @registering_date = $staging == "development" ?

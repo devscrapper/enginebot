@@ -34,7 +34,8 @@ module Tasking
 
 
       attr :devices,
-           :distribution
+           :distribution,
+           :resolution
 
 
       def initialize(website_label, date, policy_type)
@@ -49,6 +50,7 @@ module Tasking
           $staging = parameters.environment
           $debugging = parameters.debugging
           @devices = parameters.devices
+          @resolutions = parameters.resolutions
           @distribution = parameters.distribution
         end
 
@@ -118,7 +120,15 @@ module Tasking
       def device_platform_resolution
 
         execute("scraping-device-platform-resolution",
-                @devices.map { |device| device[0..3] + ["screencolor", "1280x1024", "ismobile", device[4]] })
+                begin
+                  lst = []
+                  @devices.each { |device|
+                    @resolutions.each { |resolution|
+                      lst += [device[0..3] + ["screencolor", resolution[0], "ismobile", resolution[1]]]
+                    }
+                  }
+                  lst
+                end)
       end
 
 

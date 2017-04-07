@@ -230,14 +230,18 @@ module Tasking
 
       private
       def translate_to_count_visits_target(distribution, count_visits_of_day_target)
-        count_visits_of_day_origin = 0
-        count_visits_of_day = distribution.split(SEPARATOR4)
-        count_visits_of_day.each { |count_visit_per_hour| count_visits_of_day_origin += count_visit_per_hour.to_i }
-        count_visits_of_day.map! { |count_visit_per_hour| count_visit_per_hour.to_i * count_visits_of_day_target / count_visits_of_day_origin }
-        count_visits_of_day_inter = 0
-        count_visits_of_day.each { |count_visit_per_hour| count_visits_of_day_inter += count_visit_per_hour.to_i }
-        (count_visits_of_day_target - count_visits_of_day_inter).times { count_visits_of_day[rand(count_visits_of_day.size-1)] += 1 }
-        count_visits_of_day.join(SEPARATOR4)
+        res = []
+        distribution_arr = distribution.split("|")
+        distribution_arr.each_index { |hour|
+          visits_count = distribution_arr[hour].to_i
+          res += (visits_count > 0) ? Array.new(visits_count, hour) : []
+        }.flatten!
+
+        distribution_visits_daily = Array.new(24, 0)
+        count_visits_of_day_target.times {
+          distribution_visits_daily[res[rand(100)]] += 1
+        }
+        distribution_visits_daily.join(SEPARATOR4)
       end
     end
 
