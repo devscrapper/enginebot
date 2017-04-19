@@ -93,15 +93,18 @@ module Scheduling
 
               case ress_id
                 when "published"
+                  @logger.an_event.debug  File.join(OUTPUT, "*#{Flow::SEPARATOR}#{query_values["visit_id"]}.man")
                   visit_flow = Dir.glob(File.join(OUTPUT, "*#{Flow::SEPARATOR}#{query_values["visit_id"]}.man")).map { |file| Flow.from_absolute_path(file) }[0]
 
                 when "restarted"
+                  @logger.an_event.debug  File.join(ARCHIVE, "*#{Flow::SEPARATOR}#{query_values["visit_id"]}.yml")
                   visit_flow = Dir.glob(File.join(ARCHIVE, "*#{Flow::SEPARATOR}#{query_values["visit_id"]}.yml")).map { |file| Flow.from_absolute_path(file) }[0]
 
                 else
                   raise "ress_id #{ress_id} not manage"
               end
 
+              @logger.an_event.debug visit_flow
               unless visit_flow.nil?
                 @logger.an_event.info "visit #{query_values["visit_id"]} file name found : #{visit_flow.absolute_path}"
                 server = nil
@@ -163,7 +166,14 @@ module Scheduling
                 }
 
               else
-                @logger.an_event.error "visit #{query_values["visit_id"]} file name not found in #{OUTPUT}"
+                case ress_id
+                  when "published"
+                    @logger.an_event.error "visit #{query_values["visit_id"]} file name not found in #{OUTPUT}"
+
+                  when "restarted"
+                    @logger.an_event.error "visit #{query_values["visit_id"]} file name not found in #{ARCHIVE}"
+                end
+
                 raise "visit #{query_values["visit_id"]} file not found"
 
               end
