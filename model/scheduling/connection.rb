@@ -20,6 +20,7 @@ module Scheduling
 
 
     OUTPUT = File.expand_path(File.join("..", "..", "..", "output"), __FILE__)
+    ARCHIVE = File.expand_path(File.join("..", "..", "..", "archive"), __FILE__)
 
     attr :inputflow_factories,
          :logger
@@ -39,7 +40,7 @@ module Scheduling
 
       # PUT
       # http://localhost:9105/visits/published/?visit_id=#{visit_id}
-
+      # "http://#{enginebot_host}:#{enginebot_port}/visits/restarted/?visit_id=#{visit_id}",
       # DELETE
 
       #------------------------------------------------------------------------------------------------------------------
@@ -83,13 +84,23 @@ module Scheduling
               #Flow : Windows-7_traffic_meshumeursinformatique_2016-03-07-13-17-00_537327c0-c1bb-0133-5867-00ffe049370b.yml
               # pas de respect de http, car maj ne renvoient pas la ressource maj
               # http://localhost:9105/visits/published/?visit_id=#{visit_id}
+              #"http://#{enginebot_host}:#{enginebot_port}/visits/restarted/?visit_id=#{visit_id}",
               raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "ress_id"}) if ress_id.nil? or ress_id.empty?
               raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "query string"}) if @http_query_string.nil?
-
               query_values = Addressable::URI.parse("?#{@http_query_string}").query_values
               raise Error.new(ARGUMENT_NOT_DEFINE, :values => {:variable => "visit_id"}) if query_values["visit_id"].nil? or query_values["visit_id"].empty?
 
-              visit_flow = Dir.glob(File.join(OUTPUT, "*#{Flow::SEPARATOR}#{query_values["visit_id"]}.man")).map { |file| Flow.from_absolute_path(file) }[0]
+
+              case ress_id
+                when "published"
+                  visit_flow = Dir.glob(File.join(OUTPUT, "*#{Flow::SEPARATOR}#{query_values["visit_id"]}.man")).map { |file| Flow.from_absolute_path(file) }[0]
+
+                when "restarted"
+                  visit_flow = Dir.glob(File.join(ARCHIVE, "*#{Flow::SEPARATOR}#{query_values["visit_id"]}.yml")).map { |file| Flow.from_absolute_path(file) }[0]
+
+                else
+                  raise "ress_id #{ress_id} not manage"
+              end
 
               unless visit_flow.nil?
                 @logger.an_event.info "visit #{query_values["visit_id"]} file name found : #{visit_flow.absolute_path}"
@@ -120,7 +131,14 @@ module Scheduling
                       else
                         @logger.an_event.info "push visit flow #{visit_flow.basename} to input flow server #{ip}:#{port}"
 
-                        visit_flow.archive
+                        case ress_id
+                          when "published"
+                            visit_flow.archive
+
+                          when "restarted"
+
+                        end
+
                         #informe statupweb de la creation d'une nouvelle visite
                         # en cas d'erreur on ne leve as de'exception car c'est de la communication
                         begin
